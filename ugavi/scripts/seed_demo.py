@@ -138,6 +138,11 @@ def create_demo_users():
             frappe.get_doc({
                 "doctype": "User", "email": email, "first_name": first,
                 "last_name": last, "send_welcome_email": 0, "enabled": 1,
+            }).insert(ignore_permissions=True)
+    frappe.db.commit()
+    print(f"  Created {len(users)} demo users")
+
+
 def create_donor_profiles():
     """Create donor profiles for procurement tracking."""
     donors = [
@@ -173,6 +178,3 @@ def setup_procurement_settings():
     })
     settings.insert(ignore_permissions=True)
     print("  Procurement settings seeded")
-            }).insert(ignore_permissions=True)
-    frappe.db.commit()
-    print(f"  Created {len(users)} demo users")
