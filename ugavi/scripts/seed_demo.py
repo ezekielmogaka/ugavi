@@ -31,7 +31,7 @@ def create_suppliers():
         if not frappe.db.exists("Supplier", {"supplier_name": name}):
             frappe.get_doc({
                 "doctype": "Supplier", "supplier_name": name,
-                "supplier_group": "Services", "supplier_type": "Company",
+                "supplier_group": "Local", "supplier_type": "Company",
                 "country": "Kenya",
             }).insert(ignore_permissions=True)
     frappe.db.commit()
