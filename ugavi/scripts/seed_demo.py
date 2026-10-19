@@ -91,7 +91,7 @@ def create_warehouses():
         "Main Transit Warehouse - Nairobi",
         "Cold Chain Storage - Nairobi",
     ]
-    company = frappe.defaults.get_default("company") or "Ugavi NGO"
+    company = frappe.defaults.get_defaults().get("company") or "Ugavi NGO"
     for wh_name in wh_list:
         if not frappe.db.exists("Warehouse", {"warehouse_name": wh_name}):
             frappe.get_doc({
