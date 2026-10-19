@@ -1,0 +1,6 @@
+# Ugavi Patches
+# Format: [patch_name] [YYYY-MM-DD]
+# Patches are executed in order. Each patch must be idempotent and reversible.
+
+# Initial schema - v0.1.0
+# ugavi.patches.v0_1_0.create_custom_fields

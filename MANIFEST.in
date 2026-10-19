@@ -1,0 +1,9 @@
+include: ugavi/**
+include: fixtures/**
+include: tests/**
+include: docs/**
+include: scripts/**
+recursive-include: ugavi/public *
+graft: ugavi
+global-exclude: *.pyc
+global-exclude: __pycache__
