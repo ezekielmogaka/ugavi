@@ -15,7 +15,7 @@ class Contract(Document):
     def on_update(self):
         if self.status == "Expired":
             return
-        if self.end_date and frappe.utils.getdate(self.end_date) <= frappe.utils.today():
+        if self.end_date and frappe.utils.getdate(self.end_date) <= frappe.utils.getdate(frappe.utils.today()):
             self.status = "Expired"
             self.save(ignore_permissions=True)
 
