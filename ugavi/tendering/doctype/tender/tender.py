@@ -47,23 +47,24 @@ class Tender(Document):
         self.save()
 
     def _generate_keys(self):
-        from ugavi.procurement.services.sealed_bid import generate_tender_keypair
-        private_pem, public_pem = generate_tender_keypair()
-        self.public_key = public_pem.decode("utf-8")
+        from ugavi.procurement.services.sealed_bid import generate_and_distribute_keys
+        result = generate_and_distribute_keys(
+            tender=self.name,
+            officers=[
+                self.opening_officer_1,
+                self.opening_officer_2,
+                self.opening_officer_3,
+            ],
+        )
+        self.public_key = result["public_key_pem"]
         self.key_generated_at = now_datetime()
 
-        # Store private key share data in child records
-        # Actual key sharing happens during bid opening
-        self._store_private_key(private_pem)
-
     def _store_private_key(self, private_pem):
-        key_doc = frappe.get_doc({
-            "doctype": "Sealed Bid Key",
-            "tender": self.name,
-            "private_key_pem": private_pem.decode("utf-8"),
-            "generated_at": now_datetime(),
-        })
-        key_doc.insert(ignore_permissions=True)
+        """DEPRECATED — key is now split at generation, never stored in DB."""
+        frappe.throw(
+            "Private keys must never be stored in the database. "
+            "Use generate_and_distribute_keys instead."
+        )
 
     @frappe.whitelist()
     def award(self, supplier: str, amount: float):

@@ -11,55 +11,58 @@
    "unique": 1
   },
   {
-   "fieldname": "private_key_pem",
-   "fieldtype": "Long Text",
-   "label": "Private Key (PEM)",
-   "reqd": 1
-  },
-  {
    "fieldname": "generated_at",
    "fieldtype": "Datetime",
    "label": "Generated At",
    "read_only": 1
   },
   {
+   "fieldname": "public_key_pem",
+   "fieldtype": "Long Text",
+   "label": "Public Key (PEM)",
+   "read_only": 1
+  },
+  {
    "fieldname": "share_1_user",
    "fieldtype": "Link",
-   "label": "Share 1 - User",
+   "label": "Share 1 - Officer",
    "options": "User",
-   "read_only": 1
+   "reqd": 1
   },
   {
    "fieldname": "share_1_data",
    "fieldtype": "Long Text",
-   "label": "Share 1",
-   "read_only": 1
+   "label": "Share 1 (Encrypted)",
+   "read_only": 1,
+   "reqd": 1
   },
   {
    "fieldname": "share_2_user",
    "fieldtype": "Link",
-   "label": "Share 2 - User",
+   "label": "Share 2 - Officer",
    "options": "User",
-   "read_only": 1
+   "reqd": 1
   },
   {
    "fieldname": "share_2_data",
    "fieldtype": "Long Text",
-   "label": "Share 2",
-   "read_only": 1
+   "label": "Share 2 (Encrypted)",
+   "read_only": 1,
+   "reqd": 1
   },
   {
    "fieldname": "share_3_user",
    "fieldtype": "Link",
-   "label": "Share 3 - User",
+   "label": "Share 3 - Officer",
    "options": "User",
-   "read_only": 1
+   "reqd": 1
   },
   {
    "fieldname": "share_3_data",
    "fieldtype": "Long Text",
-   "label": "Share 3",
-   "read_only": 1
+   "label": "Share 3 (Encrypted)",
+   "read_only": 1,
+   "reqd": 1
   },
   {
    "default": "0",
@@ -80,6 +83,13 @@
    "fieldtype": "Datetime",
    "label": "Reconstructed At",
    "read_only": 1
+  },
+  {
+   "fieldname": "reconstructed_by",
+   "fieldtype": "Link",
+   "label": "Reconstructed By",
+   "options": "User",
+   "read_only": 1
   }
  ],
  "istable": 0,
@@ -91,7 +101,7 @@
    "delete": 0,
    "read": 1,
    "role": "System Manager",
-   "write": 1
+   "write": 0
   }
  ],
  "track_changes": 0
