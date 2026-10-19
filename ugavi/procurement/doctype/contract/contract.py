@@ -23,5 +23,5 @@ class Contract(Document):
         """Return True if contract expires within the alert window."""
         if not self.end_date or not self.expiry_alert_days:
             return False
-        days_left = (frappe.utils.getdate(self.end_date) - frappe.utils.today()).days
+        days_left = (frappe.utils.getdate(self.end_date) - frappe.utils.getdate(frappe.utils.today())).days
         return 0 < days_left <= self.expiry_alert_days
