@@ -1,19 +1,63 @@
-"""Seed demo data for Ugavi - uses only standard ERPNext DocTypes."""
+"""Bootstrap ERPNext foundation + seed Ugavi demo data."""
 import frappe
 from frappe.utils import nowdate
 
 
 def run():
-    frappe.logger().info("Seeding Ugavi demo data...")
+    """Complete ERPNext setup, then seed demo data."""
+    setup_company()
+    create_supplier_groups()
+    create_item_groups()
     create_suppliers()
     create_warehouses()
     create_items()
     create_demo_users()
-    create_sample_pos()
     frappe.db.commit()
-    frappe.logger().info("Ugavi seed data complete!")
+    print("Ugavi seed data complete!")
 
 
+def setup_company():
+    if frappe.db.exists("Company", "Ugavi NGO"):
+        print("  Company already exists")
+        return
+    from frappe.desk.page.setup_wizard.setup_wizard import setup_complete
+    setup_complete({
+        "company_name": "Ugavi NGO",
+        "company_abbr": "UG",
+        "country": "Kenya",
+        "currency": "KES",
+        "timezone": "Africa/Nairobi",
+        "chart_of_accounts": "Standard",
+        "fy_start_date": "2024-01-01",
+        "fy_end_date": "2024-12-31",
+        "domains": ["Distribution"],
+        "language": "English",
+    })
+    print("  Company + Chart of Accounts created")
+
+
+def create_supplier_groups():
+    groups = ["Local", "International", "Services", "Raw Material"]
+    for g in groups:
+        if not frappe.db.exists("Supplier Group", g):
+            frappe.get_doc({
+                "doctype": "Supplier Group",
+                "supplier_group_name": g,
+            }).insert(ignore_permissions=True)
+    print(f"  Supplier Groups: {groups}")
+
+
+def create_item_groups():
+    groups = ["Medical Supplies", "Pharmaceuticals", "Consumable",
+              "IT Equipment", "Office Supplies", "Vehicles & Spares",
+              "Drugs", "Products"]
+    for g in groups:
+        if not frappe.db.exists("Item Group", g):
+            frappe.get_doc({
+                "doctype": "Item Group",
+                "item_group_name": g,
+            }).insert(ignore_permissions=True)
+    print(f"  Item Groups: {groups}")
 def create_suppliers():
     names = [
         "Kenya Medical Supplies", "East Africa Logistics", "Tech Solutions Kenya",
@@ -47,7 +91,7 @@ def create_warehouses():
         "Main Transit Warehouse - Nairobi",
         "Cold Chain Storage - Nairobi",
     ]
-    company = frappe.defaults.get_default("company")
+    company = frappe.defaults.get_default("company") or "Ugavi NGO"
     for wh_name in wh_list:
         if not frappe.db.exists("Warehouse", {"warehouse_name": wh_name}):
             frappe.get_doc({
@@ -60,13 +104,13 @@ def create_warehouses():
 
 def create_items():
     items = [
-        ("ANTIMALARIAL-ALU", "Antimalarial Tablets (ALU)", "Drugs"),
-        ("HIV-RAPID-TEST", "HIV Rapid Test Kit", "Drugs"),
+        ("ANTIMALARIAL-ALU", "Antimalarial Tablets (ALU)", "Pharmaceuticals"),
+        ("HIV-RAPID-TEST", "HIV Rapid Test Kit", "Medical Supplies"),
         ("LLIN-NET", "Mosquito Net - LLIN", "Consumable"),
-        ("FIRST-AID-KIT", "First Aid Kit", "Consumable"),
-        ("STATIONERY-PACK", "Office Stationery Pack", "Consumable"),
-        ("LAPTOP-DELL", "Laptop - Dell Latitude", "Products"),
-        ("GENERATOR-50KVA", "Generator - 50kVA", "Products"),
+        ("FIRST-AID-KIT", "First Aid Kit", "Medical Supplies"),
+        ("STATIONERY-PACK", "Office Stationery Pack", "Office Supplies"),
+        ("LAPTOP-DELL", "Laptop - Dell Latitude", "IT Equipment"),
+        ("GENERATOR-50KVA", "Generator - 50kVA", "Vehicles & Spares"),
         ("FUEL-DIESEL", "Fuel - Diesel", "Consumable"),
     ]
     for code, name, grp in items:
@@ -78,42 +122,20 @@ def create_items():
             }).insert(ignore_permissions=True)
     frappe.db.commit()
     print(f"  Created {len(items)} items")
+
+
 def create_demo_users():
     users = [
-        ("jane.procurement@ugavi.local", "Jane", "Wanjiku", "Procurement Officer"),
-        ("tom.logistics@ugavi.local", "Tom", "Odhiambo", "Store Keeper"),
-        ("mary.audit@ugavi.local", "Mary", "Wambui", "Auditor"),
-        ("peter.fleet@ugavi.local", "Peter", "Mwangi", "Fleet Manager"),
+        ("jane.procurement@ugavi.local", "Jane", "Wanjiku"),
+        ("tom.logistics@ugavi.local", "Tom", "Odhiambo"),
+        ("mary.audit@ugavi.local", "Mary", "Wambui"),
+        ("peter.fleet@ugavi.local", "Peter", "Mwangi"),
     ]
-    for email, first, last, role in users:
+    for email, first, last in users:
         if not frappe.db.exists("User", email):
             frappe.get_doc({
                 "doctype": "User", "email": email, "first_name": first,
                 "last_name": last, "send_welcome_email": 0, "enabled": 1,
-                "roles": [{"role": role}],
             }).insert(ignore_permissions=True)
     frappe.db.commit()
     print(f"  Created {len(users)} demo users")
-
-
-def create_sample_pos():
-    suppliers = frappe.get_all("Supplier", limit=1)
-    items = frappe.get_all("Item", limit=3)
-    if not suppliers or not items:
-        return
-    for i in range(2):
-        po_name = f"PO-DEMO-{i+1:04d}"
-        if not frappe.db.exists("Purchase Order", po_name):
-            frappe.get_doc({
-                "doctype": "Purchase Order",
-                "supplier": suppliers[0].name,
-                "schedule_date": nowdate(),
-                "items": [{
-                    "item_code": items[i].name,
-                    "qty": 100.0,
-                    "rate": 500.0,
-                    "schedule_date": nowdate(),
-                }],
-            }).insert(ignore_permissions=True)
-    frappe.db.commit()
-    print("  Created sample purchase orders")
