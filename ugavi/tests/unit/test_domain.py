@@ -78,5 +78,89 @@ class TestKeyDistribution(IntegrationTestCase):
                 "share_1_user": "user1@test.com", "share_1_data": "d1",
                 "share_2_user": "user2@test.com", "share_2_data": "d2",
                 "share_3_user": "user1@test.com", "share_3_data": "d3",
+class TestWaiverWorkflow(IntegrationTestCase):
+    """PR5: Waiver approval workflow."""
+
+    def setUp(self):
+        self.waiver = frappe.get_doc({
+            "doctype": "Waiver",
+            "requested_by": "Administrator",
+            "reason": "Emergency procurement",
+            "rule_to_override": "THRESHOLD_200K",
+            "status": "Draft",
+        }).insert(ignore_permissions=True)
+
+    def tearDown(self):
+        frappe.db.delete("Waiver", {"name": self.waiver.name})
+
+    def test_approve_waiver(self):
+        self.waiver.approve("Administrator", "Approved")
+        doc = frappe.get_doc("Waiver", self.waiver.name)
+        self.assertEqual(doc.status, "Approved")
+
+    def test_reject_waiver(self):
+        self.waiver.reject("Administrator", "Rejected")
+        doc = frappe.get_doc("Waiver", self.waiver.name)
+        self.assertEqual(doc.status, "Rejected")
+
+    def test_approve_without_approver_fails(self):
+        self.waiver.status = "Approved"
+        with self.assertRaises(frappe.ValidationError):
+            self.waiver.save()
+
+
+class TestSegregationOfDuties(IntegrationTestCase):
+    """GV1: SoD rule validation."""
+
+    def test_same_role_rejected(self):
+        with self.assertRaises(frappe.ValidationError):
+            frappe.get_doc({
+                "doctype": "Segregation of Duties",
+                "role_1": "System Manager",
+                "role_2": "System Manager",
+                "conflict_type": "Create + Approve Same Doc",
+            }).insert(ignore_permissions=True)
+
+
+class TestApprovalDelegation(IntegrationTestCase):
+    """GV6: Delegation validity."""
+
+    def test_cannot_delegate_to_self(self):
+        with self.assertRaises(frappe.ValidationError):
+            frappe.get_doc({
+                "doctype": "Approval Delegation",
+                "delegated_from": "user@test.com",
+                "delegated_to": "user@test.com",
+                "delegation_type": "All Procurement",
+                "start_date": "2025-01-01",
+                "end_date": "2025-01-31",
+            }).insert(ignore_permissions=True)
+
+
+class TestAuditLog(IntegrationTestCase):
+    """TN11-GV5: Immutable audit log with hash chain."""
+
+    def setUp(self):
+        frappe.db.delete("Audit Log", {"tender": "TEST-001"})
+        self.log = frappe.get_doc({
+            "doctype": "Audit Log",
+            "tender": "TEST-001",
+            "user": "admin@test.com",
+            "action": "BID_OPENED",
+            "outcome": "Success",
+        }).insert(ignore_permissions=True)
+
+    def tearDown(self):
+        frappe.db.delete("Audit Log", {"tender": "TEST-001"})
+
+    def test_hash_computed_on_insert(self):
+        self.assertIsNotNone(self.log.record_hash)
+        self.assertEqual(len(self.log.record_hash), 64)
+
+    def test_cannot_modify_audit_log(self):
+        log = frappe.get_doc("Audit Log", self.log.name)
+        log.action = "TAMPERED"
+        with self.assertRaises(frappe.ValidationError):
+            log.save()
                 "shares_distributed": 1,
             }).insert(ignore_permissions=True)

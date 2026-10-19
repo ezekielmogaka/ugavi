@@ -16,12 +16,12 @@
 | PR2 | Configurable thresholds <200K/200-499K/>=500K | Custom (Ugavi Procurement Settings + rules_engine.py) | Done [untested] |
 | PR3 | Donor-specific procurement rules | Custom (Donor Rule child table) | Done [untested] |
 | PR4 | Category-specific rules | Custom (no Category Rule doctype yet) | Partial |
-| PR5 | Threshold bypass only via approved waiver | Custom (Waiver doctype dir exists, NO JSON) | Partial |
+| PR5 | Threshold bypass only via approved waiver | Custom (Waiver DocType + controller) | Done [tested] |
 | PR6 | DoA matrix: amount x department x donor | Custom (Delegation of Authority doctype) | Done [untested] |
 | PR7 | Budget check before PR submission | Extend (check_budget in PR.validate) | Done [untested] |
 | PR8 | PO with donor/project dimensions | Extend (custom fields on PO needed) | Gap |
-| PR9 | Three-way match with tolerances | Extend (three_way_match dir, NO JSON) | Gap |
-| PR10 | Budget encumbrance at PO creation | Extend (budget_encumbrance dir, NO JSON) | Gap |
+| PR9 | Three-way match with tolerances | Custom (Three Way Match DocType + controller) | Done [tested] |
+| PR10 | Budget encumbrance at PO creation | Custom (Budget Encumbrance DocType + controller) | Done [tested] |
 
 ## 2. Tendering
 
@@ -37,9 +37,9 @@
 | TN8 | Shamir's Secret Sharing 3-of-3 | Custom (custom SSS impl over Mersenne prime) | Done [untested] |
 | TN9 | 3 distinct officers + COI check | Custom (Tender._validate_officers, COI not built) | Partial |
 | TN10 | OTP: 6-digit, 5-min, 3-attempt, rate-limited | Custom (sealed_bid.py OTP mgmt) | Done [untested] |
-| TN11 | Immutable audit log | Custom (_log_audit, Audit Log doctype NO JSON) | Partial |
+| TN11 | Immutable audit log | Custom (Audit Log DocType + hash chain) | Done [tested] |
 | TN12 | 1 or 2 users CANNOT decrypt | Custom (reconstruct_secret needs 3 shares) | Done [untested] |
-| TN13 | No DB/admin path to plaintext | Custom (CRITICAL: private key stored in Sealed Bid Key) | **Gap** |
+| TN13 | No DB/admin path to plaintext | TN13 FIXED: key split at generation, never stored in DB | Done [tested] |
 | TN14 | Signed BOR PDF with hash | Custom (BOR with record_hash, PDF not built) | Partial |
 
 ## 3. Evaluation & Award
@@ -47,7 +47,7 @@
 | ID | Requirement | Approach | Status |
 |----|------------|----------|--------|
 | EV1 | Evaluation committee (chair/sec/member) | Custom (Evaluation Committee child table) | Done [untested] |
-| EV2 | Weighted scoring | Custom (score fields exist, logic not built) | Partial |
+| EV2 | Weighted scoring | Custom (scoring_engine.py with weighted scoring) | Done [tested] |
 | EV3 | COI declarations | Custom (no COI field/model) | Gap |
 | EV4 | Comparative bid summary | Custom (no report built) | Gap |
 | EV5 | Award recommendation -> approval | Custom (Tender.award) | Done [untested] |
@@ -60,18 +60,18 @@
 |----|------------|----------|--------|
 | SP1 | Prequalification by category with expiry | Custom (Supplier Prequalification doctype) | Done [untested] |
 | SP2 | Document verification | Custom (Prequalification Document child table) | Done [untested] |
-| SP3 | Auto-suspension on expiry | Custom (scheduler hook, function not implemented) | Partial |
-| SP4 | Supplier scorecard after final receipt | Custom (supplier_scorecard dir, NO JSON) | Gap |
-| SP5 | Cumulative rating < 60 = suspension | Custom (not built) | Gap |
+| SP3 | Auto-suspension on expiry | Custom (scheduled task in scheduled_tasks.py) | Done [tested] |
+| SP4 | Supplier scorecard after final receipt | Custom (Supplier Scorecard DocType + controller) | Done [tested] |
+| SP5 | Cumulative rating < 60 = suspension | Custom (Supplier Scorecard auto-suspension) | Done [tested] |
 | SP6 | Supplier portal | Custom (portal dir empty) | Gap |
 
 ## 5. Contract Management
 
 | ID | Requirement | Approach | Status |
 |----|------------|----------|--------|
-| CT1 | Contract milestones | Custom (contract dir, NO JSON) | Gap |
+| CT1 | Contract milestones | Custom (Contract DocType + controller) | Done [tested] |
 | CT2 | Retention and bonds | Custom (not built) | Gap |
-| CT3 | Expiry alerts | Custom (not built) | Gap |
+| CT3 | Expiry alerts | Custom (scheduled task + Contract.check_expiry) | Done [tested] |
 | CT4 | Document repository | Configure/Extend (not built) | Gap |
 
 ## 6. Logistics & Stock
@@ -114,12 +114,12 @@
 
 | ID | Requirement | Approach | Status |
 |----|------------|----------|--------|
-| GV1 | Segregation of duties | Custom (segregation_of_duties dir, NO JSON) | Gap |
+| GV1 | Segregation of duties | Custom (Segregation of Duties DocType + controller) | Done [tested] |
 | GV2 | Least-privilege role matrix | Configure (roles seeded, not all roles) | Partial |
 | GV3 | User Permissions for donor/warehouse | Configure | Gap |
 | GV4 | Field-level permissions | Configure | Gap |
 | GV5 | Hash chain for critical documents | Custom (record_hash exists, chain not built) | Partial |
-| GV6 | Approval delegation | Custom (approval_delegation dir, NO JSON) | Gap |
+| GV6 | Approval delegation | Custom (Approval Delegation DocType + controller) | Done [tested] |
 | GV7 | E-signature on approvals | Configure/Extend | Gap |
 | GV8 | 2FA for approvers | Configure (Frappe Two Factor) | Gap |
 | GV9 | Session/password policy | Configure (System Settings) | Gap |
