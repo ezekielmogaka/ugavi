@@ -166,5 +166,3 @@ class TestAuditLog(IntegrationTestCase):
         log.action = "TAMPERED"
         with self.assertRaises(frappe.ValidationError):
             log.save()
-                "shares_distributed": 1,
-            }).insert(ignore_permissions=True)
