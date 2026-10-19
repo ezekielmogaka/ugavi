@@ -2,5 +2,5 @@ import frappe
 from frappe.model.document import Document
 
 
-class Donor Rule(Document):
+class DonorRule(Document):
     pass
