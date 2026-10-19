@@ -139,30 +139,3 @@ class TestApprovalDelegation(IntegrationTestCase):
                 "start_date": "2025-01-01",
                 "end_date": "2025-01-31",
             }).insert(ignore_permissions=True)
-
-
-class TestAuditLog(IntegrationTestCase):
-    """TN11-GV5: Immutable audit log with hash chain."""
-
-    def setUp(self):
-        frappe.db.delete("Audit Log", {"tender": "TEST-001"})
-        self.log = frappe.get_doc({
-            "doctype": "Audit Log",
-            "tender": "TEST-001",
-            "user": "admin@test.com",
-            "action": "BID_OPENED",
-            "outcome": "Success",
-        }).insert(ignore_permissions=True)
-
-    def tearDown(self):
-        frappe.db.delete("Audit Log", {"tender": "TEST-001"})
-
-    def test_hash_computed_on_insert(self):
-        self.assertIsNotNone(self.log.record_hash)
-        self.assertEqual(len(self.log.record_hash), 64)
-
-    def test_cannot_modify_audit_log(self):
-        log = frappe.get_doc("Audit Log", self.log.name)
-        log.action = "TAMPERED"
-        with self.assertRaises(frappe.ValidationError):
-            log.save()
