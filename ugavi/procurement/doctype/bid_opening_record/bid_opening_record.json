@@ -1,27 +1,23 @@
 {
- "name": "Bid Opening Record",
- "module": "Procurement",
- "istable": 0,
- "track_changes": 0,
- "custom": 0,
- "naming_rule": "By script",
  "autoname": "BOR-.YYYY.-.####",
+ "custom": 0,
+ "doctype": "DocType",
  "fields": [
   {
    "fieldname": "tender",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Tender",
    "options": "Tender",
-   "reqd": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1
+   "reqd": 1
   },
   {
    "fieldname": "opening_date",
    "fieldtype": "Datetime",
+   "in_list_view": 1,
    "label": "Opening Date",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
    "fieldname": "officer_1",
@@ -45,11 +41,11 @@
    "reqd": 1
   },
   {
+   "default": "Success",
    "fieldname": "outcome",
    "fieldtype": "Select",
    "label": "Outcome",
    "options": "Success\nPartial\nFailed",
-   "default": "Success",
    "reqd": 1
   },
   {
@@ -104,16 +100,39 @@
    "label": "Signed Bid Opening Record (PDF)"
   },
   {
+   "description": "Immutable hash of the opening record",
    "fieldname": "record_hash",
    "fieldtype": "Data",
    "label": "Record Hash (SHA-256)",
-   "read_only": 1,
-   "description": "Immutable hash of the opening record"
+   "read_only": 1
   }
  ],
+ "istable": 0,
+ "module": "Procurement",
+ "name": "Bid Opening Record",
+ "naming_rule": "By script",
  "permissions": [
-  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 0},
-  {"role": "Procurement Officer", "read": 1, "write": 0, "create": 0, "delete": 0},
-  {"role": "Bid Opening Officer", "read": 1, "write": 0, "create": 0, "delete": 0}
- ]
+  {
+   "create": 1,
+   "delete": 0,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "read": 1,
+   "role": "Procurement Officer",
+   "write": 0
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "read": 1,
+   "role": "Bid Opening Officer",
+   "write": 0
+  }
+ ],
+ "track_changes": 0
 }

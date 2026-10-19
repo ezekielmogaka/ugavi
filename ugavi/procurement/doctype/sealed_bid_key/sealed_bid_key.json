@@ -1,9 +1,6 @@
 {
- "name": "Sealed Bid Key",
- "module": "Procurement",
- "istable": 0,
- "track_changes": 0,
  "custom": 0,
+ "doctype": "DocType",
  "fields": [
   {
    "fieldname": "tender",
@@ -65,17 +62,17 @@
    "read_only": 1
   },
   {
+   "default": "0",
    "fieldname": "shares_distributed",
    "fieldtype": "Check",
    "label": "Shares Distributed",
-   "default": "0",
    "read_only": 1
   },
   {
+   "default": "0",
    "fieldname": "key_reconstructed",
    "fieldtype": "Check",
    "label": "Key Reconstructed",
-   "default": "0",
    "read_only": 1
   },
   {
@@ -85,7 +82,17 @@
    "read_only": 1
   }
  ],
+ "istable": 0,
+ "module": "Procurement",
+ "name": "Sealed Bid Key",
  "permissions": [
-  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 0}
- ]
+  {
+   "create": 1,
+   "delete": 0,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "track_changes": 0
 }

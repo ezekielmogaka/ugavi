@@ -1,10 +1,6 @@
 {
- "name": "Ugavi Procurement Settings",
- "module": "Procurement",
- "issingle": 1,
- "istable": 0,
- "track_changes": 0,
  "custom": 0,
+ "doctype": "DocType",
  "fields": [
   {
    "fieldname": "section_thresholds",
@@ -12,30 +8,30 @@
    "label": "Procurement Method Thresholds"
   },
   {
+   "default": "200000",
+   "description": "Values below this use Direct/RFQ method",
    "fieldname": "direct_threshold",
    "fieldtype": "Currency",
-   "label": "Direct Purchase (RFQ) Threshold",
-   "description": "Values below this use Direct/RFQ method",
-   "default": "200000",
    "in_list_view": 1,
+   "label": "Direct Purchase (RFQ) Threshold",
    "reqd": 1
   },
   {
+   "default": "500000",
+   "description": "Values from direct_threshold up to this use Restricted Tender",
    "fieldname": "restricted_threshold",
    "fieldtype": "Currency",
-   "label": "Restricted Tender Threshold",
-   "description": "Values from direct_threshold up to this use Restricted Tender",
-   "default": "500000",
    "in_list_view": 1,
+   "label": "Restricted Tender Threshold",
    "reqd": 1
   },
   {
+   "default": "500000",
+   "description": "Values at or above this use Open Tender",
    "fieldname": "open_threshold",
    "fieldtype": "Currency",
-   "label": "Open Tender Minimum",
-   "description": "Values at or above this use Open Tender",
-   "default": "500000",
    "in_list_view": 1,
+   "label": "Open Tender Minimum",
    "reqd": 1
   },
   {
@@ -44,37 +40,37 @@
    "label": "Governance & Controls"
   },
   {
+   "default": "1",
    "fieldname": "enforce_donor_rules",
    "fieldtype": "Check",
-   "label": "Enforce Donor-Specific Rules",
-   "default": "1"
+   "label": "Enforce Donor-Specific Rules"
   },
   {
+   "default": "1",
+   "description": "Any manual override of procurement method requires an approved Waiver",
    "fieldname": "require_waiver_for_override",
    "fieldtype": "Check",
-   "label": "Require Waiver for Method Override",
-   "description": "Any manual override of procurement method requires an approved Waiver",
-   "default": "1"
+   "label": "Require Waiver for Method Override"
   },
   {
+   "default": "1",
+   "description": "Encrypt bids; require 3-officer opening for tenders",
    "fieldname": "sealed_bid_enabled",
    "fieldtype": "Check",
-   "label": "Enable Sealed Bids",
-   "description": "Encrypt bids; require 3-officer opening for tenders",
-   "default": "1"
+   "label": "Enable Sealed Bids"
   },
   {
+   "default": "5",
    "fieldname": "otp_expiry_minutes",
    "fieldtype": "Int",
    "label": "OTP Expiry (minutes)",
-   "default": "5",
    "reqd": 1
   },
   {
+   "default": "3",
    "fieldname": "max_otp_attempts",
    "fieldtype": "Int",
    "label": "Max OTP Attempts",
-   "default": "3",
    "reqd": 1
   },
   {
@@ -83,18 +79,18 @@
    "label": "Defaults"
   },
   {
+   "default": "KES",
    "fieldname": "default_currency",
    "fieldtype": "Link",
    "label": "Default Currency",
-   "options": "Currency",
-   "default": "KES"
+   "options": "Currency"
   },
   {
+   "description": "Fallback when no DoA rule matches",
    "fieldname": "default_approver_role",
    "fieldtype": "Link",
    "label": "Default Approver Role",
-   "options": "Role",
-   "description": "Fallback when no DoA rule matches"
+   "options": "Role"
   },
   {
    "fieldname": "default_company",
@@ -103,10 +99,18 @@
    "options": "Company"
   }
  ],
+ "issingle": 1,
+ "istable": 0,
+ "module": "Procurement",
+ "name": "Ugavi Procurement Settings",
  "permissions": [
   {
+   "create": 1,
+   "delete": 0,
+   "read": 1,
    "role": "System Manager",
-   "read": 1, "write": 1, "create": 1, "delete": 0
+   "write": 1
   }
- ]
+ ],
+ "track_changes": 0
 }

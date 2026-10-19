@@ -1,21 +1,19 @@
 {
- "name": "Addendum",
- "module": "Tendering",
- "istable": 1,
  "custom": 0,
+ "doctype": "DocType",
  "fields": [
   {
    "fieldname": "addendum_number",
    "fieldtype": "Int",
-   "label": "Addendum #",
    "in_list_view": 1,
+   "label": "Addendum #",
    "reqd": 1
   },
   {
    "fieldname": "title",
    "fieldtype": "Data",
-   "label": "Title",
    "in_list_view": 1,
+   "label": "Title",
    "reqd": 1
   },
   {
@@ -41,11 +39,14 @@
    "label": "Extends Submission Deadline"
   },
   {
+   "depends_on": "eval:doc.extends_deadline",
    "fieldname": "new_deadline",
    "fieldtype": "Datetime",
-   "label": "New Deadline",
-   "depends_on": "eval:doc.extends_deadline"
+   "label": "New Deadline"
   }
  ],
+ "istable": 1,
+ "module": "Tendering",
+ "name": "Addendum",
  "permissions": []
 }

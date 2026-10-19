@@ -1,30 +1,24 @@
 {
- "name": "Purchase Requisition",
- "module": "Procurement",
- "istable": 0,
- "track_changes": 1,
- "track_seen": 1,
- "track_views": 1,
- "custom": 0,
- "naming_rule": "By script",
  "autoname": "PR-.YYYY.-.####",
+ "custom": 0,
+ "doctype": "DocType",
  "fields": [
   {
    "fieldname": "title",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Title",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
+   "default": "Draft",
    "fieldname": "status",
    "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Status",
    "options": "Draft\nPending Approval\nApproved\nRejected\nCancelled\nConverted to Tender\nConverted to PO",
-   "default": "Draft",
-   "in_list_view": 1,
-   "reqd": 1,
-   "in_standard_filter": 1
+   "reqd": 1
   },
   {
    "fieldname": "section_requester",
@@ -32,20 +26,20 @@
    "label": "Requester Information"
   },
   {
+   "default": "__user",
    "fieldname": "requester",
    "fieldtype": "Link",
    "label": "Requester",
    "options": "User",
-   "default": "__user",
    "reqd": 1
   },
   {
    "fieldname": "department",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Department",
    "options": "Department",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
    "fieldname": "section_funding",
@@ -55,17 +49,17 @@
   {
    "fieldname": "donor",
    "fieldtype": "Link",
+   "in_standard_filter": 1,
    "label": "Donor",
    "options": "Donor Profile",
-   "reqd": 1,
-   "in_standard_filter": 1
+   "reqd": 1
   },
   {
    "fieldname": "project",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Project",
-   "options": "Project",
-   "in_list_view": 1
+   "options": "Project"
   },
   {
    "fieldname": "cost_center",
@@ -93,18 +87,18 @@
   {
    "fieldname": "estimated_value",
    "fieldtype": "Currency",
+   "in_list_view": 1,
    "label": "Estimated Total Value",
-   "read_only": 1,
-   "in_list_view": 1
+   "read_only": 1
   },
   {
    "fieldname": "procurement_method",
    "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Procurement Method",
    "options": "Request for Quotation (Direct)\nRestricted Tender\nOpen Tender\nSingle Source",
-   "read_only": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1
+   "read_only": 1
   },
   {
    "fieldname": "item_category",
@@ -118,11 +112,11 @@
    "label": "Approval & Budget"
   },
   {
+   "description": "Determined by Delegation of Authority matrix",
    "fieldname": "approval_chain",
    "fieldtype": "Small Text",
    "label": "Approval Chain",
-   "read_only": 1,
-   "description": "Determined by Delegation of Authority matrix"
+   "read_only": 1
   },
   {
    "fieldname": "budget_status",
@@ -131,18 +125,18 @@
    "read_only": 1
   },
   {
+   "description": "Set if procurement method was overridden",
    "fieldname": "waiver_required",
    "fieldtype": "Check",
    "label": "Waiver Required",
-   "read_only": 1,
-   "description": "Set if procurement method was overridden"
+   "read_only": 1
   },
   {
+   "depends_on": "eval:doc.waiver_required",
    "fieldname": "waiver_reference",
    "fieldtype": "Link",
    "label": "Waiver Reference",
-   "options": "Waiver",
-   "depends_on": "eval:doc.waiver_required"
+   "options": "Waiver"
   },
   {
    "fieldname": "section_notes",
@@ -156,10 +150,41 @@
    "reqd": 1
   }
  ],
+ "istable": 0,
+ "module": "Procurement",
+ "name": "Purchase Requisition",
+ "naming_rule": "By script",
  "permissions": [
-  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 0},
-  {"role": "Procurement Officer", "read": 1, "write": 1, "create": 1, "delete": 0},
-  {"role": "Approver Level 1", "read": 1, "write": 1, "create": 0, "delete": 0},
-  {"role": "Approver Level 2", "read": 1, "write": 1, "create": 0, "delete": 0}
- ]
+  {
+   "create": 1,
+   "delete": 0,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "read": 1,
+   "role": "Procurement Officer",
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "read": 1,
+   "role": "Approver Level 1",
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "read": 1,
+   "role": "Approver Level 2",
+   "write": 1
+  }
+ ],
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1
 }

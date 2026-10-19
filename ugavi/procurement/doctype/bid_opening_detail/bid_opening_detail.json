@@ -1,15 +1,13 @@
 {
- "name": "Bid Opening Detail",
- "module": "Procurement",
- "istable": 1,
  "custom": 0,
+ "doctype": "DocType",
  "fields": [
   {
    "fieldname": "bid",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Bid",
    "options": "Bid",
-   "in_list_view": 1,
    "reqd": 1
   },
   {
@@ -32,10 +30,10 @@
    "read_only": 1
   },
   {
+   "default": "1",
    "fieldname": "opened_successfully",
    "fieldtype": "Check",
-   "label": "Opened Successfully",
-   "default": "1"
+   "label": "Opened Successfully"
   },
   {
    "fieldname": "notes",
@@ -43,5 +41,8 @@
    "label": "Notes"
   }
  ],
+ "istable": 1,
+ "module": "Procurement",
+ "name": "Bid Opening Detail",
  "permissions": []
 }

@@ -1,33 +1,28 @@
 {
- "name": "Donor Profile",
- "module": "Compliance",
- "istable": 0,
- "track_changes": 1,
- "track_seen": 1,
- "track_views": 1,
  "custom": 0,
+ "doctype": "DocType",
  "fields": [
   {
    "fieldname": "donor_name",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Donor Name",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
    "fieldname": "donor_code",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Donor Code",
    "reqd": 1,
-   "unique": 1,
-   "in_list_view": 1
+   "unique": 1
   },
   {
+   "default": "1",
    "fieldname": "enabled",
    "fieldtype": "Check",
-   "label": "Active",
-   "default": "1",
-   "in_list_view": 1
+   "in_list_view": 1,
+   "label": "Active"
   },
   {
    "fieldname": "section_rules",
@@ -46,17 +41,17 @@
    "label": "Financial"
   },
   {
+   "default": "KES",
    "fieldname": "currency",
    "fieldtype": "Link",
    "label": "Currency",
-   "options": "Currency",
-   "default": "KES"
+   "options": "Currency"
   },
   {
+   "description": "For donor-segregated reporting",
    "fieldname": "accounting_dimension",
    "fieldtype": "Data",
-   "label": "Accounting Dimension",
-   "description": "For donor-segregated reporting"
+   "label": "Accounting Dimension"
   },
   {
    "fieldname": "section_control",
@@ -64,23 +59,23 @@
    "label": "Controls"
   },
   {
+   "default": "1",
+   "description": "Stock must be tracked separately for this donor",
    "fieldname": "require_segregated_stock",
    "fieldtype": "Check",
-   "label": "Require Segregated Stock",
-   "default": "1",
-   "description": "Stock must be tracked separately for this donor"
+   "label": "Require Segregated Stock"
   },
   {
+   "default": "0",
    "fieldname": "require_segregated_assets",
    "fieldtype": "Check",
-   "label": "Require Segregated Assets",
-   "default": "0"
+   "label": "Require Segregated Assets"
   },
   {
+   "description": "Items above this value become tracked assets",
    "fieldname": "max_asset_value",
    "fieldtype": "Currency",
-   "label": "Max Asset Value",
-   "description": "Items above this value become tracked assets"
+   "label": "Max Asset Value"
   },
   {
    "fieldname": "section_reporting",
@@ -104,7 +99,19 @@
    "label": "Donor Contact Email"
   }
  ],
+ "istable": 0,
+ "module": "Compliance",
+ "name": "Donor Profile",
  "permissions": [
-  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 0}
- ]
+  {
+   "create": 1,
+   "delete": 0,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1
 }

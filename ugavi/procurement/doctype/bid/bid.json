@@ -1,59 +1,53 @@
 {
- "name": "Bid",
- "module": "Procurement",
- "istable": 0,
- "track_changes": 1,
- "track_seen": 1,
- "track_views": 1,
- "custom": 0,
- "naming_rule": "By script",
  "autoname": "BID-.YYYY.-.####",
+ "custom": 0,
+ "doctype": "DocType",
  "fields": [
   {
    "fieldname": "tender",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Tender",
    "options": "Tender",
-   "reqd": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1
+   "reqd": 1
   },
   {
    "fieldname": "supplier",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Supplier",
    "options": "Supplier",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
+   "default": "Draft",
    "fieldname": "status",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "label": "Status",
    "options": "Draft\nSubmitted\nLate\nWithdrawn\nOpened\nEvaluated\nAccepted\nRejected",
-   "default": "Draft",
-   "in_list_view": 1,
    "reqd": 1
   },
   {
    "fieldname": "submission_date",
    "fieldtype": "Datetime",
-   "label": "Submission Date",
    "in_list_view": 1,
+   "label": "Submission Date",
    "read_only": 1
   },
   {
+   "depends_on": "eval:doc.status == 'Submitted'",
    "fieldname": "section_encrypted",
    "fieldtype": "Section Break",
-   "label": "Encrypted Bid Content",
-   "depends_on": "eval:doc.status == 'Submitted'"
+   "label": "Encrypted Bid Content"
   },
   {
+   "description": "RSA-encrypted AES key",
    "fieldname": "encrypted_key",
    "fieldtype": "Long Text",
    "label": "Encrypted AES Key",
-   "read_only": 1,
-   "description": "RSA-encrypted AES key"
+   "read_only": 1
   },
   {
    "fieldname": "nonce",
@@ -68,10 +62,10 @@
    "read_only": 1
   },
   {
+   "depends_on": "eval:doc.status == 'Opened' || doc.status == 'Evaluated'",
    "fieldname": "section_evaluation",
    "fieldtype": "Section Break",
-   "label": "Evaluation",
-   "depends_on": "eval:doc.status == 'Opened' || doc.status == 'Evaluated'"
+   "label": "Evaluation"
   },
   {
    "fieldname": "bidder_name",
@@ -92,34 +86,59 @@
    "read_only": 1
   },
   {
+   "depends_on": "eval:doc.status == 'Evaluated'",
    "fieldname": "technical_score",
    "fieldtype": "Float",
-   "label": "Technical Score",
-   "depends_on": "eval:doc.status == 'Evaluated'"
+   "label": "Technical Score"
   },
   {
+   "depends_on": "eval:doc.status == 'Evaluated'",
    "fieldname": "financial_score",
    "fieldtype": "Float",
-   "label": "Financial Score",
-   "depends_on": "eval:doc.status == 'Evaluated'"
+   "label": "Financial Score"
   },
   {
+   "depends_on": "eval:doc.status == 'Evaluated'",
    "fieldname": "total_score",
    "fieldtype": "Float",
    "label": "Total Score",
-   "read_only": 1,
-   "depends_on": "eval:doc.status == 'Evaluated'"
+   "read_only": 1
   },
   {
+   "depends_on": "eval:doc.status == 'Evaluated'",
    "fieldname": "evaluation_notes",
    "fieldtype": "Small Text",
-   "label": "Evaluation Notes",
-   "depends_on": "eval:doc.status == 'Evaluated'"
+   "label": "Evaluation Notes"
   }
  ],
+ "istable": 0,
+ "module": "Procurement",
+ "name": "Bid",
+ "naming_rule": "By script",
  "permissions": [
-  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 0},
-  {"role": "Procurement Officer", "read": 1, "write": 1, "create": 1, "delete": 0},
-  {"role": "Supplier", "read": 1, "write": 1, "create": 1, "delete": 0}
- ]
+  {
+   "create": 1,
+   "delete": 0,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "read": 1,
+   "role": "Procurement Officer",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "read": 1,
+   "role": "Supplier",
+   "write": 1
+  }
+ ],
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1
 }

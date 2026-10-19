@@ -1,35 +1,30 @@
 {
- "name": "Delegation of Authority",
- "module": "Procurement",
- "istable": 0,
- "track_changes": 1,
- "track_seen": 1,
- "track_views": 1,
  "custom": 0,
+ "doctype": "DocType",
  "fields": [
   {
+   "default": "1",
    "fieldname": "enabled",
    "fieldtype": "Check",
-   "label": "Enabled",
-   "default": "1",
-   "in_list_view": 1
+   "in_list_view": 1,
+   "label": "Enabled"
   },
   {
    "fieldname": "department",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Department",
    "options": "Department",
-   "reqd": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1
+   "reqd": 1
   },
   {
    "fieldname": "donor",
    "fieldtype": "Link",
-   "label": "Donor",
-   "options": "Donor Profile",
    "in_list_view": 1,
-   "in_standard_filter": 1
+   "in_standard_filter": 1,
+   "label": "Donor",
+   "options": "Donor Profile"
   },
   {
    "fieldname": "section_threshold",
@@ -37,18 +32,18 @@
    "label": "Amount Threshold"
   },
   {
+   "default": "0",
    "fieldname": "min_amount",
    "fieldtype": "Currency",
+   "in_list_view": 1,
    "label": "Minimum Amount",
-   "default": "0",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
+   "description": "Leave blank for no upper limit",
    "fieldname": "max_amount",
    "fieldtype": "Currency",
-   "label": "Maximum Amount",
-   "description": "Leave blank for no upper limit"
+   "label": "Maximum Amount"
   },
   {
    "fieldname": "section_approver",
@@ -56,27 +51,27 @@
    "label": "Approver"
   },
   {
+   "description": "1=first, 2=second, etc. Higher levels after lower.",
    "fieldname": "approval_level",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Approval Level",
-   "description": "1=first, 2=second, etc. Higher levels after lower.",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
    "fieldname": "approver_role",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Approver Role",
    "options": "Role",
-   "reqd": 1,
-   "in_list_view": 1
+   "reqd": 1
   },
   {
+   "description": "Optional: override role with specific user",
    "fieldname": "approver_user",
    "fieldtype": "Link",
    "label": "Specific Approver",
-   "options": "User",
-   "description": "Optional: override role with specific user"
+   "options": "User"
   },
   {
    "fieldname": "section_project",
@@ -96,13 +91,25 @@
    "reqd": 1
   },
   {
+   "description": "Leave blank for indefinite",
    "fieldname": "effective_to",
    "fieldtype": "Date",
-   "label": "Effective To",
-   "description": "Leave blank for indefinite"
+   "label": "Effective To"
   }
  ],
+ "istable": 0,
+ "module": "Procurement",
+ "name": "Delegation of Authority",
  "permissions": [
-  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1}
- ]
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1
 }
