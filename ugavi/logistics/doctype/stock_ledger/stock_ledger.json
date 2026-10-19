@@ -1,0 +1,38 @@
+{
+ "custom": 0,
+ "doctype": "DocType",
+ "fields": [
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "opening_qty",
+   "fieldtype": "Float",
+   "label": "Opening Qty"
+  },
+  {
+   "fieldname": "closing_qty",
+   "fieldtype": "Float",
+   "label": "Closing Qty"
+  },
+  {
+   "fieldname": "total_value",
+   "fieldtype": "Currency",
+   "label": "Total Value"
+  },
+  {
+   "fieldname": "donor",
+   "fieldtype": "Link",
+   "label": "Donor",
+   "options": "Donor Profile"
+  }
+ ],
+ "istable": 1,
+ "module": "Logistics",
+ "name": "Stock Ledger",
+ "track_changes": 0
+}

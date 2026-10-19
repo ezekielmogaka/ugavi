@@ -1,0 +1,39 @@
+{
+ "custom": 0,
+ "doctype": "DocType",
+ "fields": [
+  {
+   "fieldname": "milestone_name",
+   "fieldtype": "Data",
+   "label": "Milestone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount"
+  },
+  {
+   "fieldname": "completed",
+   "fieldtype": "Check",
+   "label": "Completed",
+   "default": "0"
+  },
+  {
+   "fieldname": "completed_date",
+   "fieldtype": "Date",
+   "label": "Completed Date",
+   "depends_on": "eval:doc.completed"
+  }
+ ],
+ "istable": 1,
+ "module": "Procurement",
+ "name": "Contract Milestone",
+ "track_changes": 0
+}

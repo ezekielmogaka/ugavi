@@ -241,7 +241,7 @@ def _log_audit(tender_id: str, user: str, action: str, outcome: str):
     try:
         ip = frappe.local.request_ip if hasattr(frappe.local, "request_ip") else "N/A"
         frappe.get_doc({
-            "doctype": "Bid Opening Audit Log",
+            "doctype": "Audit Log",
             "tender": tender_id, "user": user,
             "action": action, "outcome": outcome,
             "ip_address": ip, "timestamp": datetime.now(),

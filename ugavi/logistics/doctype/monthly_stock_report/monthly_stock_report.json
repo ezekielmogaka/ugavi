@@ -1,0 +1,49 @@
+{
+ "custom": 0,
+ "doctype": "DocType",
+ "fields": [
+  {
+   "fieldname": "report_month",
+   "fieldtype": "Date",
+   "label": "Report Month",
+   "reqd": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "donor",
+   "fieldtype": "Link",
+   "label": "Donor",
+   "options": "Donor Profile"
+  },
+  {
+   "fieldname": "generated_at",
+   "fieldtype": "Datetime",
+   "label": "Generated At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sent_to",
+   "fieldtype": "Data",
+   "label": "Emailed To"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Stock Summary",
+   "options": "Stock Ledger"
+  }
+ ],
+ "istable": 0,
+ "module": "Logistics",
+ "name": "Monthly Stock Report",
+ "permissions": [
+  {"create": 1, "delete": 0, "read": 1, "role": "System Manager", "write": 1},
+  {"create": 1, "delete": 0, "read": 1, "role": "Stock Manager", "write": 1}
+ ],
+ "track_changes": 0
+}

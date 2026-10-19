@@ -1,0 +1,53 @@
+{
+ "custom": 0,
+ "doctype": "DocType",
+ "fields": [
+  {
+   "fieldname": "purchase_order",
+   "fieldtype": "Link",
+   "label": "Purchase Order",
+   "options": "Purchase Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "budget",
+   "fieldtype": "Link",
+   "label": "Budget",
+   "options": "Budget",
+   "reqd": 1
+  },
+  {
+   "fieldname": "encumbered_amount",
+   "fieldtype": "Currency",
+   "label": "Encumbered Amount",
+   "reqd": 1
+  },
+  {
+   "fieldname": "donor",
+   "fieldtype": "Link",
+   "label": "Donor",
+   "options": "Donor Profile"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nReleased\nReversed",
+   "default": "Active",
+   "reqd": 1
+  },
+  {
+   "fieldname": "released_date",
+   "fieldtype": "Date",
+   "label": "Released Date",
+   "read_only": 1
+  }
+ ],
+ "istable": 0,
+ "module": "Compliance",
+ "name": "Budget Encumbrance",
+ "permissions": [
+  {"create": 1, "delete": 0, "read": 1, "role": "System Manager", "write": 1}
+ ],
+ "track_changes": 1
+}
