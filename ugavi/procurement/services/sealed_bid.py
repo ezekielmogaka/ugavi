@@ -50,6 +50,10 @@ def reconstruct_secret(shares: List[Tuple[int, int]]) -> int:
                 num = (num * (-xj)) % PRIME
                 den = (den * (xi - xj)) % PRIME
         inv_den = pow(den, PRIME - 2, PRIME)
+        secret = (secret + yi * num * inv_den) % PRIME
+    return secret
+
+
 # ---- Key Generation & Encryption ----
 
 def generate_tender_keypair():
@@ -188,5 +192,3 @@ def _send_otp_email(email: str, otp: str, tender_id: str):
         )
     except Exception as e:
         frappe.log_error(f"OTP email: {e}", "SealedBid")
-        secret = (secret + yi * num * inv_den) % PRIME
-    return secret
