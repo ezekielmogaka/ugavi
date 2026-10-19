@@ -78,6 +78,10 @@ class TestKeyDistribution(IntegrationTestCase):
                 "share_1_user": "user1@test.com", "share_1_data": "d1",
                 "share_2_user": "user2@test.com", "share_2_data": "d2",
                 "share_3_user": "user1@test.com", "share_3_data": "d3",
+                "shares_distributed": 1,
+            }).insert(ignore_permissions=True)
+
+
 class TestWaiverWorkflow(IntegrationTestCase):
     """PR5: Waiver approval workflow."""
 
