@@ -35,10 +35,16 @@ doc_events = {
 scheduler_events = {
     "daily": [
         "ugavi.procurement.services.rules_engine.check_expiring_prequalifications",
+        "ugavi.scripts.scheduled_tasks.check_contract_expiry",
     ],
     "monthly": [
-        "ugavi.logistics.services.stock_report.generate_monthly_reports",
+        "ugavi.scripts.scheduled_tasks.generate_monthly_stock_reports",
     ],
+    "cron": {
+        "0 3 1,15 * *": [
+            "ugavi.scripts.scheduled_tasks.check_supplier_suspension",
+        ],
+    },
 }
 
 # Fixtures to install on app install
