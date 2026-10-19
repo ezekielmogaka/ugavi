@@ -1,0 +1,165 @@
+{
+ "name": "Purchase Requisition",
+ "module": "Procurement",
+ "istable": 0,
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1,
+ "custom": 0,
+ "naming_rule": "By script",
+ "autoname": "PR-.YYYY.-.####",
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nPending Approval\nApproved\nRejected\nCancelled\nConverted to Tender\nConverted to PO",
+   "default": "Draft",
+   "in_list_view": 1,
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "section_requester",
+   "fieldtype": "Section Break",
+   "label": "Requester Information"
+  },
+  {
+   "fieldname": "requester",
+   "fieldtype": "Link",
+   "label": "Requester",
+   "options": "User",
+   "default": "__user",
+   "reqd": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "section_funding",
+   "fieldtype": "Section Break",
+   "label": "Funding & Donor"
+  },
+  {
+   "fieldname": "donor",
+   "fieldtype": "Link",
+   "label": "Donor",
+   "options": "Donor Profile",
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "section_items",
+   "fieldtype": "Section Break",
+   "label": "Requisition Items"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "PR Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_procurement",
+   "fieldtype": "Section Break",
+   "label": "Procurement Details"
+  },
+  {
+   "fieldname": "estimated_value",
+   "fieldtype": "Currency",
+   "label": "Estimated Total Value",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "procurement_method",
+   "fieldtype": "Select",
+   "label": "Procurement Method",
+   "options": "Request for Quotation (Direct)\nRestricted Tender\nOpen Tender\nSingle Source",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "item_category",
+   "fieldtype": "Link",
+   "label": "Item Category",
+   "options": "Item Group"
+  },
+  {
+   "fieldname": "section_approval",
+   "fieldtype": "Section Break",
+   "label": "Approval & Budget"
+  },
+  {
+   "fieldname": "approval_chain",
+   "fieldtype": "Small Text",
+   "label": "Approval Chain",
+   "read_only": 1,
+   "description": "Determined by Delegation of Authority matrix"
+  },
+  {
+   "fieldname": "budget_status",
+   "fieldtype": "Data",
+   "label": "Budget Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "waiver_required",
+   "fieldtype": "Check",
+   "label": "Waiver Required",
+   "read_only": 1,
+   "description": "Set if procurement method was overridden"
+  },
+  {
+   "fieldname": "waiver_reference",
+   "fieldtype": "Link",
+   "label": "Waiver Reference",
+   "options": "Waiver",
+   "depends_on": "eval:doc.waiver_required"
+  },
+  {
+   "fieldname": "section_notes",
+   "fieldtype": "Section Break",
+   "label": "Justification & Notes"
+  },
+  {
+   "fieldname": "justification",
+   "fieldtype": "Text Editor",
+   "label": "Business Justification",
+   "reqd": 1
+  }
+ ],
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 0},
+  {"role": "Procurement Officer", "read": 1, "write": 1, "create": 1, "delete": 0},
+  {"role": "Approver Level 1", "read": 1, "write": 1, "create": 0, "delete": 0},
+  {"role": "Approver Level 2", "read": 1, "write": 1, "create": 0, "delete": 0}
+ ]
+}

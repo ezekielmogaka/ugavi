@@ -12,6 +12,8 @@ def run():
     create_warehouses()
     create_items()
     create_demo_users()
+    create_donor_profiles()
+    setup_procurement_settings()
     frappe.db.commit()
     print("Ugavi seed data complete!")
 
@@ -136,6 +138,41 @@ def create_demo_users():
             frappe.get_doc({
                 "doctype": "User", "email": email, "first_name": first,
                 "last_name": last, "send_welcome_email": 0, "enabled": 1,
+def create_donor_profiles():
+    """Create donor profiles for procurement tracking."""
+    donors = [
+        {"donor_name": "USAID Kenya", "donor_code": "USAID-KE",
+         "currency": "KES", "require_segregated_stock": 1},
+        {"donor_name": "The Global Fund", "donor_code": "GFATM",
+         "currency": "KES", "require_segregated_stock": 1},
+        {"donor_name": "DFID / FCDO", "donor_code": "FCDO",
+         "currency": "KES", "require_segregated_stock": 1},
+    ]
+    for d in donors:
+        if not frappe.db.exists("Donor Profile", {"donor_code": d["donor_code"]}):
+            frappe.get_doc({"doctype": "Donor Profile", **d}).insert(ignore_permissions=True)
+    print(f"  Created {len(donors)} donor profiles")
+
+
+def setup_procurement_settings():
+    """Seed Ugavi Procurement Settings with default thresholds."""
+    if frappe.db.exists("Ugavi Procurement Settings", "Ugavi Procurement Settings"):
+        print("  Procurement settings already exist")
+        return
+    settings = frappe.get_doc({
+        "doctype": "Ugavi Procurement Settings",
+        "direct_threshold": 200000,
+        "restricted_threshold": 500000,
+        "open_threshold": 500000,
+        "enforce_donor_rules": 1,
+        "require_waiver_for_override": 1,
+        "sealed_bid_enabled": 1,
+        "otp_expiry_minutes": 5,
+        "max_otp_attempts": 3,
+        "default_currency": "KES",
+    })
+    settings.insert(ignore_permissions=True)
+    print("  Procurement settings seeded")
             }).insert(ignore_permissions=True)
     frappe.db.commit()
     print(f"  Created {len(users)} demo users")

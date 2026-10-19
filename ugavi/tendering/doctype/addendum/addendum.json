@@ -1,0 +1,51 @@
+{
+ "name": "Addendum",
+ "module": "Tendering",
+ "istable": 1,
+ "custom": 0,
+ "fields": [
+  {
+   "fieldname": "addendum_number",
+   "fieldtype": "Int",
+   "label": "Addendum #",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "issue_date",
+   "fieldtype": "Date",
+   "label": "Issue Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "attachment",
+   "fieldtype": "Attach",
+   "label": "Attachment"
+  },
+  {
+   "fieldname": "extends_deadline",
+   "fieldtype": "Check",
+   "label": "Extends Submission Deadline"
+  },
+  {
+   "fieldname": "new_deadline",
+   "fieldtype": "Datetime",
+   "label": "New Deadline",
+   "depends_on": "eval:doc.extends_deadline"
+  }
+ ],
+ "permissions": []
+}

@@ -1,0 +1,31 @@
+{
+ "name": "Evaluation Committee",
+ "module": "Procurement",
+ "istable": 1,
+ "custom": 0,
+ "fields": [
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "Committee Member",
+   "options": "User",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "role",
+   "fieldtype": "Select",
+   "label": "Role",
+   "options": "Chairperson\nSecretary\nMember",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "read_only": 1
+  }
+ ],
+ "permissions": []
+}

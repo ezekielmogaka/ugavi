@@ -1,0 +1,122 @@
+{
+ "name": "Supplier Prequalification",
+ "module": "Procurement",
+ "istable": 0,
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1,
+ "custom": 0,
+ "fields": [
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": "Supplier",
+   "options": "Supplier",
+   "in_list_view": 1,
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Prequalification Status",
+   "options": "Draft\nUnder Review\nPrequalified\nSuspended\nExpired\nBlacklisted",
+   "default": "Draft",
+   "in_list_view": 1,
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "section_category",
+   "fieldtype": "Section Break",
+   "label": "Categories & Scope"
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Link",
+   "label": "Category",
+   "options": "Item Group",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "prequalification_categories",
+   "fieldtype": "Table MultiSelect",
+   "label": "Additional Categories",
+   "options": "Prequalification Category",
+   "description": "Supplier may be prequalified for multiple categories"
+  },
+  {
+   "fieldname": "section_period",
+   "fieldtype": "Section Break",
+   "label": "Validity Period"
+  },
+  {
+   "fieldname": "prequalification_date",
+   "fieldtype": "Date",
+   "label": "Prequalification Date",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "expiry_date",
+   "fieldtype": "Date",
+   "label": "Expiry Date",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_documents",
+   "fieldtype": "Section Break",
+   "label": "Supporting Documents"
+  },
+  {
+   "fieldname": "documents",
+   "fieldtype": "Table",
+   "label": "Documents",
+   "options": "Prequalification Document",
+   "description": "Registration certificate, tax compliance, references, etc."
+  },
+  {
+   "fieldname": "section_review",
+   "fieldtype": "Section Break",
+   "label": "Review & Approval"
+  },
+  {
+   "fieldname": "reviewed_by",
+   "fieldtype": "Link",
+   "label": "Reviewed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "review_comments",
+   "fieldtype": "Small Text",
+   "label": "Review Comments"
+  },
+  {
+   "fieldname": "section_suspension",
+   "fieldtype": "Section Break",
+   "label": "Suspension / Blacklist",
+   "depends_on": "eval:doc.status == 'Suspended' || doc.status == 'Blacklisted'"
+  },
+  {
+   "fieldname": "suspension_reason",
+   "fieldtype": "Small Text",
+   "label": "Reason"
+  },
+  {
+   "fieldname": "suspension_date",
+   "fieldtype": "Date",
+   "label": "Suspension Date"
+  },
+  {
+   "fieldname": "reinstatement_date",
+   "fieldtype": "Date",
+   "label": "Reinstatement Date"
+  }
+ ],
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 0},
+  {"role": "Procurement Officer", "read": 1, "write": 1, "create": 1, "delete": 0}
+ ]
+}

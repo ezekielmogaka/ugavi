@@ -1,0 +1,213 @@
+{
+ "name": "Tender",
+ "module": "Tendering",
+ "istable": 0,
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1,
+ "custom": 0,
+ "naming_rule": "By script",
+ "autoname": "TND-.YYYY.-.####",
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Tender Title",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nPublished\nBids Received\nUnder Evaluation\nAwarded\nCancelled\nClosed",
+   "default": "Draft",
+   "in_list_view": 1,
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "section_source",
+   "fieldtype": "Section Break",
+   "label": "Source"
+  },
+  {
+   "fieldname": "purchase_requisition",
+   "fieldtype": "Link",
+   "label": "Purchase Requisition",
+   "options": "Purchase Requisition",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "donor",
+   "fieldtype": "Link",
+   "label": "Donor",
+   "options": "Donor Profile",
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "section_procurement",
+   "fieldtype": "Section Break",
+   "label": "Procurement Details"
+  },
+  {
+   "fieldname": "procurement_method",
+   "fieldtype": "Select",
+   "label": "Procurement Method",
+   "options": "Request for Quotation (Direct)\nRestricted Tender\nOpen Tender\nSingle Source",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "estimated_value",
+   "fieldtype": "Currency",
+   "label": "Estimated Value",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "item_category",
+   "fieldtype": "Link",
+   "label": "Category",
+   "options": "Item Group"
+  },
+  {
+   "fieldname": "section_timeline",
+   "fieldtype": "Section Break",
+   "label": "Timeline"
+  },
+  {
+   "fieldname": "publish_date",
+   "fieldtype": "Date",
+   "label": "Publish Date",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "submission_deadline",
+   "fieldtype": "Datetime",
+   "label": "Submission Deadline",
+   "reqd": 1
+  },
+  {
+   "fieldname": "bid_opening_date",
+   "fieldtype": "Datetime",
+   "label": "Bid Opening Date",
+   "description": "Auto-set to deadline; override for manual opening"
+  },
+  {
+   "fieldname": "section_documents",
+   "fieldtype": "Section Break",
+   "label": "Tender Documents"
+  },
+  {
+   "fieldname": "tender_documents",
+   "fieldtype": "Table",
+   "label": "Documents",
+   "options": "Tender Document"
+  },
+  {
+   "fieldname": "addenda",
+   "fieldtype": "Table",
+   "label": "Addenda",
+   "options": "Addendum"
+  },
+  {
+   "fieldname": "section_evaluation",
+   "fieldtype": "Section Break",
+   "label": "Evaluation"
+  },
+  {
+   "fieldname": "evaluation_committee",
+   "fieldtype": "Table",
+   "label": "Evaluation Committee",
+   "options": "Evaluation Committee"
+  },
+  {
+   "fieldname": "evaluation_criteria",
+   "fieldtype": "Text Editor",
+   "label": "Evaluation Criteria"
+  },
+  {
+   "fieldname": "section_crypto",
+   "fieldtype": "Section Break",
+   "label": "Sealed Bid (Encryption)",
+   "depends_on": "eval:doc.procurement_method == 'Restricted Tender' || doc.procurement_method == 'Open Tender'"
+  },
+  {
+   "fieldname": "public_key",
+   "fieldtype": "Long Text",
+   "label": "Public Key",
+   "read_only": 1,
+   "description": "PEM public key for bid encryption"
+  },
+  {
+   "fieldname": "key_generated_at",
+   "fieldtype": "Datetime",
+   "label": "Key Generated",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_opening_officers",
+   "fieldtype": "Section Break",
+   "label": "Bid Opening Officers",
+   "depends_on": "eval:doc.procurement_method == 'Restricted Tender' || doc.procurement_method == 'Open Tender'"
+  },
+  {
+   "fieldname": "opening_officer_1",
+   "fieldtype": "Link",
+   "label": "Opening Officer 1",
+   "options": "User"
+  },
+  {
+   "fieldname": "opening_officer_2",
+   "fieldtype": "Link",
+   "label": "Opening Officer 2",
+   "options": "User"
+  },
+  {
+   "fieldname": "opening_officer_3",
+   "fieldtype": "Link",
+   "label": "Opening Officer 3",
+   "options": "User"
+  },
+  {
+   "fieldname": "section_result",
+   "fieldtype": "Section Break",
+   "label": "Award"
+  },
+  {
+   "fieldname": "awarded_supplier",
+   "fieldtype": "Link",
+   "label": "Awarded Supplier",
+   "options": "Supplier",
+   "depends_on": "eval:doc.status == 'Awarded'"
+  },
+  {
+   "fieldname": "award_amount",
+   "fieldtype": "Currency",
+   "label": "Award Amount",
+   "depends_on": "eval:doc.status == 'Awarded'"
+  },
+  {
+   "fieldname": "purchase_order",
+   "fieldtype": "Link",
+   "label": "Purchase Order",
+   "options": "Purchase Order",
+   "depends_on": "eval:doc.status == 'Awarded'",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 0},
+  {"role": "Procurement Officer", "read": 1, "write": 1, "create": 1, "delete": 0},
+  {"role": "Bid Opening Officer", "read": 1, "write": 0, "create": 0, "delete": 0}
+ ]
+}

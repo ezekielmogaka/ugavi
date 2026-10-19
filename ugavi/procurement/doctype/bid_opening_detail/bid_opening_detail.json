@@ -1,0 +1,47 @@
+{
+ "name": "Bid Opening Detail",
+ "module": "Procurement",
+ "istable": 1,
+ "custom": 0,
+ "fields": [
+  {
+   "fieldname": "bid",
+   "fieldtype": "Link",
+   "label": "Bid",
+   "options": "Bid",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": "Supplier",
+   "options": "Supplier",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bid_amount",
+   "fieldtype": "Currency",
+   "label": "Bid Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "delivery_days",
+   "fieldtype": "Int",
+   "label": "Delivery (Days)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "opened_successfully",
+   "fieldtype": "Check",
+   "label": "Opened Successfully",
+   "default": "1"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Data",
+   "label": "Notes"
+  }
+ ],
+ "permissions": []
+}

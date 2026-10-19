@@ -1,0 +1,91 @@
+{
+ "name": "Sealed Bid Key",
+ "module": "Procurement",
+ "istable": 0,
+ "track_changes": 0,
+ "custom": 0,
+ "fields": [
+  {
+   "fieldname": "tender",
+   "fieldtype": "Link",
+   "label": "Tender",
+   "options": "Tender",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "private_key_pem",
+   "fieldtype": "Long Text",
+   "label": "Private Key (PEM)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "generated_at",
+   "fieldtype": "Datetime",
+   "label": "Generated At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "share_1_user",
+   "fieldtype": "Link",
+   "label": "Share 1 - User",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "share_1_data",
+   "fieldtype": "Long Text",
+   "label": "Share 1",
+   "read_only": 1
+  },
+  {
+   "fieldname": "share_2_user",
+   "fieldtype": "Link",
+   "label": "Share 2 - User",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "share_2_data",
+   "fieldtype": "Long Text",
+   "label": "Share 2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "share_3_user",
+   "fieldtype": "Link",
+   "label": "Share 3 - User",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "share_3_data",
+   "fieldtype": "Long Text",
+   "label": "Share 3",
+   "read_only": 1
+  },
+  {
+   "fieldname": "shares_distributed",
+   "fieldtype": "Check",
+   "label": "Shares Distributed",
+   "default": "0",
+   "read_only": 1
+  },
+  {
+   "fieldname": "key_reconstructed",
+   "fieldtype": "Check",
+   "label": "Key Reconstructed",
+   "default": "0",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reconstructed_at",
+   "fieldtype": "Datetime",
+   "label": "Reconstructed At",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 0}
+ ]
+}

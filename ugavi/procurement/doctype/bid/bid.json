@@ -1,0 +1,125 @@
+{
+ "name": "Bid",
+ "module": "Procurement",
+ "istable": 0,
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1,
+ "custom": 0,
+ "naming_rule": "By script",
+ "autoname": "BID-.YYYY.-.####",
+ "fields": [
+  {
+   "fieldname": "tender",
+   "fieldtype": "Link",
+   "label": "Tender",
+   "options": "Tender",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": "Supplier",
+   "options": "Supplier",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nSubmitted\nLate\nWithdrawn\nOpened\nEvaluated\nAccepted\nRejected",
+   "default": "Draft",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "submission_date",
+   "fieldtype": "Datetime",
+   "label": "Submission Date",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_encrypted",
+   "fieldtype": "Section Break",
+   "label": "Encrypted Bid Content",
+   "depends_on": "eval:doc.status == 'Submitted'"
+  },
+  {
+   "fieldname": "encrypted_key",
+   "fieldtype": "Long Text",
+   "label": "Encrypted AES Key",
+   "read_only": 1,
+   "description": "RSA-encrypted AES key"
+  },
+  {
+   "fieldname": "nonce",
+   "fieldtype": "Data",
+   "label": "Nonce",
+   "read_only": 1
+  },
+  {
+   "fieldname": "encrypted_content",
+   "fieldtype": "Long Text",
+   "label": "Encrypted Bid Content",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_evaluation",
+   "fieldtype": "Section Break",
+   "label": "Evaluation",
+   "depends_on": "eval:doc.status == 'Opened' || doc.status == 'Evaluated'"
+  },
+  {
+   "fieldname": "bidder_name",
+   "fieldtype": "Data",
+   "label": "Bidder Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bid_amount",
+   "fieldtype": "Currency",
+   "label": "Bid Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "delivery_days",
+   "fieldtype": "Int",
+   "label": "Delivery (days)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "technical_score",
+   "fieldtype": "Float",
+   "label": "Technical Score",
+   "depends_on": "eval:doc.status == 'Evaluated'"
+  },
+  {
+   "fieldname": "financial_score",
+   "fieldtype": "Float",
+   "label": "Financial Score",
+   "depends_on": "eval:doc.status == 'Evaluated'"
+  },
+  {
+   "fieldname": "total_score",
+   "fieldtype": "Float",
+   "label": "Total Score",
+   "read_only": 1,
+   "depends_on": "eval:doc.status == 'Evaluated'"
+  },
+  {
+   "fieldname": "evaluation_notes",
+   "fieldtype": "Small Text",
+   "label": "Evaluation Notes",
+   "depends_on": "eval:doc.status == 'Evaluated'"
+  }
+ ],
+ "permissions": [
+  {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 0},
+  {"role": "Procurement Officer", "read": 1, "write": 1, "create": 1, "delete": 0},
+  {"role": "Supplier", "read": 1, "write": 1, "create": 1, "delete": 0}
+ ]
+}

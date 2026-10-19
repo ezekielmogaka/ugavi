@@ -1,0 +1,25 @@
+{
+ "name": "Prequalification Category",
+ "module": "Procurement",
+ "istable": 1,
+ "custom": 0,
+ "fields": [
+  {
+   "fieldname": "category",
+   "fieldtype": "Link",
+   "label": "Category",
+   "options": "Item Group",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Prequalified\nPending\nExpired",
+   "default": "Pending",
+   "in_list_view": 1
+  }
+ ],
+ "permissions": []
+}
