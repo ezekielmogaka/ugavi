@@ -1,1 +1,6 @@
-Ugavi
+Procurement
+Logistics
+Fleet
+Compliance
+Tendering
+Integrations
