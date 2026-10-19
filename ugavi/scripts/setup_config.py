@@ -109,8 +109,17 @@ def configure_roles():
 def configure_taxes():
     """Create KES tax templates for VAT and withholding tax."""
     company = frappe.defaults.get_user_default("company") or "Ugavi NGO"
-    _ensure_account("VAT Payable - UG", "Tax", company)
-    _ensure_account("Withholding Tax Payable - UG", "Tax", company)
+
+    # Ensure withholding tax account exists
+    if not frappe.db.exists("Account", "Withholding Tax - UG"):
+        frappe.get_doc({
+            "doctype": "Account",
+            "account_name": "Withholding Tax",
+            "account_type": "Tax",
+            "parent_account": "Duties and Taxes - UG",
+            "company": company,
+            "is_group": 0,
+        }).insert(ignore_permissions=True)
 
     # VAT 16% Purchase Tax Template
     if not frappe.db.exists("Purchase Taxes and Charges Template", "VAT 16% - UG"):
@@ -118,10 +127,10 @@ def configure_taxes():
             "doctype": "Purchase Taxes and Charges Template",
             "title": "VAT 16% - UG",
             "company": company,
-            "is_default": 1,
+            "is_default": 0,
             "taxes": [{
                 "charge_type": "On Net Total",
-                "account_head": "VAT Payable - UG",
+                "account_head": "VAT - UG",
                 "rate": 16,
                 "description": "VAT 16%",
             }],
@@ -136,7 +145,7 @@ def configure_taxes():
             "company": company,
             "taxes": [{
                 "charge_type": "On Net Total",
-                "account_head": "Withholding Tax Payable - UG",
+                "account_head": "Withholding Tax - UG",
                 "rate": 5,
                 "description": "Withholding Tax 5%",
             }],
@@ -144,24 +153,6 @@ def configure_taxes():
         wht.insert(ignore_permissions=True)
 
     print("  Tax templates configured")
-
-
-def _ensure_account(account_name, account_type, company):
-    """Create account if missing."""
-    root = {
-        "Tax": "Duties and Taxes - UG",
-        "Expense": "Expenses - UG",
-    }
-    parent = root.get(account_type, "Application of Funds (Assets) - UG")
-    if not frappe.db.exists("Account", account_name):
-        frappe.get_doc({
-            "doctype": "Account",
-            "account_name": account_name,
-            "account_type": account_type,
-            "parent_account": parent,
-            "company": company,
-            "is_group": 0,
-        }).insert(ignore_permissions=True)
 
 
 def configure_stock_settings():
