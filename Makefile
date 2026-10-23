@@ -1,4 +1,4 @@
-.PHONY: setup build start stop seed seed-lokado seed-generic seed-check demo-check fleet-check tenant-manifest-check test lint backup restore backup-demo restore-demo reset-demo reset-lokado upgrade-check clean
+.PHONY: setup build start stop dev-up dev-down dev-logs dev-shell dev-migrate seed seed-lokado seed-generic seed-check demo-check fleet-check tenant-manifest-check test lint backup restore backup-demo restore-demo reset-demo reset-lokado upgrade-check clean
 
 BENCH_DIR ?= $(HOME)/frappe-bench
 SITE ?= ugavi.localhost
@@ -8,6 +8,7 @@ ERPNEXT_TAG ?= v16.52.1
 NGINX_LISTEN_PORT ?= 8080
 TENANT_MANIFEST ?= deploy/tenants.example.json
 COMPOSE = UGAVI_IMAGE=$(UGAVI_IMAGE) UGAVI_TAG=$(UGAVI_TAG) NGINX_LISTEN_PORT=$(NGINX_LISTEN_PORT) docker compose -f compose.yaml
+DEV_COMPOSE = UGAVI_IMAGE=$(UGAVI_IMAGE) UGAVI_TAG=$(UGAVI_TAG) docker compose -f compose.yaml -f compose.dev.yaml
 
 setup:
 	@echo "==> Setting up Ugavi development environment..."
@@ -38,6 +39,37 @@ start:
 stop:
 	docker compose -f compose.yaml down
 	@echo "Services stopped."
+
+dev-up: build
+	@echo "==> Starting source-mounted Frappe development server..."
+	@$(DEV_COMPOSE) rm -sf configurator
+	@$(DEV_COMPOSE) up -d mariadb valkey mailpit
+	@$(DEV_COMPOSE) up -d configurator
+	@$(DEV_COMPOSE) up -d backend
+	@ready=0; \
+	for i in $$(seq 1 60); do \
+		if $(DEV_COMPOSE) exec -T backend curl -fsS \
+			-H "X-Frappe-Site-Name: $(SITE)" \
+			http://localhost:8000/api/method/frappe.ping >/dev/null; then \
+			ready=1; break; \
+		fi; \
+		echo "Waiting for site setup... $$i"; sleep 5; \
+	done; \
+	test $$ready -eq 1
+	@$(DEV_COMPOSE) up -d dev-socketio
+	@$(DEV_COMPOSE) up dev-server
+
+dev-down:
+	$(DEV_COMPOSE) down
+
+dev-logs:
+	$(DEV_COMPOSE) logs -f dev-server
+
+dev-shell:
+	$(DEV_COMPOSE) exec dev-server bash
+
+dev-migrate:
+	$(DEV_COMPOSE) run --rm dev-server bench --site $(SITE) migrate
 
 seed: seed-lokado
 
@@ -165,6 +197,11 @@ help:
 	@echo "Ugavi Makefile targets:"
 	@echo "  make setup          - Initialize bench via Docker, install app"
 	@echo "  make start          - Start Docker services"
+	@echo "  make dev-up        - Build image, mount source, and run native bench start"
+	@echo "  make dev-down      - Stop the source-mounted development stack"
+	@echo "  make dev-logs      - Follow native Frappe development logs"
+	@echo "  make dev-shell     - Open a shell in the development container"
+	@echo "  make dev-migrate   - Run a migration in the development container"
 	@echo "  make stop           - Stop Docker services"
 	@echo "  make seed           - Seed LOKADO customer demo data (canonical)"
 	@echo "  make seed-lokado    - Seed the LOKADO customer demo (same as 'make seed')"

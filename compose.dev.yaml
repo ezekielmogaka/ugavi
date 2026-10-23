@@ -1,0 +1,66 @@
+# Development-only overlay.
+#
+# The release/demo stack in compose.yaml remains image-based and immutable.
+# This overlay mounts the repository into a single native Frappe development
+# process so Python, templates, and client assets can be iterated without
+# rebuilding the application image for every change.
+
+services:
+  dev-server:
+    image: ${UGAVI_IMAGE:-ugavi}:${UGAVI_TAG:-0.1.0}
+    entrypoint:
+      - bash
+      - -lc
+    command:
+      - cd /home/frappe/frappe-bench && exec bench serve --port 8000
+    working_dir: /home/frappe/frappe-bench
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+      - .:/home/frappe/frappe-bench/apps/ugavi
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      DB_HOST: ${DB_HOST:-mariadb}
+      DB_PORT: ${DB_PORT:-3306}
+      SITE_NAME: ${SITE_NAME:-ugavi.localhost}
+      DEV_SERVER: "1"
+      UGAVI_ENFORCE_2FA: ${UGAVI_ENFORCE_2FA:-0}
+      MPESA_ENVIRONMENT: ${MPESA_ENVIRONMENT:-sandbox}
+      MPESA_CONSUMER_KEY: ${MPESA_CONSUMER_KEY:-}
+      MPESA_CONSUMER_SECRET: ${MPESA_CONSUMER_SECRET:-}
+      MPESA_SECURITY_CREDENTIAL: ${MPESA_SECURITY_CREDENTIAL:-}
+      MPESA_INITIATOR_NAME: ${MPESA_INITIATOR_NAME:-}
+      MPESA_SHORTCODE: ${MPESA_SHORTCODE:-}
+    ports:
+      - "${DEV_HTTP_PORT:-8000}:8000"
+      - "${SOCKETIO_PORT:-9000}:9000"
+    depends_on:
+      configurator:
+        condition: service_completed_successfully
+      mariadb:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+
+  dev-socketio:
+    image: ${UGAVI_IMAGE:-ugavi}:${UGAVI_TAG:-0.1.0}
+    entrypoint:
+      - bash
+      - -lc
+    command:
+      - cd /home/frappe/frappe-bench && exec bench socketio
+    working_dir: /home/frappe/frappe-bench
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+      - .:/home/frappe/frappe-bench/apps/ugavi
+    environment:
+      SITE_NAME: ${SITE_NAME:-ugavi.localhost}
+    ports:
+      - "${SOCKETIO_PORT:-9000}:9000"
+    depends_on:
+      configurator:
+        condition: service_completed_successfully
+      valkey:
+        condition: service_healthy

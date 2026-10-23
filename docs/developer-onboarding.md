@@ -14,18 +14,30 @@
 git clone <repo-url>
 cd ugavi
 
-# 2. Setup environment
-make setup          # creates bench, installs app, runs migrations
-make seed           # seeds LOKADO demo data (canonical)
-make seed-generic   # seeds generic Ugavi NGO demo data (legacy)
-make build          # compiles JS/CSS
+# 2. Build the development image and start the source-mounted stack
+make dev-up
 
-# 3. Start development server
-cd ~/frappe-bench
-bench start
+# 3. In another terminal, seed and verify the demo
+make seed
+make demo-check
+make fleet-check
 ```
 
-Open http://localhost:8000 → login with Administrator / admin
+Open http://localhost:8000. The development stack uses Frappe's native
+`bench start` process with the repository mounted at
+`/home/frappe/frappe-bench/apps/ugavi`; Python, templates, and client assets
+can therefore be iterated without rebuilding for each edit. Use `make dev-logs`
+to follow the process, `make dev-shell` for a shell, and `make dev-down` to
+stop it.
+
+The development service uses Frappe's native `bench serve` process, with a
+separate native Socket.IO process. The image-based `make setup`/`make start`
+path remains the authoritative rehearsal and demo path. It intentionally does
+not mount source code and therefore validates the same immutable application
+image used for release testing. Do not use the source-mounted development
+stack as an upgrade rehearsal.
+
+Open http://localhost:8000 and login with Administrator / admin.
 
 **LOKADO Demo:** `make seed` (canonical 19-user dataset) · `make demo-check` · `make fleet-check` · Tour: `docs/demo/LOKADO-DEMO-TOUR.md`
 
