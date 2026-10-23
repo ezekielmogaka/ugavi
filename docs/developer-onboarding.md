@@ -49,16 +49,18 @@ hot-reload. `make seed`, `make test`, `make demo-check`, and `make fleet-check`
 also target the image-based backend. To validate current local source instead:
 
 ```bash
-docker compose -f compose.yaml -f compose.dev.yaml exec -T dev-server \
-  bench --site ugavi.localhost execute ugavi.scripts.seed_lokado.run
+make dev-seed        # seed_lokado.run in dev-server (idempotent)
+make dev-check       # LOKADO + fleet acceptance gates in dev-server
+make dev-reset       # DESTRUCTIVE: reinstall site, setup_config, seed, gates
 docker compose -f compose.yaml -f compose.dev.yaml exec -T dev-server \
   bench --site ugavi.localhost run-tests --app ugavi
-docker compose -f compose.yaml -f compose.dev.yaml exec -T dev-server \
-  bench --site ugavi.localhost execute ugavi.scripts.check_lokado_demo.run
-docker compose -f compose.yaml -f compose.dev.yaml exec -T dev-server \
-  bench --site ugavi.localhost execute ugavi.scripts.check_fleet_demo.run
 UGAVI_BASE_URL=http://ugavi.localhost:8000 make e2e
 ```
+
+`make reset-lokado` is the image-based equivalent of `make dev-reset`. Both
+pass `DB_ROOT_PASSWORD`/`ADMIN_PASSWORD` (default `admin`, local only) and run
+`setup_config` before seeding: a fresh site needs it, for example to enable
+batch tracking in Stock Settings. Take `make backup` before any reset.
 
 Use `make dev-migrate` after local DocType schema changes. Directly served
 Ugavi CSS and templates reflect the source mount; compiled bundles still
@@ -67,25 +69,23 @@ shared between development and rehearsal services, so these are not isolated
 test environments. Use an independent Compose project and site for destructive
 tests. `make dev-down` stops the shared stack without deleting its named volumes.
 
-### Validation checkpoint (2026-10-23)
+### Validation checkpoint (fresh site)
 
-- `make dev-migrate` performed an actual site migration.
-- `make upgrade-check` rebuilt the immutable image, passed compatibility
-  (67 Ugavi / 529 ERPNext DocTypes), migration, 61 backend tests, and health.
-- The three Chromium browser tests passed against both
-  `http://ugavi.localhost:8000` and `http://ugavi.localhost:8080`.
-- Source bind mounts and directly served portal CSS matched the host files.
-- Two seed runs after the stable Stock Entry / Purchase Invoice scenario-key
-  repair produced identical acceptance counts. Earlier duplicates were retained;
-  no stock or accounting records were deleted.
+- Fresh reinstall → `setup_config` → seed run twice: both runs reported zero
+  `FAILED`/`skipped`/tracebacks and identical acceptance counts.
+- All finance and stock evidence is submitted: 8 Purchase Invoices, 6 Three-Way
+  Match, 5 Payment Entries, 3 Landed Cost Vouchers, 6 Budgets, 20 Stock
+  Entries, 12 Completed supplier evaluations. `demo-check` enforces these
+  minimums and their `docstatus = 1`.
+- Cross-donor stock moves only through Inter Donor Transfer `approve()` →
+  `complete()`; the seed never bypasses the donor-segregation validation.
+- `make upgrade-check` rebuilt the image and passed compatibility, migration,
+  61 backend tests and health; `make demo-check`, `make fleet-check` and the
+  three Playwright tests passed.
 
-This does not certify every demo scenario. The seed still catches failures in
-two supplier scorecards, two unauthorized cross-donor transfers, existing
-reorder rows, and three Budget fixtures. Budget and Landed Cost Voucher counts
-are zero and currently have zero minimum thresholds in `demo-check`; its
-`ready: true` output therefore does not prove those features. Some finance and
-stock fixtures may be drafts rather than submitted evidence. Inspect document
-status and links before presenting them as completed business transactions.
+Known by design: the three-officer bid opening is performed live (no Bid
+Opening Record is seeded), and one Approved plus one Pending transfer are left
+for the presenter to act on.
 
 **LOKADO Demo:** `make seed` (canonical 19-user dataset) · `make demo-check` · `make fleet-check` · Tour: `docs/demo/LOKADO-DEMO-TOUR.md`
 

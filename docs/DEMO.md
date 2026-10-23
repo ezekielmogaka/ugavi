@@ -25,7 +25,7 @@ make backup-demo              # Safety net: dump LOKADO data to backups/ (option
 Expected output:
 - `{"compatible": true, "issues": [], "missing_controllers": []}`
 - `{"message":"pong"}` from `curl http://localhost:8080/api/method/frappe.ping`
-- backend output: `Ran 57 tests` followed by `OK`
+- backend output: `Ran 61 tests` followed by `OK`
 - demo and fleet checks: `"ready": true` with an empty `issues` list
 
 Browser automation is a separate host-side gate. Prepare it once, then run it
@@ -382,11 +382,18 @@ Log in as: finance@lokado.org / Ugavi@2024
 Navigate: Finance -> Three-Way Match
 ```
 
-1. Purchase Order for IOM Warehouse (KES 1,150,000).
-2. Purchase Receipt (when goods are received).
-3. Purchase Invoice (supplier invoice).
-4. Three-Way Match — PO/GRN/Invoice comparison with tolerances.
-5. Budget Encumbrance — PO committed KES 1,150,000 against IOM budget.
+1. Open the Three-Way Match list: 6 records, one per receipt-linked supplier
+   invoice (e.g. `LOK-INV-TCL-0412`, Turkana Construction → IOM Kakuma).
+2. Drill into the linked Purchase Order → Purchase Receipt → Purchase Invoice
+   and show the PO/GRN/Invoice quantity and rate comparison.
+3. Payments: 5 submitted Payment Entries (full and partial). Lodwar General
+   Supplies (`LOK-INV-LGS-1190`) is deliberately left unpaid to show an open
+   payable; every payment passed the completed-supplier-evaluation gate.
+4. Landed Cost Vouchers: 3 submitted, spreading freight onto receipt valuation.
+5. Budgets: 6 submitted donor budgets (`Budget Against = Donor Profile`), e.g.
+   IOM Freight KES 1,150,000, CONCERN Admin KES 1,200,000, with Warn actions.
+6. Budget Encumbrance — every submitted Purchase Order commits funds against
+   its donor at PO submission.
 
 **What to say:** "Before payment, the system verifies PO, GRN, and Invoice
 match within your configured tolerances. Budget encumbrance happens at PO
@@ -496,18 +503,25 @@ upgrades without breaking Ugavi."
 | Items | 15 | Hygiene kits, WASH tanks, pipes, goats, construction |
 | Warehouses | 6 | Across Kakuma, Lodwar, Lokichoggio, Kitale, Oropoi |
 | Purchase Requisitions | 10 | Direct, restricted, and open methods across Draft, Pending Approval, Approved, and Rejected |
-| Tenders | 5 | 2 Open, 2 Restricted, 1 RFQ; value ladder 150K-800K |
-| Bids | 15 | Distributed across tenders; 3 sealed on IOM Warehouse |
+| Tenders | 8 | Open, Restricted and RFQ methods; value ladder 150K-800K |
+| Bids | 26 | Distributed across tenders; 3 sealed on IOM Warehouse |
 | Bid Opening Record | 0 seeded | Created live only by the verified 3-officer OTP ceremony |
 | Evaluation Committee | 1 | Chairperson, Secretary, 3 members, COI declarations |
 | Bid Evaluation Summary | 1 | Turkana Construction Ltd recommended |
-| Contracts | 5 | Active evidence-backed records automatically linked to submitted Purchase Orders |
-| Purchase Receipts | 4 | Submitted donor fleet procurement receipts |
-| Supplier Evaluations | 4 | Completed evaluations linked to submitted receipts |
+| Purchase Orders / Contracts | 15 / 15 | Every submitted PO has its automatically linked Ugavi Contract |
+| Purchase Receipts | 10 | 6 PO-backed donor-warehouse receipts + 4 fleet procurement receipts, all submitted |
+| Supplier Evaluations | 12 | All Completed (0–10 scale), receipt- or invoice-linked |
 | Standstill Period | 1 | Active 14-day window on Field Motorcycles tender |
-| Donor Warehouse links | 6 | Each donor mapped to physical warehouse |
+| Donor Warehouse links | 8 | Each donor mapped to its physical warehouses |
 | Stock Reports | 6 | One monthly stock book for every donor scenario |
-| Inter Donor Transfers | 3 | Approved, pending-approval, and rejected outcomes |
+| Inter Donor Transfers | 6 | 2 Completed (with linked Stock Entry), 2 Approved, 1 Pending, 1 Rejected |
+| Stock Entries | 20 | Submitted receipts, issues and transfer-generated movements; 34 tracked batches |
+| Quality Inspections | 8 | Submitted incoming inspections |
+| Material Requests | 5 | 3 submitted, 2 draft; reorder levels on 14 item/warehouse rows |
+| Purchase Invoices | 8 | 6 receipt-linked (→ 6 Three-Way Match) + 2 direct service invoices |
+| Payment Entries | 5 | Full and partial payments; one invoice left unpaid |
+| Landed Cost Vouchers | 3 | Submitted against logistics receipts |
+| Budgets | 6 | Submitted donor budgets against Donor Profile |
 | Vehicles | 4 | ERPNext Vehicles with 4 active donor allocations |
 | Fleet reconciliations | 8 | Fully allocated fuel/spare receipt rows |
 | Fuel / spare / trip records | 8 each | Submitted evidence linked to purchase and stock sources |

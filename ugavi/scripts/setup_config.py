@@ -437,6 +437,8 @@ def configure_stock_settings():
     if not settings.item_naming_by:
         settings.item_naming_by = "Item Name"
     settings.allow_negative_stock = 0
+    # Donor stock needs batch/expiry traceability (LO3); v16 ships this disabled.
+    settings.enable_serial_and_batch_no_for_item = 1
     settings.save(ignore_permissions=True)
     print("  Stock settings configured")
 

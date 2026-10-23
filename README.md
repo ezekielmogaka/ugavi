@@ -49,7 +49,7 @@ make e2e            # Playwright browser tests
 | `make backup-demo` | Export LOKADO demo data to SQL dump (safety net) |
 | `make restore-demo` | Restore LOKADO demo data from SQL dump |
 | `make reset-demo` | Reinstall site + re-seed LOKADO demo (alias for `reset-lokado`) |
-| `make reset-lokado` | Fresh site reinstall + LOKADO seed |
+| `make reset-lokado` | Fresh site reinstall + setup_config + LOKADO seed + demo-check (destructive) |
 | `make test` | Run full test suite |
 | `make lint` | Run ruff + black format check |
 | `make e2e` | Run Playwright E2E tests (requires backend running) |

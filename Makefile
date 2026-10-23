@@ -1,4 +1,4 @@
-.PHONY: setup build start stop dev-up dev-down dev-logs dev-shell dev-migrate seed seed-lokado seed-generic seed-check demo-check fleet-check tenant-manifest-check test lint backup restore backup-demo restore-demo reset-demo reset-lokado upgrade-check clean
+.PHONY: setup build start stop dev-up dev-down dev-logs dev-shell dev-migrate dev-seed dev-check dev-reset seed seed-lokado seed-generic seed-check demo-check fleet-check tenant-manifest-check test lint backup restore backup-demo restore-demo reset-demo reset-lokado upgrade-check clean
 
 BENCH_DIR ?= $(HOME)/frappe-bench
 SITE ?= ugavi.localhost
@@ -7,6 +7,9 @@ UGAVI_TAG ?= 0.1.0
 ERPNEXT_TAG ?= v16.52.1
 NGINX_LISTEN_PORT ?= 8080
 TENANT_MANIFEST ?= deploy/tenants.example.json
+# Local development credentials only; override for any shared environment.
+DB_ROOT_PASSWORD ?= admin
+ADMIN_PASSWORD ?= admin
 COMPOSE = UGAVI_IMAGE=$(UGAVI_IMAGE) UGAVI_TAG=$(UGAVI_TAG) NGINX_LISTEN_PORT=$(NGINX_LISTEN_PORT) docker compose -f compose.yaml
 DEV_COMPOSE = UGAVI_IMAGE=$(UGAVI_IMAGE) UGAVI_TAG=$(UGAVI_TAG) docker compose -f compose.yaml -f compose.dev.yaml
 
@@ -70,6 +73,19 @@ dev-shell:
 
 dev-migrate:
 	$(DEV_COMPOSE) run --rm dev-server bench --site $(SITE) migrate
+
+dev-seed:
+	$(DEV_COMPOSE) exec -T dev-server bench --site $(SITE) execute ugavi.scripts.seed_lokado.run
+
+dev-check:
+	$(DEV_COMPOSE) exec -T dev-server bench --site $(SITE) execute ugavi.scripts.check_lokado_demo.run
+	$(DEV_COMPOSE) exec -T dev-server bench --site $(SITE) execute ugavi.scripts.check_fleet_demo.run
+
+dev-reset:
+	$(DEV_COMPOSE) exec -T dev-server bench --site $(SITE) reinstall --yes --db-root-password $(DB_ROOT_PASSWORD) --admin-password $(ADMIN_PASSWORD)
+	$(DEV_COMPOSE) exec -T dev-server bench --site $(SITE) execute ugavi.scripts.setup_config.run
+	$(MAKE) dev-seed
+	$(MAKE) dev-check
 
 seed: seed-lokado
 
@@ -147,10 +163,11 @@ upgrade-check: build
 reset-demo: reset-lokado
 
 reset-lokado:
-	docker compose exec -T backend bench --site $(SITE) reinstall --yes
-	docker compose exec -T backend bench --site $(SITE) install-app ugavi
+	docker compose exec -T backend bench --site $(SITE) reinstall --yes --db-root-password $(DB_ROOT_PASSWORD) --admin-password $(ADMIN_PASSWORD)
+	docker compose exec -T backend bench --site $(SITE) execute ugavi.scripts.setup_config.run
 	$(MAKE) seed-lokado
-	@echo "==> LOKADO demo reset complete. Run 'make demo-check' to verify."
+	$(MAKE) demo-check
+	@echo "==> LOKADO demo reset complete and verified."
 
 clean:
 	docker compose -f compose.yaml down -v

@@ -1625,36 +1625,30 @@ def _seed_logistics():
         }):
             continue
         try:
-            pr = frappe.get_doc({
-                "doctype": "Purchase Receipt",
-                "supplier": supplier,
-                "set_warehouse": wh_full,
-                "posting_date": str(add_days(td, -10)),
-                "company": "Lotus Kenya Action for Development Organization",
-            })
-            for item_code, received_qty, rate, _batch_no, _expiry in items:
-                item_name = frappe.db.get_value("Item", item_code, "item_name") or item_code
-                child = {
-                    "item_code": item_code,
-                    "item_name": item_name,
-                    "received_qty": received_qty,
-                    "qty": received_qty,
-                    "rate": rate,
-                    "uom": "Nos",
-                    "stock_uom": "Nos",
-                    "conversion_factor": 1,
-                    "base_rate": rate,
-                    "warehouse": wh_full,
-                }
+            order = _ensure_logistics_purchase_order(supplier, supplier_name, wh_full, items, td)
+            from erpnext.buying.doctype.purchase_order.purchase_order import (
+                make_purchase_receipt,
+            )
+
+            pr = make_purchase_receipt(order.name)
+            pr.set_warehouse = wh_full
+            pr.set_posting_time = 1
+            pr.posting_date = str(add_days(td, -10))
+            for child in pr.items:
+                child.warehouse = wh_full
+                batch_no = next(
+                    (b for code, _q, _r, b, _e in items if code == child.item_code), None
+                )
                 # Only set batch_no if the Batch record exists (created by the fleet seed)
-                if frappe.db.exists("Batch", _batch_no):
-                    child["batch_no"] = _batch_no
-                pr.append("items", child)
+                if batch_no and frappe.db.exists("Batch", batch_no):
+                    child.batch_no = batch_no
             pr.insert(ignore_permissions=True)
             pr.submit()
-            print(f"  PurchaseReceipt: {supplier_name[:25]} → {wh_name[:35]}")
+            frappe.db.commit()
+            print(f"  PurchaseReceipt: {supplier_name[:25]} → {wh_name[:35]} (from {order.name})")
         except Exception as e:
-            print(f"  PurchaseReceipt: {supplier_name[:25]} skipped — {type(e).__name__}: {e}")
+            frappe.db.rollback()
+            print(f"  PurchaseReceipt: {supplier_name[:25]} FAILED — {type(e).__name__}: {e}")
 
     frappe.db.commit()
     print("  Logistics: 6 donor books, 6 stock reports, 4 transfer outcomes, 6 purchase receipts with batch tracking")
@@ -1663,6 +1657,43 @@ def _seed_logistics():
         f"({len(LOKADO_USERS) - len(SUPPLIER_PORTAL_LINKS)} staff + "
         f"{len(SUPPLIER_PORTAL_LINKS)} supplier portal users)"
     )
+
+
+def _ensure_logistics_purchase_order(supplier, supplier_name, warehouse, items, td):
+    """Submitted, donor-tagged PO so receipts and invoices form a real three-way match."""
+    title = f"LOKADO-GRN-{supplier_name}"[:140]
+    name = frappe.db.get_value(
+        "Purchase Order", {"title": title, "docstatus": ("<", 2)}, "name"
+    )
+    if name:
+        order = frappe.get_doc("Purchase Order", name)
+    else:
+        order = frappe.get_doc({
+            "doctype": "Purchase Order",
+            "title": title,
+            "company": "Lotus Kenya Action for Development Organization",
+            "supplier": supplier,
+            "transaction_date": str(add_days(td, -25)),
+            "schedule_date": str(add_days(td, -12)),
+            "set_warehouse": warehouse,
+            "ugavi_donor": frappe.db.get_value(
+                "Donor Warehouse", {"warehouse": warehouse}, "donor"
+            ),
+            "items": [
+                {
+                    "item_code": item_code,
+                    "qty": qty,
+                    "rate": rate,
+                    "schedule_date": str(add_days(td, -12)),
+                    "warehouse": warehouse,
+                }
+                for item_code, qty, rate, _batch, _expiry in items
+            ],
+        })
+        order.insert(ignore_permissions=True)
+    if order.docstatus == 0:
+        order.submit()
+    return order
 
 
 # ─────────────────────────────────────────────────
@@ -1723,36 +1754,117 @@ def _seed_supplier_evaluations():
         },
     ]
 
+    # Suppliers without a stock delivery are evaluated against a direct service
+    # invoice, the same source document the Purchase Invoice hook uses in production.
+    direct_service_purchases = {
+        "Ekaale Building Works": (
+            "LOK-SVC-EKAALE-001", "Solar pump house repair works (rework completed)", 145000,
+        ),
+        "Moi's Bridge Livestock": (
+            "LOK-SVC-MOIS-001", "Livestock transport Kitale to Lodwar", 98000,
+        ),
+    }
+
+    completed = 0
     for scenario in evaluation_scenarios:
         supplier = frappe.db.get_value(
             "Supplier", {"supplier_name": scenario["supplier_name"]}, "name"
         )
         if not supplier:
             continue
-        if frappe.db.exists("Ugavi Supplier Evaluation", {"supplier": supplier}):
+        if scenario["supplier_name"] in direct_service_purchases:
+            _ensure_direct_service_invoice(
+                supplier, *direct_service_purchases[scenario["supplier_name"]]
+            )
+        evaluation_name = _pending_or_completed_evaluation(supplier, scenario["comments"])
+        if not evaluation_name:
+            print(f"  SupplierEval: {scenario['supplier_name'][:25]} has no delivery to evaluate")
             continue
-
-        try:
-            eval_doc = frappe.get_doc({
-                "doctype": "Ugavi Supplier Evaluation",
-                "supplier": supplier,
-                "evaluation_date": str(add_days(today(), -5)),
-                "quality_score": scenario["delivery_quality"],
-                "delivery_score": scenario["timeliness"],
-                "compliance_score": scenario["compliance"],
-                "total_score": scenario["overall"],
-                "price_competitiveness": scenario["overall"] * 0.7,
-                "cumulative_rating": scenario["overall"],
-                "remarks": scenario["comments"],
-                "status": "Completed",
-            })
-            eval_doc.insert(ignore_permissions=True)
-            print(f"  SupplierEval: {scenario['supplier_name'][:25]} → {scenario['overall']}/5")
-        except Exception as e:
-            print(f"  SupplierEval: {scenario['supplier_name'][:25]} skipped — {type(e).__name__}: {e}")
+        evaluation = frappe.get_doc("Ugavi Supplier Evaluation", evaluation_name)
+        if evaluation.status == "Completed":
+            completed += 1
+            continue
+        # Scenario ratings are on a 5-point scale; the scorecard uses 0-10.
+        evaluation.quality_score = scenario["delivery_quality"] * 2
+        evaluation.delivery_score = scenario["timeliness"] * 2
+        evaluation.compliance_score = scenario["compliance"] * 2
+        evaluation.price_competitiveness = scenario["overall"] * 2
+        evaluation.evaluation_date = str(add_days(today(), -5))
+        evaluation.remarks = scenario["comments"]
+        evaluation.flags.ignore_permissions = True
+        evaluation.complete_evaluation()
+        completed += 1
+        print(
+            f"  SupplierEval: {scenario['supplier_name'][:25]} → "
+            f"{evaluation.total_score}% (cumulative {evaluation.cumulative_rating}%)"
+        )
 
     frappe.db.commit()
-    print("  Supplier Evaluations: 8 scorecards with ratings and comments")
+    print(f"  Supplier Evaluations: {completed}/{len(evaluation_scenarios)} scenario scorecards completed")
+
+
+def _pending_or_completed_evaluation(supplier, comments):
+    """Reuse this scenario's completed scorecard, else take the oldest pending one."""
+    return frappe.db.get_value(
+        "Ugavi Supplier Evaluation",
+        {"supplier": supplier, "status": "Completed", "remarks": comments},
+        "name",
+    ) or frappe.db.get_value(
+        "Ugavi Supplier Evaluation",
+        {"supplier": supplier, "status": "Pending"},
+        "name",
+        order_by="creation asc",
+    )
+
+
+def _ensure_service_item():
+    item_code = "SVC-FIELD-WORKS"
+    if not frappe.db.exists("Item", item_code):
+        frappe.get_doc({
+            "doctype": "Item",
+            "item_code": item_code,
+            "item_name": "Field Works and Logistics Services",
+            "item_group": "Services" if frappe.db.exists("Item Group", "Services") else "All Item Groups",
+            "stock_uom": "Nos",
+            "is_stock_item": 0,
+            "is_purchase_item": 1,
+            "include_item_in_manufacturing": 0,
+        }).insert(ignore_permissions=True)
+    return item_code
+
+
+def _ensure_direct_service_invoice(supplier, bill_no, description, amount):
+    """Submitted non-stock invoice; its on_submit hook creates the pending evaluation."""
+    existing = frappe.db.get_value(
+        "Purchase Invoice", {"supplier": supplier, "bill_no": bill_no, "docstatus": ("<", 2)},
+        ["name", "docstatus"], as_dict=True,
+    )
+    if existing and existing.docstatus == 1:
+        return existing.name
+    if existing:
+        invoice = frappe.get_doc("Purchase Invoice", existing.name)
+    else:
+        invoice = frappe.get_doc({
+            "doctype": "Purchase Invoice",
+            "company": "Lotus Kenya Action for Development Organization",
+            "supplier": supplier,
+            "bill_no": bill_no,
+            "bill_date": str(add_days(today(), -20)),
+            "posting_date": str(add_days(today(), -20)),
+            "set_posting_time": 1,
+            "remarks": description,
+            "items": [{
+                "item_code": _ensure_service_item(),
+                "description": description,
+                "qty": 1,
+                "rate": amount,
+                "expense_account": "Miscellaneous Expenses - LOKADO",
+            }],
+        })
+        invoice.insert(ignore_permissions=True)
+    invoice.submit()
+    print(f"  DirectInvoice: {bill_no} → {amount:,} KES (service, no receipt)")
+    return invoice.name
 
 
 # ─────────────────────────────────────────────────
@@ -1932,6 +2044,14 @@ def _seed_quality_inspections():
 # 11. STOCK ENTRIES — Material Receipt/Issue/Transfer
 # ─────────────────────────────────────────────────
 
+STOCK_RECEIPT_RATES = {
+    "CEMENT-BAG": 1100, "WATER-TANK-10K": 52000, "GOAT-GALLA": 3842,
+    "ANIMAL-FEED": 520, "VET-KIT": 4500, "HYGIENE-KIT": 175,
+    "FIRST-AID-KIT": 1500, "PIPE-HDPE-63MM": 290, "MOTORCYCLE-FIELD": 130000,
+    "WATER-PUMP-SOLAR": 185000,
+}
+
+
 def _seed_stock_entries():
     """Stock Entries: Material Receipt, Issue, Transfer."""
     td = today()
@@ -1943,7 +2063,7 @@ def _seed_stock_entries():
          add_days(td, -18), [("CEMENT-BAG", 250), ("WATER-TANK-10K", 6)],
          "Receive construction materials from Turkana Construction"),
         ("Material Receipt", None, _wh("LOKADO Main Warehouse - Lodwar"),
-         add_days(td, -14), [("GOAT-GALLA", 95), ("ANIMAL-FEED", 50)],
+         add_days(td, -14), [("GOAT-GALLA", 95), ("ANIMAL-FEED", 50), ("VET-KIT", 30)],
          "Receive livestock from Nadirkonyen Women's Group"),
         ("Material Receipt", None, _wh("LOKADO Field Store - Lokichoggio"),
          add_days(td, -10), [("HYGIENE-KIT", 900), ("FIRST-AID-KIT", 120)],
@@ -1954,8 +2074,11 @@ def _seed_stock_entries():
         ("Material Receipt", None, _wh("LOKADO Transit Store - Kitale"),
          add_days(td, -4), [("MOTORCYCLE-FIELD", 4)],
          "Receive motorcycles from Jopeji Enterprises"),
+        ("Material Receipt", None, _wh("Cold Chain Storage - Lodwar"),
+         add_days(td, -9), [("FIRST-AID-KIT", 100), ("WATER-PUMP-SOLAR", 5)],
+         "Receive Japan health cold-chain and solar pump stock"),
         ("Material Issue", _wh("IOM Supported Warehouse - Kakuma"), None,
-         add_days(td, -12), [("CEMENT-BAG", 80), ("PIPE-HDPE-63MM", 200)],
+         add_days(td, -5), [("CEMENT-BAG", 80), ("PIPE-HDPE-63MM", 200)],
          "Issue to Kakuma WASH pipe network extension"),
         ("Material Issue", _wh("LOKADO Main Warehouse - Lodwar"), None,
          add_days(td, -8), [("ANIMAL-FEED", 25), ("VET-KIT", 10)],
@@ -1966,41 +2089,77 @@ def _seed_stock_entries():
         ("Material Issue", _wh("Cold Chain Storage - Lodwar"), None,
          add_days(td, -3), [("FIRST-AID-KIT", 30), ("WATER-PUMP-SOLAR", 2)],
          "Issue to Japan health cold chain items"),
-        ("Material Transfer", _wh("LOKADO Main Warehouse - Lodwar"),
-         _wh("LOKADO Transit Store - Kitale"), add_days(td, -7),
-         [("VET-KIT", 5), ("ANIMAL-FEED", 10)],
-         "Transfer vet supplies to Kitale for EU programme"),
-        ("Material Transfer", _wh("IOM Supported Warehouse - Kakuma"),
-         _wh("LOKADO Field Store - Lokichoggio"), add_days(td, -2),
-         [("WATER-TANK-10K", 2)],
-         "Emergency transfer for Lokichoggio flood response"),
     ]
     for etype, fwh, twh, pdate, items, purpose in entries:
-        if frappe.db.exists(
-            "Stock Entry", {"stock_entry_type": etype, "remarks": purpose}
-        ):
+        existing = frappe.db.get_value(
+            "Stock Entry",
+            {"stock_entry_type": etype, "remarks": purpose, "docstatus": ("<", 2)},
+            ["name", "docstatus"], as_dict=True,
+        )
+        if existing and existing.docstatus == 1:
             continue
         try:
-            se = frappe.get_doc({
-                "doctype": "Stock Entry", "stock_entry_type": etype,
-                "posting_date": str(pdate), "set_posting_time": 1,
-                "remarks": purpose,
-                "from_warehouse": fwh or "", "to_warehouse": twh or "",
-            })
-            for ic, qty in items:
-                se.append("items", {"item_code": ic, "qty": qty, "uom": "Nos",
-                    "s_warehouse": fwh or "", "t_warehouse": twh or "",
-                    "allow_zero_valuation_rate": 1})
-            se.insert(ignore_permissions=True)
-            try:
-                se.submit()
-            except Exception:
-                pass
+            if existing:
+                se = frappe.get_doc("Stock Entry", existing.name)
+            else:
+                se = frappe.get_doc({
+                    "doctype": "Stock Entry", "stock_entry_type": etype,
+                    "posting_date": str(pdate), "set_posting_time": 1,
+                    "remarks": purpose,
+                    "from_warehouse": fwh or "", "to_warehouse": twh or "",
+                })
+                for ic, qty in items:
+                    row = {"item_code": ic, "qty": qty,
+                           "s_warehouse": fwh or "", "t_warehouse": twh or ""}
+                    if etype == "Material Receipt":
+                        row["basic_rate"] = STOCK_RECEIPT_RATES[ic]
+                    se.append("items", row)
+                se.insert(ignore_permissions=True)
+            se.submit()
+            frappe.db.commit()
             print(f"  StockEntry [{etype}]: {', '.join(f'{i[0]}x{i[1]}' for i in items)}")
         except Exception as e:
-            print(f"  StockEntry skipped — {type(e).__name__}: {e}")
+            frappe.db.rollback()
+            print(f"  StockEntry [{etype}] FAILED — {type(e).__name__}: {e}")
     frappe.db.commit()
-    print("  Stock Entries: 11 entries (5 receipts, 4 issues, 2 transfers)")
+
+    # Cross-donor movements must go through an approved Inter Donor Transfer;
+    # completing the transfer creates the linked Stock Entry (the production path).
+    completed_transfers = [
+        (_wh("LOKADO Main Warehouse - Lodwar"), _wh("LOKADO Transit Store - Kitale"),
+         "USAID", "EU", [("VET-KIT", 5), ("ANIMAL-FEED", 10)],
+         "DEMO-COMPLETED: Vet supplies lent to EU programme at Kitale, donor consent on file."),
+        (_wh("IOM Supported Warehouse - Kakuma"), _wh("LOKADO Field Store - Lokichoggio"),
+         "IOM", "CONCERN", [("WATER-TANK-10K", 2)],
+         "DEMO-COMPLETED: Emergency water tanks for Lokichoggio flood response."),
+    ]
+    for fwh, twh, from_code, to_code, items, reason in completed_transfers:
+        name = frappe.db.get_value("Inter Donor Transfer", {"reason": reason}, "name")
+        if name and frappe.db.get_value("Inter Donor Transfer", name, "status") == "Completed":
+            continue
+        try:
+            if name:
+                idt = frappe.get_doc("Inter Donor Transfer", name)
+            else:
+                idt = frappe.get_doc({
+                    "doctype": "Inter Donor Transfer",
+                    "from_warehouse": fwh, "to_warehouse": twh,
+                    "status": "Pending Approval",
+                    "transfer_date": str(add_days(td, -7)),
+                    "reason": reason,
+                    "items": [{"item_code": ic, "qty": qty, "uom": "Nos"} for ic, qty in items],
+                })
+                idt.insert(ignore_permissions=True)
+            if idt.status == "Pending Approval":
+                idt.approve()
+            idt.complete()
+            frappe.db.commit()
+            print(f"  InterDonorTransfer: {from_code} -> {to_code} completed with linked Stock Entry")
+        except Exception as e:
+            frappe.db.rollback()
+            print(f"  InterDonorTransfer: {from_code} -> {to_code} FAILED — {type(e).__name__}: {e}")
+    frappe.db.commit()
+    print("  Stock Entries: 10 direct entries (6 receipts, 4 issues) + 2 governed inter-donor transfers")
 
 
 # ─────────────────────────────────────────────────
@@ -2009,15 +2168,19 @@ def _seed_stock_entries():
 
 def _seed_batch_tracking():
     """Batch records with manufacture/expiry for LO3."""
-    # Ensure items have batch tracking enabled (may have been created without it)
-    frappe.db.sql("""
-        UPDATE tabItem SET has_batch_no=1, create_new_batch=1
-        WHERE is_stock_item=1
-    """)
-    frappe.db.sql("""
-        UPDATE tabItem SET inspection_required_before_purchase=1
-        WHERE is_stock_item=1 AND item_code NOT IN ('FUEL-DIESEL','LAPTOP-DELL')
-    """)
+    # Batch tracking is set when items are created; it must never be flipped after
+    # stock transactions exist (ERPNext forbids it). Inspection is a plain flag.
+    for item_code in frappe.get_all(
+        "Item",
+        filters={
+            "is_stock_item": 1,
+            "inspection_required_before_purchase": 0,
+            "item_code": ("not in", ["FUEL-DIESEL", "LAPTOP-DELL"]),
+            "ugavi_fleet_category": ("is", "not set"),
+        },
+        pluck="name",
+    ):
+        frappe.db.set_value("Item", item_code, "inspection_required_before_purchase", 1)
     frappe.db.commit()
     td = today()
     batches = [
@@ -2086,7 +2249,11 @@ def _seed_reorder_levels():
     ]
     for wh_name, item_code, min_stock, max_stock in reorder_data:
         wh_full = _wh(wh_name)
-        if frappe.db.exists("Item Reorder", {"item_code": item_code, "warehouse": wh_full}):
+        if frappe.db.exists(
+            "Item Reorder",
+            {"parenttype": "Item", "parent": item_code, "warehouse": wh_full,
+             "material_request_type": "Purchase"},
+        ):
             continue
         try:
             item = frappe.get_doc("Item", item_code)
@@ -2132,77 +2299,112 @@ def _seed_material_requests():
          [("MOTORCYCLE-FIELD", 1)],
          "Peace building: replacement motorcycle for Lokiriama post"),
     ]
+    submitted = 0
     for wh_full, status, sched, items, purpose in mr_data:
-        if frappe.db.exists("Material Request", {"set_warehouse": wh_full, "schedule_date": str(sched)}):
+        title = purpose[:140]
+        existing = frappe.db.get_value(
+            "Material Request", {"title": title, "docstatus": ("<", 2)},
+            ["name", "docstatus"], as_dict=True,
+        )
+        if existing and (existing.docstatus == 1 or status == "Draft"):
+            submitted += existing.docstatus
             continue
         try:
-            mr = frappe.get_doc({
-                "doctype": "Material Request",
-                "material_request_type": "Material Issue",
-                "transaction_date": str(sched),
-                "schedule_date": str(sched), "set_warehouse": wh_full,
-                "purpose": purpose[:140],
-            })
-            for ic, qty in items:
-                mr.append("items", {"item_code": ic, "qty": qty, "uom": "Nos",
-                    "warehouse": wh_full, "schedule_date": str(sched)})
-            mr.insert(ignore_permissions=True)
+            if existing:
+                mr = frappe.get_doc("Material Request", existing.name)
+            else:
+                mr = frappe.get_doc({
+                    "doctype": "Material Request",
+                    "material_request_type": "Material Issue",
+                    "transaction_date": str(add_days(sched, -2)),
+                    "schedule_date": str(sched), "set_warehouse": wh_full,
+                    "title": title,
+                })
+                for ic, qty in items:
+                    mr.append("items", {"item_code": ic, "qty": qty, "uom": "Nos",
+                        "warehouse": wh_full, "schedule_date": str(sched)})
+                mr.insert(ignore_permissions=True)
+            if status != "Draft":
+                mr.submit()
+                submitted += 1
+            frappe.db.commit()
             print(f"  MaterialReq [{status}]: {', '.join(f'{i[0]}x{i[1]}' for i in items)}")
         except Exception as e:
-            print(f"  MaterialReq skipped — {type(e).__name__}: {e}")
-    frappe.db.commit()
-    print("  Material Requests: 5 requests across Draft/Submitted/Approved")
+            frappe.db.rollback()
+            print(f"  MaterialReq FAILED — {type(e).__name__}: {e}")
+    print(f"  Material Requests: {len(mr_data)} requests ({submitted} submitted, rest draft)")
 
 
 # ─────────────────────────────────────────────────
 # 15. PURCHASE INVOICES — For three-way match (PR9)
 # ─────────────────────────────────────────────────
 
+LOKADO_COMPANY = "Lotus Kenya Action for Development Organization"
+
+
+def _logistics_receipt(supplier_name, warehouse_name):
+    """The stock receipt created by _seed_logistics for a supplier and warehouse."""
+    supplier = frappe.db.get_value("Supplier", {"supplier_name": supplier_name}, "name")
+    warehouse = frappe.db.get_value("Warehouse", {"warehouse_name": warehouse_name}, "name")
+    if not supplier or not warehouse:
+        return None
+    return frappe.db.get_value(
+        "Purchase Receipt",
+        {"supplier": supplier, "set_warehouse": warehouse, "docstatus": 1},
+        "name",
+    )
+
+
+# Supplier invoice number, receipt (supplier, warehouse), payment share, payment mode
+RECEIPT_INVOICES = [
+    ("LOK-INV-TCL-0412", "Turkana Construction Ltd", "IOM Supported Warehouse - Kakuma", 0.6, "Bank Transfer"),
+    ("LOK-INV-NWG-0088", "Nadirkonyen Women's Group", "LOKADO Main Warehouse - Lodwar", 1.0, "Mobile Money"),
+    ("LOK-INV-LGS-1190", "Lodwar General Supplies", "IOM Supported Warehouse - Kakuma", 0.0, None),
+    ("LOK-INV-KRC-2207", "Kenya Red Cross Supplies", "LOKADO Field Store - Lokichoggio", 1.0, "Cheque"),
+    ("LOK-INV-RVH-0731", "Rift Valley Hardware", "IOM Supported Warehouse - Kakuma", 1.0, "Bank Transfer"),
+    ("LOK-INV-JOP-0056", "Jopeji Enterprises", "LOKADO Transit Store - Kitale", 0.5, "Bank Transfer"),
+]
+
+
 def _seed_purchase_invoices():
-    """Purchase Invoices for three-way match demo (PR9)."""
-    td = today()
-    invoices = [
-        ("Turkana Construction Ltd", add_days(td, -15), add_days(td, 30),
-         "VAT 16% - KES", [("CEMENT-BAG", 250, 1100), ("WATER-TANK-10K", 6, 52000)],
-         "IOM warehouse construction materials - batch 1"),
-        ("Nadirkonyen Women's Group", add_days(td, -12), add_days(td, 25),
-         "VAT Exempt - KES", [("GOAT-GALLA", 95, 3842), ("ANIMAL-FEED", 50, 520)],
-         "Livestock restocking and animal feed"),
-        ("Lodwar General Supplies", add_days(td, -10), add_days(td, 20),
-         "VAT 16% - KES", [("WATER-TANK-10K", 6, 48000)],
-         "Water tanks - alternate supplier batch"),
-        ("Kenya Red Cross Supplies", add_days(td, -8), add_days(td, 15),
-         "VAT Exempt - KES", [("HYGIENE-KIT", 900, 175), ("FIRST-AID-KIT", 120, 1500)],
-         "Hygiene and first aid kits - Concern SERVE"),
-        ("Rift Valley Hardware", add_days(td, -5), add_days(td, 10),
-         "VAT 16% - KES", [("PIPE-HDPE-63MM", 650, 290)],
-         "HDPE pipes - emergency WASH repair"),
-        ("Jopeji Enterprises", add_days(td, -2), add_days(td, 45),
-         "VAT 16% - KES", [("MOTORCYCLE-FIELD", 4, 130000)],
-         "Field motorcycles - peace building"),
-    ]
-    for sup_name, pdate, due, tax, items, remarks in invoices:
-        supplier = frappe.db.get_value("Supplier", {"supplier_name": sup_name}, "name")
-        if not supplier or frappe.db.exists(
-            "Purchase Invoice", {"supplier": supplier, "remarks": remarks}
-        ):
+    """Receipt-linked Purchase Invoices; submit triggers the Ugavi Three-Way Match record."""
+    from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
+
+    submitted = 0
+    for bill_no, supplier_name, warehouse_name, _share, _mode in RECEIPT_INVOICES:
+        existing = frappe.db.get_value(
+            "Purchase Invoice", {"bill_no": bill_no, "docstatus": ("<", 2)},
+            ["name", "docstatus"], as_dict=True,
+        )
+        if existing and existing.docstatus == 1:
+            submitted += 1
+            continue
+        receipt = _logistics_receipt(supplier_name, warehouse_name)
+        if not receipt:
+            print(f"  PurchaseInvoice: {bill_no} has no submitted receipt to bill")
             continue
         try:
-            pi = frappe.get_doc({
-                "doctype": "Purchase Invoice", "supplier": supplier,
-                "posting_date": str(pdate), "set_posting_time": 1,
-                "due_date": str(due),
-                "remarks": remarks,
-            })
-            for ic, qty, rate in items:
-                pi.append("items", {"item_code": ic, "qty": qty, "rate": rate, "uom": "Nos"})
-            pi.insert(ignore_permissions=True)
-            total = sum(q * r for _, q, r in items)
-            print(f"  PurchaseInvoice: {sup_name[:25]} → {total:,.0f} KES")
+            if existing:
+                invoice = frappe.get_doc("Purchase Invoice", existing.name)
+            else:
+                receipt_date = frappe.db.get_value("Purchase Receipt", receipt, "posting_date")
+                invoice = make_purchase_invoice(receipt)
+                invoice.bill_no = bill_no
+                invoice.bill_date = str(add_days(receipt_date, 2))
+                invoice.set_posting_time = 1
+                invoice.posting_date = str(add_days(receipt_date, 2))
+                invoice.due_date = str(add_days(receipt_date, 32))
+                invoice.payment_schedule = []
+                invoice.remarks = f"Supplier invoice {bill_no} against {receipt}"
+                invoice.insert(ignore_permissions=True)
+            invoice.submit()
+            frappe.db.commit()
+            submitted += 1
+            print(f"  PurchaseInvoice: {bill_no} ← {receipt} → {invoice.grand_total:,.0f} KES")
         except Exception as e:
-            print(f"  PurchaseInvoice: {sup_name[:25]} skipped — {type(e).__name__}: {e}")
-    frappe.db.commit()
-    print("  Purchase Invoices: 6 invoices for 3-way match (PR9)")
+            frappe.db.rollback()
+            print(f"  PurchaseInvoice: {bill_no} FAILED — {type(e).__name__}: {e}")
+    print(f"  Purchase Invoices: {submitted}/{len(RECEIPT_INVOICES)} receipt-linked invoices submitted")
 
 
 # ─────────────────────────────────────────────────
@@ -2210,41 +2412,54 @@ def _seed_purchase_invoices():
 # ─────────────────────────────────────────────────
 
 def _seed_payment_entries():
-    """Payment Entries against purchase invoices."""
+    """Full and partial payments allocated to invoices, passing the evaluation gate."""
+    from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+
     td = today()
-    company = "Lotus Kenya Action for Development Organization"
-    payments = [
-        ("Turkana Construction Ltd", 400000, add_days(td, -10),
-         "Bank Transfer", "Partial: IOM warehouse (60% milestone)"),
-        ("Nadirkonyen Women's Group", 365000, add_days(td, -7),
-         "Mobile Money", "Full payment: livestock delivered"),
-        ("Kenya Red Cross Supplies", 337500, add_days(td, -5),
-         "Cheque", "Full: hygiene + first aid Concern SERVE"),
-        ("Rift Valley Hardware", 188500, add_days(td, -3),
-         "Bank Transfer", "Full: HDPE pipes emergency WASH"),
-        ("Jopeji Enterprises", 260000, add_days(td, -1),
-         "Bank Transfer", "Partial: 50% advance for 2 motorcycles"),
-    ]
-    for sup_name, amount, pdate, mode, remarks in payments:
-        supplier = frappe.db.get_value("Supplier", {"supplier_name": sup_name}, "name")
-        if not supplier or frappe.db.exists("Payment Entry", {"party": supplier, "posting_date": str(pdate)}):
+    paid = 0
+    for index, (bill_no, supplier_name, _wh, share, mode) in enumerate(RECEIPT_INVOICES):
+        if not share:
+            continue
+        reference_no = f"PAY-{bill_no}"
+        if frappe.db.exists("Payment Entry", {"reference_no": reference_no, "docstatus": 1}):
+            paid += 1
+            continue
+        invoice = frappe.db.get_value(
+            "Purchase Invoice", {"bill_no": bill_no, "docstatus": 1},
+            ["name", "outstanding_amount"], as_dict=True,
+        )
+        if not invoice or not invoice.outstanding_amount:
+            print(f"  Payment: {bill_no} has no outstanding submitted invoice")
             continue
         try:
-            pe = frappe.get_doc({
-                "doctype": "Payment Entry", "payment_type": "Pay",
-                "party_type": "Supplier", "party": supplier,
-                "paid_amount": amount, "received_amount": amount,
-                "posting_date": str(pdate), "mode_of_payment": mode,
-                "remarks": remarks,
-                "paid_from": "Cash - LOKADO",
-                "paid_to": "Creditors - LOKADO",
-            })
-            pe.insert(ignore_permissions=True)
-            print(f"  Payment: {sup_name[:25]} → {amount:,} KES [{mode}]")
+            draft = frappe.db.get_value(
+                "Payment Entry", {"reference_no": reference_no, "docstatus": 0}, "name"
+            )
+            if draft:
+                payment = frappe.get_doc("Payment Entry", draft)
+            else:
+                amount = round(invoice.outstanding_amount * share, 2)
+                payment = get_payment_entry(
+                    "Purchase Invoice", invoice.name, party_amount=amount
+                )
+                payment.mode_of_payment = mode
+                payment.paid_from = "Cash - LOKADO"
+                payment.posting_date = str(add_days(td, -(len(RECEIPT_INVOICES) - index)))
+                payment.reference_no = reference_no
+                payment.reference_date = payment.posting_date
+                payment.remarks = (
+                    f"{'Full' if share == 1 else f'Partial ({int(share * 100)}%)'} "
+                    f"payment of {bill_no} via {mode}"
+                )
+                payment.insert(ignore_permissions=True)
+            payment.submit()
+            frappe.db.commit()
+            paid += 1
+            print(f"  Payment: {bill_no} → {payment.paid_amount:,.0f} KES [{mode}]")
         except Exception as e:
-            print(f"  Payment: {sup_name[:25]} skipped — {type(e).__name__}: {e}")
-    frappe.db.commit()
-    print("  Payment Entries: 5 payments across bank transfer, mobile money, cheque")
+            frappe.db.rollback()
+            print(f"  Payment: {bill_no} FAILED — {type(e).__name__}: {e}")
+    print(f"  Payment Entries: {paid} submitted (full, partial; one invoice left outstanding)")
 
 
 # ─────────────────────────────────────────────────
@@ -2252,98 +2467,130 @@ def _seed_payment_entries():
 # ─────────────────────────────────────────────────
 
 def _seed_landed_cost_vouchers():
-    """Landed Cost Vouchers for transport and handling."""
-    td = today()
-    company = "Lotus Kenya Action for Development Organization"
+    """Submitted Landed Cost Vouchers that capitalise freight into receipt valuation."""
     costs = [
-        ("IOM warehouse delivery", add_days(td, -16), "IOM-FLEET",
-         [("Transport & Logistics", 85000)],
-         "Transport: cement + tanks Lodwar to Kakuma"),
-        ("Livestock transport", add_days(td, -13), "USAID-FLEET",
-         [("Transport & Logistics", 35000), ("Veterinary Clearance", 12000)],
-         "Livestock Nadirkonyen to Lodwar + vet clearance"),
-        ("Kitale transit handling", add_days(td, -3), "EU-FLEET",
-         [("Transport & Logistics", 28000), ("Warehouse Handling", 15000)],
-         "Motorcycles Nairobi to Kitale transit store"),
+        ("Turkana Construction Ltd", "IOM Supported Warehouse - Kakuma",
+         [("Transport: cement + tanks Lodwar to Kakuma", 85000)]),
+        ("Nadirkonyen Women's Group", "LOKADO Main Warehouse - Lodwar",
+         [("Livestock transport Nadirkonyen to Lodwar", 35000),
+          ("Veterinary movement permit and clearance", 12000)]),
+        ("Jopeji Enterprises", "LOKADO Transit Store - Kitale",
+         [("Motorcycles Nairobi to Kitale transit", 28000),
+          ("Warehouse handling and assembly", 15000)]),
     ]
-    for title, pdate, marker, charges, remarks in costs:
-        receipt = frappe.db.get_value("Purchase Receipt", {"supplier_delivery_note": marker}, "name")
-        if not receipt or frappe.db.exists("Landed Cost Voucher", {"posting_date": str(pdate)}):
+    vouchers = 0
+    for supplier_name, warehouse_name, charges in costs:
+        receipt = _logistics_receipt(supplier_name, warehouse_name)
+        if not receipt:
+            print(f"  LandedCost: {supplier_name[:25]} has no submitted receipt")
+            continue
+        existing = frappe.db.get_value(
+            "Landed Cost Purchase Receipt",
+            {"parenttype": "Landed Cost Voucher", "receipt_document": receipt},
+            "parent",
+        )
+        if existing and frappe.db.get_value("Landed Cost Voucher", existing, "docstatus") == 1:
+            vouchers += 1
             continue
         try:
-            lcv = frappe.get_doc({
-                "doctype": "Landed Cost Voucher", "company": company,
-                "posting_date": str(pdate),
-                "distribute_charges_based_on": "Amount", "remarks": remarks,
-            })
-            lcv.append("purchase_receipts", {
-                "receipt_document_type": "Purchase Receipt",
-                "receipt_document": receipt,
-            })
-            for desc, amount in charges:
-                lcv.append("taxes", {
-                    "description": desc, "amount": amount,
-                    "expense_account": "Freight and Forwarding Charges - LOKADO",
+            if existing:
+                lcv = frappe.get_doc("Landed Cost Voucher", existing)
+            else:
+                lcv = frappe.get_doc({
+                    "doctype": "Landed Cost Voucher",
+                    "company": LOKADO_COMPANY,
+                    "distribute_charges_based_on": "Amount",
                 })
-            lcv.insert(ignore_permissions=True)
-            total = sum(a for _, a in charges)
-            print(f"  LandedCost: {title[:35]} → {total:,} KES")
+                lcv.append("purchase_receipts", {
+                    "receipt_document_type": "Purchase Receipt",
+                    "receipt_document": receipt,
+                    "supplier": frappe.db.get_value("Purchase Receipt", receipt, "supplier"),
+                    "posting_date": frappe.db.get_value("Purchase Receipt", receipt, "posting_date"),
+                })
+                lcv.get_items_from_purchase_receipts()
+                for description, amount in charges:
+                    lcv.append("taxes", {
+                        "description": description,
+                        "amount": amount,
+                        "expense_account": "Freight and Forwarding Charges - LOKADO",
+                    })
+                lcv.insert(ignore_permissions=True)
+            lcv.submit()
+            frappe.db.commit()
+            vouchers += 1
+            print(f"  LandedCost: {receipt} + {sum(a for _, a in charges):,} KES freight/handling")
         except Exception as e:
-            print(f"  LandedCost: {title[:35]} skipped — {type(e).__name__}: {e}")
-    frappe.db.commit()
-    print("  Landed Cost Vouchers: 3 vouchers (transport + handling)")
+            frappe.db.rollback()
+            print(f"  LandedCost: {receipt} FAILED — {type(e).__name__}: {e}")
+    print(f"  Landed Cost Vouchers: {vouchers}/{len(costs)} submitted")
 
 
 # ─────────────────────────────────────────────────
-# 18. BUDGET RECORDS — Programme budget allocations
+# 18. BUDGET RECORDS — Donor budget control (ERPNext v16 Budget)
 # ─────────────────────────────────────────────────
 
 def _seed_budget_records():
-    """Budget records per programme and cost center."""
-    td = getdate(today())
-    company = "Lotus Kenya Action for Development Organization"
-    fy = f"{td.year}-{td.year+1}"
+    """Donor-dimension budgets: one Budget per donor and expense account (v16 schema)."""
+    fiscal_year = frappe.db.get_value(
+        "Fiscal Year",
+        {"year_start_date": ("<=", today()), "year_end_date": (">=", today()), "disabled": 0},
+        "name",
+    )
+    if not fiscal_year:
+        print("  Budget: no active fiscal year covering today")
+        return
     budgets = [
-        ("WASH Programme Budget", fy, "Cost Center", "Main - LOKADO", [
-            ("Stock In Hand - LOKADO", 2500000),
-            ("Administrative Expenses - LOKADO", 1800000),
-            ("Travel Expenses - LOKADO", 750000),
-        ]),
-        ("Livelihoods & Food Security", fy, "Cost Center", "Main - LOKADO", [
-            ("Stock In Hand - LOKADO", 1200000),
-            ("Travel Expenses - LOKADO", 600000),
-        ]),
-        ("Emergency Response Reserve", fy, "Cost Center", "Main - LOKADO", [
-            ("Stock In Hand - LOKADO", 3500000),
-            ("Travel Expenses - LOKADO", 500000),
-        ]),
+        ("IOM", "Freight and Forwarding Charges - LOKADO", 1150000),
+        ("IOM", "Administrative Expenses - LOKADO", 600000),
+        ("USAID", "Travel Expenses - LOKADO", 750000),
+        ("USAID", "Miscellaneous Expenses - LOKADO", 400000),
+        ("EU", "Travel Expenses - LOKADO", 600000),
+        ("CONCERN", "Administrative Expenses - LOKADO", 1200000),
     ]
-    for bname, ffy, applies, cc, accounts in budgets:
-        if frappe.db.exists("Budget", {"name": bname}):
+    created = 0
+    for donor_code, account, amount in budgets:
+        donor = frappe.db.get_value("Donor Profile", {"donor_code": donor_code}, "name")
+        if not donor:
+            continue
+        key = {
+            "budget_against": "Donor Profile", "donor_profile": donor,
+            "account": account, "from_fiscal_year": fiscal_year, "docstatus": ("<", 2),
+        }
+        existing = frappe.db.get_value("Budget", key, ["name", "docstatus"], as_dict=True)
+        if existing and existing.docstatus == 1:
+            created += 1
             continue
         try:
-            budget = frappe.get_doc({
-                "doctype": "Budget", "budget_name": bname,
-                "company": company, "fiscal_year": ffy,
-                "applicable_on": applies,
-            })
-            if cc:
-                budget.cost_center = cc
-            for acct, amt in accounts:
-                # Budget Distribution child table in ERPNext v16
-                budget.append("budget_distribution", {
-                    "start_date": str(add_days(td, -30)),
-                    "end_date": str(add_days(td, 335)),
-                    "amount": amt,
-                    "percent": round(amt / 5000000 * 100, 1),
+            if existing:
+                budget = frappe.get_doc("Budget", existing.name)
+            else:
+                budget = frappe.get_doc({
+                    "doctype": "Budget",
+                    "company": LOKADO_COMPANY,
+                    "budget_against": "Donor Profile",
+                    "donor_profile": donor,
+                    "account": account,
+                    "from_fiscal_year": fiscal_year,
+                    "to_fiscal_year": fiscal_year,
+                    "budget_amount": amount,
+                    "distribution_frequency": "Quarterly",
+                    "distribute_equally": 1,
+                    "applicable_on_purchase_order": 1,
+                    "action_if_annual_budget_exceeded_on_po": "Warn",
+                    "action_if_accumulated_monthly_budget_exceeded_on_po": "Warn",
+                    "applicable_on_booking_actual_expenses": 1,
+                    "action_if_annual_budget_exceeded": "Warn",
+                    "action_if_accumulated_monthly_budget_exceeded": "Warn",
                 })
-            budget.insert(ignore_permissions=True)
-            total = sum(a for _, a in accounts)
-            print(f"  Budget: {bname[:35]} → {total:,} KES")
+                budget.insert(ignore_permissions=True)
+            budget.submit()
+            frappe.db.commit()
+            created += 1
+            print(f"  Budget: {donor_code} / {account} → {amount:,} KES ({fiscal_year})")
         except Exception as e:
-            print(f"  Budget: {bname[:35]} skipped — {type(e).__name__}: {e}")
-    frappe.db.commit()
-    print("  Budget Records: 3 programme budget allocations")
+            frappe.db.rollback()
+            print(f"  Budget: {donor_code} / {account} FAILED — {type(e).__name__}: {e}")
+    print(f"  Budget Records: {created}/{len(budgets)} donor budgets submitted")
 
 
 # ─────────────────────────────────────────────────

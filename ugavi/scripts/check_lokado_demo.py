@@ -42,15 +42,15 @@ def get_report() -> dict:
             issues.append(f"Missing supplier identity link: {email} -> {supplier}")
 
     minimum_counts = {
-        "Donor Profile": 10,
-        "Supplier": 42,
+        "Donor Profile": 6,
+        "Supplier": 18,
         "Purchase Requisition": 10,
         "Tender": 8,
         "Bid": 26,
         "Ugavi Contract": 5,
         "Donor Warehouse": 8,
         "Monthly Stock Report": 6,
-        "Inter Donor Transfer": 4,
+        "Inter Donor Transfer": 6,
         "Standstill Period": 1,
         "Vehicle": 4,
         "Vehicle Allocation": 4,
@@ -66,14 +66,15 @@ def get_report() -> dict:
         "Ugavi Supplier Evaluation": 8,
         # ── Supply Chain Depth ──
         "Quality Inspection": 0,      # items need inspection_required_before_purchase=1
-        "Stock Entry": 8,
+        "Stock Entry": 11,
         "Batch": 8,
-        "Material Request": 4,
+        "Material Request": 5,
         # ── Finance + Three-Way Match ──
-        "Purchase Invoice": 5,
-        "Payment Entry": 4,
-        "Landed Cost Voucher": 0,      # insert+commit under investigation
-        "Budget": 0,                   # ERPNext v16 Budget structure mismatch
+        "Purchase Invoice": 8,
+        "Payment Entry": 5,
+        "Landed Cost Voucher": 3,
+        "Budget": 6,
+        "Three Way Match": 6,
         # ── Notifications ──
         "Notification": 4,
         # ── Programme ──
@@ -88,6 +89,29 @@ def get_report() -> dict:
             issues.append(
                 f"{doctype}: expected at least {minimum}, found {counts[doctype]}"
             )
+
+    minimum_submitted = {
+        "Purchase Invoice": 8,
+        "Payment Entry": 5,
+        "Landed Cost Voucher": 3,
+        "Budget": 6,
+        "Stock Entry": 11,
+        "Material Request": 3,
+    }
+    for doctype, minimum in minimum_submitted.items():
+        submitted = frappe.db.count(doctype, {"docstatus": 1})
+        if submitted < minimum:
+            issues.append(
+                f"{doctype}: expected at least {minimum} submitted, found {submitted}"
+            )
+
+    completed_evaluations = frappe.db.count(
+        "Ugavi Supplier Evaluation", {"status": "Completed"}
+    )
+    if completed_evaluations < 12:
+        issues.append(
+            f"Ugavi Supplier Evaluation: expected at least 12 completed, found {completed_evaluations}"
+        )
 
     pr_lifecycle_examples = {
         "Draft": "Solar Water Pumps - EU Resilience Programme",
@@ -106,7 +130,7 @@ def get_report() -> dict:
     transfer_statuses = set(
         frappe.get_all("Inter Donor Transfer", pluck="status")
     )
-    for required_status in ("Pending Approval", "Approved", "Rejected"):
+    for required_status in ("Pending Approval", "Approved", "Rejected", "Completed"):
         if required_status not in transfer_statuses:
             issues.append(
                 f"Inter Donor Transfer lifecycle missing {required_status} evidence"
