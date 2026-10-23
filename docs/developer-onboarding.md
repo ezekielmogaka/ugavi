@@ -23,8 +23,8 @@ make demo-check
 make fleet-check
 ```
 
-Open http://localhost:8000. The development stack uses Frappe's native
-`bench start` process with the repository mounted at
+Open http://ugavi.localhost:8000. The development stack uses Frappe's native
+`bench serve` process with the repository mounted at
 `/home/frappe/frappe-bench/apps/ugavi`; Python, templates, and client assets
 can therefore be iterated without rebuilding for each edit. Use `make dev-logs`
 to follow the process, `make dev-shell` for a shell, and `make dev-down` to
@@ -37,7 +37,55 @@ not mount source code and therefore validates the same immutable application
 image used for release testing. Do not use the source-mounted development
 stack as an upgrade rehearsal.
 
-Open http://localhost:8000 and login with Administrator / admin.
+Open http://ugavi.localhost:8000 and login with Administrator / admin.
+Frappe resolves the site from the request hostname: plain `localhost:8000`
+returns 404 for a site named `ugavi.localhost`. For a different site name, use
+that hostname and arrange local DNS or a hosts-file entry.
+
+The source mount applies to `dev-server` and `dev-socketio` only. Backend,
+workers and scheduler still run the image-baked code. Rebuild and recreate
+those services when testing changed background jobs; do not assume they
+hot-reload. `make seed`, `make test`, `make demo-check`, and `make fleet-check`
+also target the image-based backend. To validate current local source instead:
+
+```bash
+docker compose -f compose.yaml -f compose.dev.yaml exec -T dev-server \
+  bench --site ugavi.localhost execute ugavi.scripts.seed_lokado.run
+docker compose -f compose.yaml -f compose.dev.yaml exec -T dev-server \
+  bench --site ugavi.localhost run-tests --app ugavi
+docker compose -f compose.yaml -f compose.dev.yaml exec -T dev-server \
+  bench --site ugavi.localhost execute ugavi.scripts.check_lokado_demo.run
+docker compose -f compose.yaml -f compose.dev.yaml exec -T dev-server \
+  bench --site ugavi.localhost execute ugavi.scripts.check_fleet_demo.run
+UGAVI_BASE_URL=http://ugavi.localhost:8000 make e2e
+```
+
+Use `make dev-migrate` after local DocType schema changes. Directly served
+Ugavi CSS and templates reflect the source mount; compiled bundles still
+require a Bench asset build/watch workflow. Database and uploaded files are
+shared between development and rehearsal services, so these are not isolated
+test environments. Use an independent Compose project and site for destructive
+tests. `make dev-down` stops the shared stack without deleting its named volumes.
+
+### Validation checkpoint (2026-10-23)
+
+- `make dev-migrate` performed an actual site migration.
+- `make upgrade-check` rebuilt the immutable image, passed compatibility
+  (67 Ugavi / 529 ERPNext DocTypes), migration, 61 backend tests, and health.
+- The three Chromium browser tests passed against both
+  `http://ugavi.localhost:8000` and `http://ugavi.localhost:8080`.
+- Source bind mounts and directly served portal CSS matched the host files.
+- Two seed runs after the stable Stock Entry / Purchase Invoice scenario-key
+  repair produced identical acceptance counts. Earlier duplicates were retained;
+  no stock or accounting records were deleted.
+
+This does not certify every demo scenario. The seed still catches failures in
+two supplier scorecards, two unauthorized cross-donor transfers, existing
+reorder rows, and three Budget fixtures. Budget and Landed Cost Voucher counts
+are zero and currently have zero minimum thresholds in `demo-check`; its
+`ready: true` output therefore does not prove those features. Some finance and
+stock fixtures may be drafts rather than submitted evidence. Inspect document
+status and links before presenting them as completed business transactions.
 
 **LOKADO Demo:** `make seed` (canonical 19-user dataset) · `make demo-check` · `make fleet-check` · Tour: `docs/demo/LOKADO-DEMO-TOUR.md`
 

@@ -1976,12 +1976,15 @@ def _seed_stock_entries():
          "Emergency transfer for Lokichoggio flood response"),
     ]
     for etype, fwh, twh, pdate, items, purpose in entries:
-        if frappe.db.exists("Stock Entry", {"stock_entry_type": etype, "posting_date": str(pdate), "purpose": purpose}):
+        if frappe.db.exists(
+            "Stock Entry", {"stock_entry_type": etype, "remarks": purpose}
+        ):
             continue
         try:
             se = frappe.get_doc({
                 "doctype": "Stock Entry", "stock_entry_type": etype,
-                "posting_date": str(pdate), "purpose": purpose[:140],
+                "posting_date": str(pdate), "set_posting_time": 1,
+                "remarks": purpose,
                 "from_warehouse": fwh or "", "to_warehouse": twh or "",
             })
             for ic, qty in items:
@@ -2180,12 +2183,15 @@ def _seed_purchase_invoices():
     ]
     for sup_name, pdate, due, tax, items, remarks in invoices:
         supplier = frappe.db.get_value("Supplier", {"supplier_name": sup_name}, "name")
-        if not supplier or frappe.db.exists("Purchase Invoice", {"supplier": supplier, "posting_date": str(pdate)}):
+        if not supplier or frappe.db.exists(
+            "Purchase Invoice", {"supplier": supplier, "remarks": remarks}
+        ):
             continue
         try:
             pi = frappe.get_doc({
                 "doctype": "Purchase Invoice", "supplier": supplier,
-                "posting_date": str(pdate), "due_date": str(due),
+                "posting_date": str(pdate), "set_posting_time": 1,
+                "due_date": str(due),
                 "remarks": remarks,
             })
             for ic, qty, rate in items:

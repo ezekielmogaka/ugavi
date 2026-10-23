@@ -8,11 +8,12 @@
 services:
   dev-server:
     image: ${UGAVI_IMAGE:-ugavi}:${UGAVI_TAG:-0.1.0}
-    entrypoint:
-      - bash
-      - -lc
+    entrypoint: []
     command:
-      - cd /home/frappe/frappe-bench && exec bench serve --port 8000
+      - bench
+      - serve
+      - --port
+      - "8000"
     working_dir: /home/frappe/frappe-bench
     volumes:
       - sites_data:/home/frappe/frappe-bench/sites
