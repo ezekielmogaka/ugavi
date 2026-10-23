@@ -7,7 +7,13 @@ This guide demonstrates the complete supplier experience while preserving ERPNex
 ```bash
 make setup
 make seed                # canonical LOKADO seed (alias: seed-lokado)
+make demo-check
+make fleet-check
 ```
+
+For mounted-source development use `make dev-config`, `make dev-seed` and
+`make dev-check` after `make dev-up`. See the [Make reference](../../README.md#makefile-reference).
+Use separate browser profiles for supplier and staff sessions.
 
 Open `http://localhost:8080/login` and sign in with:
 
@@ -60,6 +66,9 @@ The upload is private. The server verifies that the File belongs to the current 
 
 1. Select **Opportunities**.
 2. Point out the procurement method, estimated value, category, and deadline.
+   Use a still-open tender, not the closed solar-pump opening fixture. If this
+   supplier already bid on that opportunity, use another eligible supplier or
+   a new draft tender; duplicate submissions are intentionally rejected.
 3. Select **Prepare bid** on an opportunity.
 4. Enter the bid amount, ISO currency code, delivery days, and an optional technical proposal.
 5. Select **Encrypt and submit bid**.

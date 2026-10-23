@@ -1,5 +1,46 @@
 import { expect, test } from '@playwright/test';
 
+for (const [email, doctypes] of [
+  ['programme@lokado.org', ['Purchase Requisition']],
+  ['approver1@lokado.org', ['Purchase Requisition']],
+  ['approver2@lokado.org', ['Purchase Requisition']],
+  ['procurement@lokado.org', ['Tender', 'Supplier Prequalification', 'Ugavi Contract', 'Ugavi Supplier Evaluation']],
+  ['opening1@lokado.org', ['Tender', 'Bid Opening Record']],
+  ['opening2@lokado.org', ['Tender', 'Bid Opening Record']],
+  ['opening3@lokado.org', ['Tender', 'Bid Opening Record']],
+  ['committee@lokado.org', ['Bid Evaluation Summary']],
+  ['storekeeper@lokado.org', ['Purchase Receipt']],
+  ['logistics@lokado.org', ['Donor Warehouse', 'Monthly Stock Report', 'Inter Donor Transfer', 'Stock Entry']],
+  ['fleet@lokado.org', ['Vehicle', 'Vehicle Allocation', 'Fuel Log', 'Spare Parts Issue', 'Fleet Utilization Report']],
+  ['assets@lokado.org', ['Asset Register', 'Ugavi Asset Movement', 'Asset Verification', 'Asset Disposal']],
+  ['finance@lokado.org', ['Three Way Match', 'Purchase Invoice', 'Payment Entry', 'Budget', 'Landed Cost Voucher']],
+  ['auditor@lokado.org', ['Audit Log', 'Delegation of Authority', 'Segregation of Duties']],
+] as const) {
+  test(`${email} can access the documented demo records`, async ({ page }) => {
+    await page.goto('/login');
+    await page.locator('#login_email').fill(email);
+    await page.locator('#login_password').fill('Ugavi@2024');
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page).toHaveURL(/\/(app|desk)/);
+
+    for (const doctype of doctypes) {
+      const response = await page.request.get('/api/method/frappe.client.get_list', {
+        params: { doctype, fields: '["name"]', limit_page_length: 1 },
+      });
+      expect(response.ok(), `${email}: read ${doctype}`).toBeTruthy();
+      const { message } = await response.json();
+      expect(Array.isArray(message), `${doctype}: list response`).toBeTruthy();
+      if (doctype !== 'Bid Opening Record') {
+        expect(message.length, `${email}: seeded ${doctype} evidence`).toBeGreaterThan(0);
+      }
+    }
+
+    const route = doctypes[0].toLowerCase().replaceAll(' ', '-');
+    await page.goto(`/app/${route}`);
+    await expect(page.locator('.page-title:visible').first()).toContainText(doctypes[0]);
+  });
+}
+
 test('health endpoint and administrator desk load', async ({ page }) => {
   const ping = await page.request.get('/api/method/frappe.ping');
   expect(ping.ok()).toBeTruthy();

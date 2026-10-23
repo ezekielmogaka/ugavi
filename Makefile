@@ -1,4 +1,4 @@
-.PHONY: setup build start stop dev-up dev-down dev-logs dev-shell dev-migrate dev-seed dev-check dev-reset seed seed-lokado seed-generic seed-check demo-check fleet-check tenant-manifest-check test lint backup restore backup-demo restore-demo reset-demo reset-lokado upgrade-check clean
+.PHONY: setup build start stop dev-up dev-down dev-logs dev-shell dev-migrate dev-config dev-seed dev-check dev-test dev-reset seed seed-lokado seed-generic seed-check demo-check fleet-check tenant-manifest-check test lint backup restore backup-demo restore-demo reset-demo reset-lokado upgrade-check clean e2e help
 
 BENCH_DIR ?= $(HOME)/frappe-bench
 SITE ?= ugavi.localhost
@@ -74,8 +74,15 @@ dev-shell:
 dev-migrate:
 	$(DEV_COMPOSE) run --rm dev-server bench --site $(SITE) migrate
 
+dev-config:
+	$(DEV_COMPOSE) exec -T dev-server bench --site $(SITE) execute ugavi.scripts.setup_config.run
+
 dev-seed:
 	$(DEV_COMPOSE) exec -T dev-server bench --site $(SITE) execute ugavi.scripts.seed_lokado.run
+
+dev-test:
+	$(DEV_COMPOSE) exec -T dev-server bench --site $(SITE) set-config allow_tests true
+	$(DEV_COMPOSE) exec -T dev-server bench --site $(SITE) run-tests --app ugavi
 
 dev-check:
 	$(DEV_COMPOSE) exec -T dev-server bench --site $(SITE) execute ugavi.scripts.check_lokado_demo.run
@@ -197,7 +204,7 @@ load-test:
 
 container-scan:
 	@echo "==> Scanning container image..."
-	trivy image ugavi:latest
+	trivy image $(UGAVI_IMAGE):$(UGAVI_TAG)
 
 check-links:
 	@echo "==> Checking documentation links..."
@@ -213,22 +220,29 @@ all-checks: lint security-scan sbom test e2e
 help:
 	@echo "Ugavi Makefile targets:"
 	@echo "  make setup          - Initialize bench via Docker, install app"
+	@echo "  make build          - Build the immutable Ugavi image ($(UGAVI_IMAGE):$(UGAVI_TAG))"
 	@echo "  make start          - Start Docker services"
-	@echo "  make dev-up        - Build image, mount source, and run native bench start"
+	@echo "  make dev-up        - Build image, mount source, and run native bench serve"
 	@echo "  make dev-down      - Stop the source-mounted development stack"
 	@echo "  make dev-logs      - Follow native Frappe development logs"
 	@echo "  make dev-shell     - Open a shell in the development container"
 	@echo "  make dev-migrate   - Run a migration in the development container"
+	@echo "  make dev-config    - Apply site and role configuration using local source"
+	@echo "  make dev-seed      - Seed LOKADO using mounted local source"
+	@echo "  make dev-check     - Check LOKADO and fleet evidence using local source"
+	@echo "  make dev-test      - Enable and run backend tests using local source"
+	@echo "  make dev-reset     - DESTRUCTIVE reinstall, configure, seed and check using local source"
 	@echo "  make stop           - Stop Docker services"
 	@echo "  make seed           - Seed LOKADO customer demo data (canonical)"
 	@echo "  make seed-lokado    - Seed the LOKADO customer demo (same as 'make seed')"
+	@echo "  make seed-check     - Report generic seed integrity (legacy dataset)"
 	@echo "  make seed-generic   - Seed generic Ugavi NGO demo data (legacy)"
 	@echo "  make demo-check     - Verify LOKADO users, supplier links, data, and health"
 	@echo "  make fleet-check    - Verify fleet purchase-to-vehicle reconciliation"
 	@echo "  make backup-demo    - Export LOKADO demo data to SQL dump (safety net)"
 	@echo "  make restore-demo   - Restore LOKADO demo data from SQL dump"
 	@echo "  make reset-demo     - Reinstall + re-seed LOKADO demo (alias for reset-lokado)"
-	@echo "  make reset-lokado   - Fresh site reinstall + LOKADO seed"
+	@echo "  make reset-lokado   - DESTRUCTIVE reinstall + configuration + seed + demo-check"
 	@echo "  make tenant-manifest-check TENANT_MANIFEST=... - Validate isolated MVP3 tenant definitions"
 	@echo "  make test           - Run unit tests"
 	@echo "  make e2e            - Run Playwright e2e tests"
@@ -243,6 +257,5 @@ help:
 	@echo "  make backup         - Backup DB with files"
 	@echo "  make restore        - Restore from backup"
 	@echo "  make upgrade-check  - Rehearse compatibility, migration, tests, and health checks"
-	@echo "  make reset-demo     - Reinstall and re-seed demo data"
 	@echo "  make clean          - Remove Docker volumes and backups"
 	@echo "  make help           - Show this help"

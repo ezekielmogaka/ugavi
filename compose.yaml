@@ -5,7 +5,7 @@
 #   - No PYTHONPATH workaround, no cp -rL asset copy
 #   - Secrets via .env file
 #
-# Setup: make build && make up
+# Setup: make setup (image rehearsal) or make dev-up (source-mounted development)
 
 x-ugavi-image: &ugavi_image
   image: ${UGAVI_IMAGE:-ugavi}:${UGAVI_TAG:-0.1.0}

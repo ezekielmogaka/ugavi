@@ -12,6 +12,7 @@ def run():
     """Apply all Phase B configuration — idempotent."""
     configure_custom_fields()
     configure_roles()
+    configure_role_permissions()
     configure_fiscal_years()
     configure_procurement_settings()
     configure_taxes()
@@ -21,6 +22,58 @@ def run():
     configure_workflows()
     frappe.db.commit()
     print("Phase B configuration complete!")
+
+
+def configure_role_permissions():
+    """Add business-role access through Frappe, preserving upstream defaults."""
+    from frappe.permissions import add_permission, update_permission_property
+
+    grants = {
+        "Procurement Officer": {
+            "Ugavi Contract": ("read", "write", "create"),
+            "Ugavi Supplier Evaluation": ("read", "write", "create"),
+        },
+        "Evaluation Committee": {
+            "Bid Evaluation Summary": ("read",),
+        },
+        "Logistics Officer": {
+            "Donor Warehouse": ("read",),
+            "Monthly Stock Report": ("read", "write", "create"),
+            "Inter Donor Transfer": ("read", "write", "create"),
+        },
+        "Finance Officer": {
+            "Budget": ("read",),
+            "Landed Cost Voucher": ("read",),
+        },
+        "Auditor": {
+            "Delegation of Authority": ("read",),
+            "Segregation of Duties": ("read",),
+            "Waiver": ("read",),
+        },
+        "Programme Manager": {
+            doctype: ("read", "select")
+            for doctype in ("Item", "Item Group", "Project", "Department", "Company", "UOM")
+        },
+    }
+    for role in (
+        "Programme Manager", "Procurement Officer", "Approver Level 1",
+        "Approver Level 2", "Logistics Officer", "Fleet Manager", "Asset Manager",
+        "Finance Officer", "Auditor", "Store Keeper", "Evaluation Committee",
+    ):
+        grants.setdefault(role, {})["Donor Profile"] = ("read", "select")
+
+    for role, doctypes in grants.items():
+        for doctype, permissions in doctypes.items():
+            existing = frappe.db.exists(
+                "Custom DocPerm",
+                {"parent": doctype, "role": role, "permlevel": 0, "if_owner": 0},
+            )
+            if not existing:
+                add_permission(doctype, role)
+            for permission in permissions:
+                update_permission_property(doctype, role, 0, permission, 1)
+    frappe.clear_cache()
+    print("  Business-role permissions configured (upstream defaults retained)")
 
 
 def configure_custom_fields():
@@ -272,6 +325,7 @@ def configure_roles():
         "Approver Level 2",
         "Evaluation Committee",
         "Store Keeper",
+        "Logistics Officer",
         "Stock Manager",
         "Fleet Manager",
         "Asset Manager",

@@ -2,6 +2,9 @@
 
 import inspect
 import unittest
+from unittest.mock import MagicMock, patch
+
+import frappe
 
 from ugavi.procurement.doctype.bid_opening_record.bid_opening_record import (
     BidOpeningRecord,
@@ -18,6 +21,30 @@ from ugavi.procurement import events
 
 
 class TestRequirementControlBoundaries(unittest.TestCase):
+    def test_stock_report_uses_posted_value_not_highest_historical_rate(self):
+        from ugavi.logistics.doctype.monthly_stock_report.monthly_stock_report import (
+            MonthlyStockReport,
+        )
+
+        report = MagicMock(
+            donor="TEST-DONOR", warehouse="TEST-WAREHOUSE", report_month="2026-10-01",
+        )
+        ledger_row = frappe._dict(
+            item_code="TEST-ITEM", opening_qty=5, receipts_qty=10, issues_qty=2,
+            transfer_in_qty=1, transfer_out_qty=3, adjustment_qty=-1,
+            closing_value=1210,
+        )
+        with (
+            patch.object(frappe.db, "get_value", return_value="TEST-DONOR"),
+            patch.object(frappe.db, "sql", return_value=[ledger_row]) as sql,
+        ):
+            MonthlyStockReport.generate(report)
+        row = report.append.call_args.args[1]
+        self.assertEqual(row["closing_qty"], 10)
+        self.assertEqual(row["total_value"], 1210)
+        report.save.assert_called_once()
+        self.assertIn("SUM(sle.stock_value_difference)", sql.call_args.args[0])
+
     def test_bid_opening_record_requires_verified_ceremony(self):
         source = inspect.getsource(BidOpeningRecord)
         self.assertIn("opening_verified", source)

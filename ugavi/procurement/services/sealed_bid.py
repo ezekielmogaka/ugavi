@@ -335,11 +335,11 @@ def open_bids(tender: str,
         )
 
     # Step 2: Reconstruct private key (unwraps all 3 shares)
-    _log_audit(tender, frappe.session.user, "OPENING_CEREMONY_START", "InProgress")
+    _log_audit(tender, frappe.session.user, "OPENING_CEREMONY_START", "Success")
     try:
         private_pem = construct_private_key(tender)
-    except Exception as e:
-        _log_audit(tender, frappe.session.user, "KEY_RECONSTRUCTION_FAILED", str(e))
+    except Exception:
+        _log_audit(tender, frappe.session.user, "KEY_RECONSTRUCTION_FAILED", "Failed")
         raise
 
     # Step 3: Decrypt all submitted bids
@@ -371,16 +371,16 @@ def open_bids(tender: str,
             frappe.db.set_value("Bid", bid.name, "status", "Opened")
             frappe.db.set_value("Bid", bid.name, "bidder_name", content.get("bidder", ""))
             frappe.db.set_value("Bid", bid.name, "bid_amount", content.get("amount", 0))
-            frappe.db.set_value("Bid", bid.name, "delivery_days", content.get("delivery", 0))
+            frappe.db.set_value("Bid", bid.name, "delivery_days", content.get("delivery") or 0)
             if proposal_url:
                 frappe.db.set_value("Bid", bid.name, "technical_proposal", proposal_url)
             decrypted_bids.append({
                 "bid": bid.name, "supplier": bid.supplier,
                 "amount": content.get("amount", 0),
-                "delivery_days": content.get("delivery", 0),
+                "delivery_days": content.get("delivery") or 0,
             })
         except (ValueError, TypeError, binascii.Error, InvalidTag) as exc:
-            _log_audit(tender, frappe.session.user, "BID_DECRYPTION_FAILED", bid.name)
+            _log_audit(tender, frappe.session.user, "BID_DECRYPTION_FAILED", "Failed")
             frappe.throw(_("Could not decrypt bid {0}: {1}").format(bid.name, exc))
 
     # Step 4: Create Bid Opening Record
@@ -407,8 +407,7 @@ def open_bids(tender: str,
     tender_doc.status = "Under Evaluation"
     tender_doc.save(ignore_permissions=True)
 
-    _log_audit(tender, frappe.session.user, "OPENING_CEREMONY_COMPLETE",
-               f"Success: {len(decrypted_bids)} bids opened")
+    _log_audit(tender, frappe.session.user, "OPENING_CEREMONY_COMPLETE", "Success")
     del private_pem
     return {
         "opening_record": bor.name,
@@ -421,8 +420,8 @@ def open_bids(tender: str,
 def init_opening_ceremony(tender: str) -> dict:
     """Generate OTPs for all 3 officers and send emails.
 
-    Returns dict with {"officers": [...], "otp_hashes": {email: hash}} used
-    by the caller to pass officer-provided OTPs to ``open_bids()``.
+    Returns only officer identities. Codes are delivered out of band and
+    supplied by the officers to ``open_bids()``.
     """
     tender_doc = frappe.get_doc("Tender", tender)
     if not tender_doc.submission_deadline or frappe.utils.now_datetime() <= tender_doc.submission_deadline:

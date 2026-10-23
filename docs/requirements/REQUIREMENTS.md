@@ -1,10 +1,13 @@
 # Ugavi Requirements
 
-> Authoritative requirements document. All requirements originate from the client scope.
+> Requirements inventory: the original client procurement/logistics/assets/fleet
+> scope plus derived governance, finance, operations and upgrade controls.
+> The [demo coverage map](../demo/LOKADO-DEMO-TOUR.md#4-requirement-to-scene-map)
+> distinguishes the original ask, crucial additions and verification limits.
 
 ## Versions
-- **Frappe:** 16.52.0 (version-16)
-- **ERPNext:** 16.51.1 (version-16)
+- **Frappe:** 16.53.0 (verified 2026-10-23)
+- **ERPNext:** 16.52.1 (verified 2026-10-23)
 - **Ugavi:** 0.1.0 (main)
 
 ---
@@ -170,5 +173,5 @@
 ### 14.6 Demo-Specific (LOKADO)
 119. **NFD1** – Seed script idempotent (safe to re-run, `_ensure` upsert pattern)
 120. **NFD2** – Seed script production-guarded (refuses non-demo environments)
-121. **NFD3** – LOKADO demo covers 98/98 functional requirements in demo tour
+121. **NFD3** – LOKADO demo maps all functional requirements to scenes and distinguishes verified controls, live actions and externally dependent acceptance criteria (coverage target, not blanket certification)
 122. **NFD4** – All demo users have realistic Turkana/Kenyan names and roles

@@ -72,7 +72,7 @@ class Bid(Document):
             content = json.dumps({
                 "bidder": self.supplier,
                 "amount": getattr(self, "bid_amount", 0),
-                "delivery": getattr(self, "delivery_days", 0),
+                "delivery": self.delivery_days or 0,
                 "technical_proposal": attachment,
             })
             encrypted = encrypt_bid_content(content, tender.public_key.encode())

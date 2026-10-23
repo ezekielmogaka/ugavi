@@ -80,6 +80,7 @@ def run():
     _seed_finance()               # KRA PIN, tax templates, eTIMS hooks
     _seed_procurement_workflow()  # PRs, tenders, bids, awards, contracts
     _seed_bid_opening_and_sealed_keys(today())  # AP-19: Sealed Bid Keys + BOR
+    _prepare_live_opening_demo()
 
     # ── Supply-Chain Depth ──
     _seed_batch_tracking()         # Batch records with expiry dates (must come before QC)
@@ -102,6 +103,7 @@ def run():
 
     # ── Procurement Depth ──
     _seed_lokado_purchase_orders() # Co-signed LPOs from awards
+    _seed_monthly_stock_reports()  # derive donor books after all stock/valuation postings
 
     frappe.db.commit()
     print("\n=== LOKADO demo seed complete ===")
@@ -193,6 +195,13 @@ SUPPLIER_PORTAL_LINKS = {
     "lodwar-supplies@outlook.com": "Lodwar General Supplies",
 }
 
+LOKADO_UPSTREAM_ROLES = {
+    "procurement@lokado.org": ("Purchase User",),
+    "logistics@lokado.org": ("Stock User",),
+    "storekeeper@lokado.org": ("Stock User",),
+    "finance@lokado.org": ("Accounts User",),
+}
+
 
 def _seed_roles_and_users():
     for role in ROLES:
@@ -205,6 +214,8 @@ def _seed_roles_and_users():
     for index, (email, first, last, role) in enumerate(LOKADO_USERS):
         if frappe.db.exists("User", email):
             update_password(email, _DEMO_PASSWORD)
+            user = frappe.get_doc("User", email)
+            user.add_roles(*((role,) if role else ()), *LOKADO_UPSTREAM_ROLES.get(email, ()))
             continue
         user = frappe.get_doc({
             "doctype": "User",
@@ -218,6 +229,8 @@ def _seed_roles_and_users():
         })
         if role:
             user.append("roles", {"role": role})
+        for upstream_role in LOKADO_UPSTREAM_ROLES.get(email, ()):
+            user.append("roles", {"role": upstream_role})
         user.insert(ignore_permissions=True)
         print(f"  User: {email} ({role or 'portal'})")
 
@@ -1165,6 +1178,23 @@ def _seed_bid_opening_and_sealed_keys(td):
         print("  BOR: pending live three-officer opening ceremony (not fabricated)")
 
 
+def _prepare_live_opening_demo():
+    """Date the submitted solar-pump fixture as a closed, unopened tender."""
+    name = frappe.db.get_value(
+        "Tender", {"title": "Solar Water Pumps EU Resilience"}, "name"
+    )
+    if not name:
+        frappe.throw("The live-opening solar-pump demo tender is missing")
+    tender = frappe.get_doc("Tender", name)
+    if tender.status not in ("Published", "Bids Received"):
+        return
+    if getdate(tender.submission_deadline) >= getdate(today()):
+        tender.publish_date = add_days(today(), -20)
+        tender.submission_deadline = str(add_days(today(), -1)) + " 17:00:00"
+        tender.save(ignore_permissions=True)
+    print("  Live opening ready: Solar Water Pumps EU Resilience (closed, four sealed bids)")
+
+
 def _seed_lokado_award(td, dm):
     """Award 3 tenders with full evaluation summaries."""
 
@@ -1429,70 +1459,6 @@ def _seed_logistics():
         }).insert(ignore_permissions=True)
         print(f"  DonorWH: {dcode} <-> {wh}")
 
-    stock_reports = [
-        ("IOM", 60, "IOM Supported Warehouse - Kakuma", [
-            ("HYGIENE-KIT", 500, 420, 210000),
-            ("PIPE-HDPE-63MM", 200, 150, 75000),
-        ]),
-        ("USAID", 30, "LOKADO Main Warehouse - Lodwar", [
-            ("GOAT-GALLA", 200, 135, 540000),
-            ("ANIMAL-FEED", 80, 65, 26000),
-            ("VET-KIT", 30, 25, 75000),
-        ]),
-        ("CONCERN", 45, "LOKADO Field Store - Lokichoggio", [
-            ("HYGIENE-KIT", 900, 720, 360000),
-            ("FIRST-AID-KIT", 120, 95, 142500),
-        ]),
-        ("JAPAN", 75, "Cold Chain Storage - Lodwar", [
-            ("FIRST-AID-KIT", 180, 154, 231000),
-            ("WATER-PUMP-SOLAR", 8, 6, 510000),
-        ]),
-        ("EU", 90, "LOKADO Transit Store - Kitale", [
-            ("MOTORCYCLE-FIELD", 6, 4, 520000),
-            ("PIPE-HDPE-63MM", 1200, 860, 430000),
-        ]),
-        ("LOKADO-OWN", 15, "LOKADO Field Store - Oropoi", [
-            ("LAPTOP-DELL", 12, 9, 1170000),
-            ("FUEL-DIESEL", 600, 240, 50400),
-        ]),
-    ]
-
-    for dcode, days_ago, wh, items in stock_reports:
-        dname = dm.get(dcode, dcode)
-        report_filters = {
-            "donor": dname,
-            "warehouse": _wh(wh),
-            "report_month": str(add_days(td, -days_ago)),
-        }
-        existing_reports = frappe.get_all(
-            "Monthly Stock Report",
-            filters=report_filters,
-            pluck="name",
-            order_by="creation asc",
-        )
-        for duplicate in existing_reports[1:]:
-            frappe.delete_doc(
-                "Monthly Stock Report", duplicate, ignore_permissions=True
-            )
-        if existing_reports:
-            continue
-        msr = frappe.get_doc({
-            "doctype": "Monthly Stock Report",
-            "donor": dname,
-            "warehouse": _wh(wh),
-            "report_month": str(add_days(td, -days_ago)),
-        })
-        for item_code, open_q, close_q, total_val in items:
-            msr.append("items", {
-                "item_code": item_code,
-                "opening_qty": open_q,
-                "closing_qty": close_q,
-                "total_value": total_val,
-                "donor": dname,
-            })
-        msr.insert(ignore_permissions=True)
-        print(f"  StockReport: {dcode} [{add_days(td, -days_ago)}]")
-
     # Inter-donor transfer: IOM -> Concern for flood emergency
     transfer_filters = {
         "from_donor": dm.get("IOM"),
@@ -1657,6 +1623,38 @@ def _seed_logistics():
         f"({len(LOKADO_USERS) - len(SUPPLIER_PORTAL_LINKS)} staff + "
         f"{len(SUPPLIER_PORTAL_LINKS)} supplier portal users)"
     )
+
+
+def _seed_monthly_stock_reports():
+    """Generate current-period donor books from posted stock, never sample totals."""
+    month = frappe.utils.get_first_day(today())
+    scenarios = [
+        ("IOM", 60, "IOM Supported Warehouse - Kakuma"),
+        ("USAID", 30, "LOKADO Main Warehouse - Lodwar"),
+        ("CONCERN", 45, "LOKADO Field Store - Lokichoggio"),
+        ("JAPAN", 75, "Cold Chain Storage - Lodwar"),
+        ("EU", 90, "LOKADO Transit Store - Kitale"),
+        ("LOKADO-OWN", 15, "LOKADO Field Store - Oropoi"),
+    ]
+    for code, legacy_days_ago, warehouse_name in scenarios:
+        donor = frappe.db.get_value("Donor Profile", {"donor_code": code}, "name")
+        warehouse = frappe.db.get_value("Warehouse", {"warehouse_name": warehouse_name}, "name")
+        filters = {"donor": donor, "warehouse": warehouse, "report_month": month}
+        name = frappe.db.get_value("Monthly Stock Report", filters, "name")
+        if not name:
+            # Upgrade the earlier demo fixture in place; do not remove historical user reports.
+            name = frappe.db.get_value(
+                "Monthly Stock Report",
+                {**filters, "report_month": add_days(today(), -legacy_days_ago)}, "name",
+            )
+        if name:
+            report = frappe.get_doc("Monthly Stock Report", name)
+            report.report_month = month
+        else:
+            report = frappe.get_doc({"doctype": "Monthly Stock Report", **filters})
+            report.insert(ignore_permissions=True)
+        report.generate()
+        print(f"  StockReport: {code} [{month}] — {len(report.items)} ledger-derived rows")
 
 
 def _ensure_logistics_purchase_order(supplier, supplier_name, warehouse, items, td):
@@ -2048,7 +2046,7 @@ STOCK_RECEIPT_RATES = {
     "CEMENT-BAG": 1100, "WATER-TANK-10K": 52000, "GOAT-GALLA": 3842,
     "ANIMAL-FEED": 520, "VET-KIT": 4500, "HYGIENE-KIT": 175,
     "FIRST-AID-KIT": 1500, "PIPE-HDPE-63MM": 290, "MOTORCYCLE-FIELD": 130000,
-    "WATER-PUMP-SOLAR": 185000,
+    "WATER-PUMP-SOLAR": 185000, "LAPTOP-DELL": 97500, "FUEL-DIESEL": 210,
 }
 
 
@@ -2077,6 +2075,9 @@ def _seed_stock_entries():
         ("Material Receipt", None, _wh("Cold Chain Storage - Lodwar"),
          add_days(td, -9), [("FIRST-AID-KIT", 100), ("WATER-PUMP-SOLAR", 5)],
          "Receive Japan health cold-chain and solar pump stock"),
+        ("Material Receipt", None, _wh("LOKADO Field Store - Oropoi"),
+         add_days(td, -12), [("LAPTOP-DELL", 12), ("FUEL-DIESEL", 600)],
+         "Receive LOKADO own-funds laptops and generator diesel at Oropoi"),
         ("Material Issue", _wh("IOM Supported Warehouse - Kakuma"), None,
          add_days(td, -5), [("CEMENT-BAG", 80), ("PIPE-HDPE-63MM", 200)],
          "Issue to Kakuma WASH pipe network extension"),
@@ -2089,6 +2090,9 @@ def _seed_stock_entries():
         ("Material Issue", _wh("Cold Chain Storage - Lodwar"), None,
          add_days(td, -3), [("FIRST-AID-KIT", 30), ("WATER-PUMP-SOLAR", 2)],
          "Issue to Japan health cold chain items"),
+        ("Material Issue", _wh("LOKADO Field Store - Oropoi"), None,
+         add_days(td, -4), [("LAPTOP-DELL", 3), ("FUEL-DIESEL", 360)],
+         "Issue own-funds laptops and generator diesel to Oropoi field office"),
     ]
     for etype, fwh, twh, pdate, items, purpose in entries:
         existing = frappe.db.get_value(
@@ -2159,7 +2163,7 @@ def _seed_stock_entries():
             frappe.db.rollback()
             print(f"  InterDonorTransfer: {from_code} -> {to_code} FAILED — {type(e).__name__}: {e}")
     frappe.db.commit()
-    print("  Stock Entries: 10 direct entries (6 receipts, 4 issues) + 2 governed inter-donor transfers")
+    print(f"  Stock Entries: {len(entries)} direct receipts/issues + 2 governed inter-donor transfers")
 
 
 # ─────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 # Requirements Traceability Matrix (RTM) — Ugavi 0.1.0
 
-> **Versions:** Frappe 16.52.0 | ERPNext 16.51.1 | Ugavi 0.1.0
-> **Updated:** 2026-10-22 (supplier journey and upstream rehearsal verified)
+> **Versions:** Frappe 16.53.0 | ERPNext 16.52.1 | Ugavi 0.1.0
+> **Updated:** 2026-10-23 (persona access, real opening ceremony and submitted-data gates)
 > **Status:** Done [tested] | Done [controller] | Configured | Gap
 
 ---
@@ -190,14 +190,17 @@
 | Upgradeability | 0 | 5 | 0 | 0 | 5 |
 | **TOTAL** | **7** | **77** | **14** | **0** | **98** |
 
-**98/98 requirements addressed (100%). 7 unit-tested, 77 controller-built, 14 configured. 0 gaps.**
+**98 requirements mapped to implementations/configuration.** The classification
+table is an implementation inventory, not 98 passed acceptance tests or a
+production-readiness certificate. External integrations, client templates,
+production 2FA/SSO, capacity targets and recovery objectives need separate
+acceptance. GV8 is configurable but demo 2FA is off; FI6 is an adapter, not a
+certified eTIMS connection.
 
-> Current authoritative rehearsal evidence (2026-10-22): `make upgrade-check`
-> reports 67 Ugavi and 529 ERPNext DocTypes, zero compatibility issues, zero
-> missing controllers, 57 passing backend tests, and a healthy public endpoint.
-> `make demo-check` verifies 19 identities, five supplier links, and linked
-> procurement, contract, evaluation, logistics, asset, and fleet evidence.
-> `make fleet-check` separately verifies source reconciliation, submitted stock
-> links, cached totals, and donor-isolated reports. Browser Playwright evidence
-> remains a separate host-side gate and must not be claimed unless it was run.
-> See the [functional demo tour](../demo/LOKADO-DEMO-TOUR.md).
+Current automated evidence: [evidence registry](evidence.md). The
+[functional demo tour](../demo/LOKADO-DEMO-TOUR.md#4-requirement-to-scene-map)
+maps every original client requirement to actors, scenes, positive evidence,
+negative controls and verification limits. The new runtime test exercises
+one/two/three-code opening with actual crypto, database writes and private PDF
+creation. Browser tests cover all 14 staff identities plus supplier
+desktop/mobile access. Other business transitions remain explicit live steps.

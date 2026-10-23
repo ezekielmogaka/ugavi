@@ -1,5 +1,11 @@
 # Evidence Document — Ugavi 0.1.0
 
+> **Historical delivery inventory.** The checkboxes below record artifacts,
+> not current runtime certification. Versions and test counts may describe
+> earlier checkpoints. Use the [current evidence registry](traceability/evidence.md)
+> and [demo coverage map](demo/LOKADO-DEMO-TOUR.md#4-requirement-to-scene-map)
+> for the 2026-10-23 validation and limitations.
+
 ## Phase A: Foundation (Complete)
 - [x] Frappe 16.52.0 installed and configured
 - [x] MariaDB 11.8 running with donor-segregated schema

@@ -5,7 +5,7 @@ Ugavi is a donor-segregated procurement and logistics system on Frappe v16.
 
 ## System Requirements
 - Python 3.14+
-- MariaDB 11.8+
+- MariaDB 11.4+ (Docker baseline: 11.4)
 - Valkey 8+
 - Node.js 24+
 - Frappe Bench v16
@@ -18,8 +18,15 @@ Ugavi is a donor-segregated procurement and logistics system on Frappe v16.
 git clone <repo-url> && cd ugavi
 make setup          # Creates containers, installs apps, runs migrations
 make seed           # Seeds LOKADO demo data (canonical)
-make seed-lokado    # Seeds LOKADO demo data (alias for make seed)
+make demo-check
+make fleet-check
 ```
+
+`make seed-lokado` is an alias alternative, not a second required seed step.
+For daily source-mounted development use `make dev-up`, then `make dev-config`,
+`make dev-seed`, `make dev-check` and `make dev-test`. Image-based commands
+require `make upgrade-check` after code changes. See the
+[Make reference](../README.md#makefile-reference) for reset/backup warnings.
 
 **URL:** http://ugavi.localhost:8080 | Login: `Administrator` / `admin`
 

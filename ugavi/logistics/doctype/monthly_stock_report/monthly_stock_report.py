@@ -55,7 +55,7 @@ class MonthlyStockReport(Document):
                 SUM(CASE WHEN sle.posting_date BETWEEN %(start)s AND %(end)s
                               AND sle.voucher_type = 'Stock Reconciliation'
                          THEN sle.actual_qty ELSE 0 END) AS adjustment_qty,
-                MAX(sle.valuation_rate) AS valuation_rate
+                SUM(sle.stock_value_difference) AS closing_value
             FROM `tabStock Ledger Entry` sle
             LEFT JOIN `tabStock Entry` se
               ON sle.voucher_type = 'Stock Entry' AND se.name = sle.voucher_no
@@ -88,7 +88,7 @@ class MonthlyStockReport(Document):
                     "transfer_out_qty": row.transfer_out_qty or 0,
                     "adjustment_qty": row.adjustment_qty or 0,
                     "closing_qty": closing,
-                    "total_value": closing * (row.valuation_rate or 0),
+                    "total_value": row.closing_value or 0,
                     "donor": self.donor,
                 },
             )

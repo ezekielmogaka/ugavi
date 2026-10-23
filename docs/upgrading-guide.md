@@ -8,7 +8,7 @@ Frappe/ERPNext files, replace core controllers, or override whitelisted methods.
 
 | Ugavi | Frappe | ERPNext | Python | MariaDB |
 |---|---|---|---|---|
-| 0.1.x | 16.52.0 or compatible v16 | 16.51.1 or compatible v16 | 3.14 | 11.4+ |
+| 0.1.x | 16.53.0 (rehearsed) | 16.52.1 (pinned/rehearsed) | 3.14 | 11.4+ |
 
 Exact production image versions are pinned in `Dockerfile` and `apps.json`.
 The CI compatibility job also installs the current `version-16` upstream
@@ -49,13 +49,13 @@ curl -fsS http://localhost:8000/api/method/frappe.ping
 For the Docker demo, `make upgrade-check` runs the same compatibility,
 migration, app-test, and health sequence.
 
-The 2026-10-22 authoritative rehearsal against ERPNext 16.51.1 and Frappe
-16.52.0 reported:
+The current baseline is ERPNext 16.52.1 and Frappe 16.53.0. The
+[evidence registry](traceability/evidence.md) records the latest rehearsal:
 
 - 67 Ugavi DocTypes and 529 ERPNext DocTypes;
 - zero compatibility issues and zero missing controllers;
 - a successful migration and idempotent setup configuration;
-- 57 passing backend tests; and
+- passing integration and unit suites (15 + 62 at this checkpoint); and
 - `{"message":"pong"}` from the public health endpoint.
 
 After the upgrade rehearsal, validate the seeded business evidence separately:
@@ -64,7 +64,13 @@ After the upgrade rehearsal, validate the seeded business evidence separately:
 make seed                # or: make seed-lokado
 make demo-check
 make fleet-check
+make e2e                 # separately prepared host browser runtime
 ```
+
+For mounted local source use `make dev-config`, `make dev-seed`, `make dev-test`
+and `make dev-check`, then `UGAVI_BASE_URL=http://ugavi.localhost:8000 make e2e`.
+These are development checks, not an immutable-image upgrade rehearsal.
+No passing v16 rehearsal guarantees compatibility with v17 or a newer v16 tag.
 
 Both acceptance commands must return `"ready": true` with no issues. Browser
 Playwright tests are a separate host-side UI gate and are not evidence produced

@@ -1,7 +1,7 @@
 # LOKADO Functional-Requirements Demo Tour
 
 > **Client:** Lotus Kenya Action for Development Organization (LOKADO)  
-> **Baseline:** Frappe 16.52.0, ERPNext 16.51.1, Ugavi 0.1.0  
+> **Verified baseline (2026-10-23):** Frappe 16.53.0, ERPNext 16.52.1, Ugavi 0.1.0
 > **Duration:** 45-60 minutes for the full tour; scenes can be presented independently.
 
 This is the presenter runbook for the stated procurement, logistics, asset, and fleet requirements. It distinguishes Ugavi controls from ERPNext records so the demo does not imply that upstream behavior was copied or replaced.
@@ -14,13 +14,22 @@ make upgrade-check
 make seed                # canonical LOKADO seed (alias: seed-lokado)
 make demo-check
 make fleet-check
+make e2e                 # host-side Chromium prerequisites below
+make backup              # database + public/private uploaded files
 ```
+
+Run from the repository root. For source-mounted development use `make dev-up`
+in one terminal, then `make dev-config`, `make dev-seed`, `make dev-check` and
+`make dev-test` in another. Run browser tests with
+`UGAVI_BASE_URL=http://ugavi.localhost:8000 make e2e`.
+Use `make help` or the [Make reference](../../README.md#makefile-reference).
+Do not combine `seed-generic` with the canonical LOKADO dataset.
 
 Expected validation:
 
 - upstream compatibility reports `compatible: true`;
 - migration completes;
-- all 57 backend tests pass;
+- both backend runners pass (15 integration + 62 unit tests at this checkpoint);
 - all documented identities, roles, passwords and supplier links pass `make demo-check`;
 - the purchase-backed fleet journey and donor isolation pass `make fleet-check`;
 - `/api/method/frappe.ping` returns `{"message":"pong"}`;
@@ -39,10 +48,10 @@ make e2e
 ```
 
 Do not claim browser evidence when the Node dependencies or browser binary are
-not installed. The authoritative 2026-10-22 rehearsal passed compatibility,
-migration, 57 backend tests, demo acceptance, fleet acceptance, monthly stock
-report reconciliation, and public health; browser E2E was not executed because
-its host runtime was unavailable.
+not installed. The current automated evidence and honest limits are recorded
+in the [evidence registry](../traceability/evidence.md). Browser checks include
+all 14 staff personas and the supplier desktop/mobile views; they are not a
+claim that every business transition was performed in a browser.
 
 ## 2. Demo credentials and identities
 
@@ -68,7 +77,7 @@ All seeded users use password `Ugavi@2024`.
 | Fleet Manager | David Ewoi | `fleet@lokado.org` | `Ugavi@2024` | Ugavi Fleet |
 | Asset Manager | Agnes Ekal | `assets@lokado.org` | `Ugavi@2024` | Ugavi Assets |
 | Finance Officer | Margaret Nachuk | `finance@lokado.org` | `Ugavi@2024` | Finance, three-way match |
-| Internal Auditor | Robert Lotukoi | `auditor@lokado.org` | `Ugavi@2024` | Governance and audit evidence |
+| Auditor | Robert Lotukoi | `auditor@lokado.org` | `Ugavi@2024` | Governance and audit evidence |
 | Store Keeper | Ruth Napeyok | `storekeeper@lokado.org` | `Ugavi@2024` | Purchase Receipt, Stock Entry |
 
 ### Supplier portal accounts
@@ -118,14 +127,12 @@ Use this run sheet as the primary presenter sequence:
 | Prequalification review | `procurement@lokado.org` | `/app/supplier-prequalification` | Review and decide application | Status and reviewer evidence | Supplier |
 | Bid/clarification | `lodwar-supplies@outlook.com` | `/supplier/dashboard#opportunities` | Submit bid and clarification | Receipt hash, sealed content, notification | Procurement/opening officers |
 | Clarification response | `procurement@lokado.org` | `/app/clarification` | Answer supplier question | Answered status and supplier notification | Supplier |
-| Opening share 1 | `opening1@lokado.org` | `/app/bid-opening-record` | Enter officer 1 code | Opening remains locked | Officer 2 |
-| Opening share 2 | `opening2@lokado.org` | `/app/bid-opening-record` | Enter officer 2 code | Opening remains locked | Officer 3 |
-| Opening share 3 | `opening3@lokado.org` | `/app/bid-opening-record` | Enter officer 3 code and open | Bids decrypt; immutable opening record | Procurement/evaluation |
+| Opening ceremony | `opening1@lokado.org`, with codes supplied by officers 2 and 3 | Solar-pump Tender → **Open Sealed Bids** | Collect all three system-issued codes in the authorized session | Bids decrypt; immutable opening record and private PDF | Procurement/evaluation |
 | Award | `procurement@lokado.org` | `/app/bid-evaluation-summary` | Review scores, recommendation, and award | Winning bid, PO, contract, supplier notice | Supplier/storekeeper |
 | PO acknowledgement | winning supplier login | `/supplier/dashboard#deliveries` | Acknowledge the order | Timestamped `ugavi_*` acknowledgement | Store Keeper |
 | Receipt | `storekeeper@lokado.org` | `/app/purchase-receipt` | Receive accepted/rejected quantities from PO | Purchase Receipt and updated PO received percentage | Logistics/finance |
 | Donor stock | `logistics@lokado.org` | `/app/query-report/Stock Ledger` | Review ledger and donor warehouse/report | Receipt/dispatch trace and donor segregation | Finance |
-| Match | `finance@lokado.org` | `/app/three-way-match` | Compare PO, receipt and invoice | Match/tolerance result; no payment is demonstrated | Procurement Manager |
+| Match/payment | `finance@lokado.org` | `/app/three-way-match`, `/app/payment-entry` | Compare PO, receipt and invoice; inspect allocated payments | Six matches, five submitted payments, open payable; evaluation gate | Procurement |
 | Evaluation | `procurement@lokado.org` | `/app/ugavi-supplier-evaluation` | Score completed receipt | Total/cumulative rating visible to supplier | Supplier/auditor |
 | Audit | `auditor@lokado.org` | `/app/audit-log` | Review approvals, opening and overrides | Actor/time/outcome and hash-chain evidence | Presenter |
 | Fleet | `fleet@lokado.org` | `/app/vehicle-allocation` | Review allocation, fuel, spares and utilization | Vehicle-linked source documents and report | Presenter |
@@ -156,6 +163,29 @@ Use this run sheet as the primary presenter sequence:
 | Separate donor ledger books | 14 | `Donor Warehouse`, donor-linked stock dimensions |
 | Asset register, movement, and condition | 17 | ERPNext `Asset` plus Ugavi movement/verification |
 | Vehicle allocation, spares, fuel, monthly report | 18 | ERPNext `Vehicle` plus Ugavi fleet records |
+
+### Original scope: acceptance and important additional controls
+
+All rows have a presenter path; a prepared record is not the same as a fresh
+live transition. Follow the actor handoffs above and the completion checklist.
+
+| Requirement/control | Positive evidence to show | Negative/control check | Verification boundary |
+|---|---|---|---|
+| Prequalification and KES thresholds | Active/expired/suspended supplier examples; Direct below 200K, Restricted from 200K to below 500K, Open from 500K | Ineligible supplier cannot bid on restricted category; an open tender is not restricted to prequalified firms | Rules/eligibility tests and live portal |
+| Send/receive bids; three codes | Still-open opportunities for submission; **Solar Water Pumps EU Resilience** for closed-tender opening | One/two codes do not open; late submission rejected | Real integration test generates keys, decrypts, writes private BOR PDF; presenter ceremony remains unconsumed |
+| Programme PR and approval | Coded PR, `Pending Approval`, required DoA history, `Approved` before tender creation | Requester cannot approve own PR; direct status edits rejected | Controller tests and persona access; live handoff |
+| Coded PO and contract per issue | 15 POs (10 submitted) and 15 contracts; linked receipt/invoice sources | Submitted PO without contract fails gate | Database join checks and live linked documents |
+| Supplier performance after purchase | 12 Completed receipt/direct-invoice scorecards, scores 0–10 | Payment blocked without completed evaluation; low cumulative rating can suspend supplier | Completion gate and controller tests; destructive low-score demo only on disposable data |
+| Stock receipt/dispatch and monthly donor books | 22 submitted Stock Entries, six ledger-derived monthly stock reports (every donor book has rows), eight donor-warehouse links | Cross-donor issue needs approved transfer; report balances reconcile to Stock Ledger | Gate, donor control tests and ledger comparison |
+| Asset register/movement/condition | Eight Ugavi registers/verifications, two movements and one disposal | Movement compares source custodian/location/condition; disposal authorizer differs from owner | App-owned workflow evidence; ERPNext depreciation is separate, not certified by the Ugavi register count |
+| Fleet allocation/fuel/spares/monthly | Four Vehicles/allocations; eight reconciliations, fuel logs, spare issues and trips; four donor reports | Purchase row over-allocation and donor mixing rejected | Dedicated `fleet-check` validates submitted sources and report isolation |
+| Finance beyond original scope | Eight submitted invoices, five allocated payments, three landed-cost vouchers, six donor budgets, six line-level matches | Disputes require review; native budgets use Warn actions, not hard-stop overspend | Submitted-state gate; no real bank/M-Pesa settlement |
+| Audit, supplier identity and documents | Role-scoped Desk access, private supplier files, hash evidence, complaints and notifications | Supplier cannot choose another identity; auditor has no governance-rule edit rights | Role/browser tests, portal tests and live complaint review |
+| Upgrade-safe delivery and recovery | Native DocTypes/permissions, additive hooks/assets; pinned image rebuild/migrate/tests | No guarantee for an untested v17; backup restore requires separate rehearsal | `upgrade-check`; `make backup` creates files but alone does not prove RTO/RPO |
+
+**Templates:** the original PR/PO/prequalification/evaluation/ledger templates
+were to be supplied by the client. Current records demonstrate functional
+fields and standard/app print formats, not signed-off client layouts.
 
 ## Scene 5: Organization and funding context
 
@@ -245,14 +275,19 @@ See [Supplier Journey Demo Guide](SUPPLIER-JOURNEY.md) for the detailed supplier
 ## Scene 11: Three-person sealed-bid opening
 
 **Login sequence:** `opening1@lokado.org` → `opening2@lokado.org` → `opening3@lokado.org`  
-**Navigate:** `/app/bid-opening-record`
+**Navigate:** `/app/tender` → **Solar Water Pumps EU Resilience** → **Open Sealed Bids**
 
-1. Show that sealed methods create an RSA public key and an AES-wrapped private key.
-2. Explain that only the 256-bit wrapping key is split into three shares.
-3. Demonstrate one officer: opening fails.
-4. Demonstrate two officers: opening still fails.
-5. Have all three distinct officers enter their short-lived system-issued codes.
-6. Open the bids and show the Bid Opening Record and hash evidence.
+1. This fixture is closed with four sealed bids, assigned to `opening1/2/3`.
+   The warehouse tender is already awarded and is not a new-opening example.
+2. Click **Open Sealed Bids** as an Opening Officer; read codes in Mailpit.
+3. The dialog requires all three codes. Each officer supplies their own code
+   to the supervising officer's session. It is not a three-session approval UI.
+4. For deliberate failed API trials with one/two codes, request fresh codes
+   before each trial (successful verifications consume codes).
+5. Complete all three valid codes and show `outcome = Success`, the private PDF,
+   opened amounts and Tender `Under Evaluation`.
+6. Never create a BOR directly. The seed deliberately leaves this ceremony
+   pending and does not reset it after opening; back up before demonstrating it.
 
 **Control:** 3-of-3 is enforced by cryptography and controller validation, not by hiding a button.
 
@@ -292,8 +327,13 @@ See [Supplier Journey Demo Guide](SUPPLIER-JOURNEY.md) for the detailed supplier
 2. Show that receipt updates the Purchase Order received percentage.
 3. Create or open a Stock Entry for dispatch.
 4. Open ERPNext **Stock Ledger** and filter by item and warehouse.
-5. Show six donor-to-warehouse links.
+5. Show eight donor-to-warehouse links for the six donors.
 6. Open the IOM and USAID Monthly Stock Reports.
+   These are current-month snapshots generated after stock postings, not typed
+   sample balances. `demo-check` reconciles closing quantities and values
+   against the native Stock Ledger, including missing item rows.
+   Every donor book has rows; for Own Funds, show the Oropoi laptop and
+   generator-diesel receipt and issue, kept separate from donor-funded stock.
 7. Show the approved IOM-to-Concern inter-donor transfer.
 8. Explain that cross-donor consumption requires an approved transfer.
 
@@ -307,6 +347,14 @@ See [Supplier Journey Demo Guide](SUPPLIER-JOURNEY.md) for the detailed supplier
 1. Compare Purchase Order, Purchase Receipt/GRN, and Purchase Invoice.
 2. Show tolerance handling and mismatch status.
 3. Show donor/project dimensions carried into the finance handoff.
+4. Open five submitted payments and their invoice allocations (full/partial).
+   `LOK-INV-LGS-1190` remains unpaid for the open-payables example.
+5. Inspect three submitted Landed Cost Vouchers and six submitted donor Budgets.
+   Finance Officer has read-only Budget/LCV access; administration is a separate role.
+
+Matching creates review evidence; it is not an automatic mismatch-payment block.
+The separate completed-supplier-evaluation payment gate is enforced. Native
+demo budgets use Warn actions. No real funds are transmitted.
 
 **Upstream boundary:** ERPNext owns Purchase Invoice and accounting postings; Ugavi adds donor compliance and matching evidence.
 
@@ -329,11 +377,15 @@ See [Supplier Journey Demo Guide](SUPPLIER-JOURNEY.md) for the detailed supplier
 **Login:** `assets@lokado.org`  
 **Navigate:** `/app/asset`, `/app/ugavi-asset-movement`, `/app/asset-verification`, `/app/asset-disposal`
 
-1. Show the ERPNext Asset register, category, capitalization, location, custodian, depreciation, and maintenance.
-2. Show Ugavi donor attribution and QR/tagging extension.
-3. Record a movement between custodian/location states.
-4. Record condition during verification.
-5. Show controlled disposal.
+1. Open **Asset Register** (`/app/asset-register`) for the eight Ugavi donor
+   assets, locations, custodians and condition records.
+2. Explain upstream ERPNext Asset capitalization/depreciation as a separate
+   capability; these eight Ugavi records are not proof of eight capitalized,
+   depreciating ERPNext Asset records.
+3. Show Ugavi donor attribution and QR/tagging extension.
+4. Record a movement between custodian/location states.
+5. Record condition during verification.
+6. Show controlled disposal.
 
 The LOKADO seed includes eight donor assets, eight physical verification
 records, two custody/location movements with condition evidence, and one

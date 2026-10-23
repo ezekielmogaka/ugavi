@@ -1,11 +1,10 @@
 # Developer Onboarding Guide — Ugavi
 
 ## Prerequisites
-- Python 3.14+ installed
-- MariaDB 11.8+ installed
-- Valkey 8+ installed
-- Node.js 24+ installed
-- Frappe Bench installed: `pip install frappe-bench`
+- Docker Engine/Docker Desktop with Compose v2, Git and Make.
+- Host Node.js/npm plus Chromium for Playwright (`tests/e2e`).
+- The container provides Bench, Python 3.14, MariaDB 11.4 and Valkey 8.1;
+  do not install duplicate host database/Bench services for the Docker workflow.
 
 ## Quick Start
 
@@ -18,9 +17,9 @@ cd ugavi
 make dev-up
 
 # 3. In another terminal, seed and verify the demo
-make seed
-make demo-check
-make fleet-check
+make dev-config
+make dev-seed
+make dev-check
 ```
 
 Open http://ugavi.localhost:8000. The development stack uses Frappe's native
@@ -51,12 +50,17 @@ also target the image-based backend. To validate current local source instead:
 ```bash
 make dev-seed        # seed_lokado.run in dev-server (idempotent)
 make dev-check       # LOKADO + fleet acceptance gates in dev-server
-make dev-reset       # DESTRUCTIVE: reinstall site, setup_config, seed, gates
-docker compose -f compose.yaml -f compose.dev.yaml exec -T dev-server \
-  bench --site ugavi.localhost run-tests --app ugavi
+make dev-test        # enable tests + run integration and unit suites in dev-server
 UGAVI_BASE_URL=http://ugavi.localhost:8000 make e2e
 ```
 
+Run `make dev-config` after configuration/permission changes; it preserves
+upstream default permissions while adding explicit Custom DocPerm grants.
+The seed idempotently assigns native Purchase User, Stock User and Accounts
+User roles to the relevant demo personas. Auditor governance and Finance
+Budget/LCV access remain read-only; no staff persona is made System Manager.
+
+For a deliberate destructive reset only: `make backup`, then `make dev-reset`.
 `make reset-lokado` is the image-based equivalent of `make dev-reset`. Both
 pass `DB_ROOT_PASSWORD`/`ADMIN_PASSWORD` (default `admin`, local only) and run
 `setup_config` before seeding: a fresh site needs it, for example to enable
@@ -73,19 +77,21 @@ tests. `make dev-down` stops the shared stack without deleting its named volumes
 
 - Fresh reinstall → `setup_config` → seed run twice: both runs reported zero
   `FAILED`/`skipped`/tracebacks and identical acceptance counts.
-- All finance and stock evidence is submitted: 8 Purchase Invoices, 6 Three-Way
-  Match, 5 Payment Entries, 3 Landed Cost Vouchers, 6 Budgets, 20 Stock
-  Entries, 12 Completed supplier evaluations. `demo-check` enforces these
-  minimums and their `docstatus = 1`.
+- Submitted evidence: 10 Purchase Orders/Receipts, 8 Purchase Invoices,
+  5 Payment Entries, 3 Landed Cost Vouchers, 6 Budgets, 22 Stock Entries and
+  8 Quality Inspections. Six Three-Way Match records and 12 Completed supplier
+  evaluations are non-submittable DocTypes, checked by count/status instead.
 - Cross-donor stock moves only through Inter Donor Transfer `approve()` →
   `complete()`; the seed never bypasses the donor-segregation validation.
 - `make upgrade-check` rebuilt the image and passed compatibility, migration,
-  61 backend tests and health; `make demo-check`, `make fleet-check` and the
-  three Playwright tests passed.
+  backend tests and health; see the [current evidence](traceability/evidence.md)
+  for suite totals, browser coverage and limitations.
 
-Known by design: the three-officer bid opening is performed live (no Bid
-Opening Record is seeded), and one Approved plus one Pending transfer are left
-for the presenter to act on.
+Known by design: Solar Water Pumps EU Resilience is closed with four sealed
+bids ready for live opening (no BOR is fabricated). Two Approved plus one
+Pending transfer are left for the presenter. Opening is a one-time action;
+rerunning the seed does not reverse it. Exact replay requires a backed-up
+disposable site reset.
 
 **LOKADO Demo:** `make seed` (canonical 19-user dataset) · `make demo-check` · `make fleet-check` · Tour: `docs/demo/LOKADO-DEMO-TOUR.md`
 

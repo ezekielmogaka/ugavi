@@ -76,19 +76,29 @@ bench restart
 ### Quick Reset
 ```bash
 make reset-demo         # reinstall site + re-seed LOKADO (alias for reset-lokado)
-# or step by step:
-make clean              # tear down all containers + volumes
-make setup              # recreate clean environment
-make seed               # populate LOKADO data (canonical; alias: seed-lokado)
 make demo-check         # verify LOKADO identities and seeded workflow evidence
 make fleet-check        # verify purchase-to-vehicle reconciliation and donor isolation
 ```
 
+**Destructive:** first take `make backup` and copy its files off the container.
+Reset reinstalls the site database and applies configuration before seeding.
+Do not use `make clean` as routine recovery: it removes data volumes and host
+backup contents. For mounted source use `make dev-reset` (also destructive).
+For non-destructive daily repair use `make dev-config && make dev-seed && make dev-check`.
+
 ### Backup & Restore (safety net)
 ```bash
-make backup-demo        # export LOKADO DB to backups/lokado_demo_dump.sql
-make restore-demo       # restore from SQL dump
+make backup             # Bench database AND uploaded-file archives in sites/<site>/private/backups
+# Copy archives off the container with docker compose cp.
+# Recovery on an isolated site (DB_FILE is a path INSIDE the backend container):
+make restore DB_FILE=/path/to/database.sql.gz
 ```
+
+The Make restore helper restores the database only. Restore public/private
+file archives with the native Bench restore options described in
+[backup/restore procedure](../tests/backup_restore_procedure.md).
+Legacy `backup-demo`/`restore-demo` hard-code the original database name and
+are not the supported recovery path after a reinstall.
 
 ### Verify LOKADO Data Integrity
 ```bash
@@ -96,10 +106,10 @@ make demo-check         # automated check: users, suppliers, counts, fleet
 make fleet-check        # fleet-specific reconciliation
 docker compose exec backend bench --site ugavi.localhost console
 # In console:
-# frappe.db.count('Purchase Requisition')  # should be 6
-# frappe.db.count('Supplier')              # should be 42
-# frappe.db.count('Donor')                 # should be 6
-# frappe.db.count('Tender')                # should be 5
+# frappe.db.count('Purchase Requisition')  # fresh baseline: 10
+# frappe.db.count('Supplier')              # 18
+# frappe.db.count('Donor Profile')         # 6
+# frappe.db.count('Tender')                # 8
 ```
 
 ### LOKADO Demo Tour Checklist
@@ -107,8 +117,8 @@ docker compose exec backend bench --site ugavi.localhost console
 - [ ] Verify 10 Purchase Requisitions across Draft, Pending Approval, Approved, and Rejected
 - [ ] Verify 6 Donor Profiles (IOM, USAID, Concern, Japan, EU, Own Funds)
 - [ ] Verify 3 Tender Threshold Rules in Procurement Settings
-- [ ] Verify 5 Tenders with bids
+- [ ] Verify 8 Tenders with 26 bids (solar-pump tender closed for live opening)
 - [ ] Verify IOM Warehouse Construction contract (milestones, retention, bond)
-- [ ] Verify Supplier prequalification (9 active, 1 expired, 1 suspended)
+- [ ] Verify Supplier prequalification (15 prequalified, 2 expired, 1 suspended)
 - [ ] Verify Inter Donor Transfer (IOM → Concern, 200 hygiene kits)
 - [ ] Verify `make demo-check` and `make fleet-check` both return `"ready": true`

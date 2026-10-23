@@ -3,18 +3,108 @@
 > Mapping every claim to its verified source.
 > Label: `[verified: path|url]` `[tested: test_id]` `[assumption]`
 
-## Environment
-- **Frappe:** 16.52.0 (version-16, commit 4515014) `[verified: bench version]`
-- **ERPNext:** 16.51.1 (version-16, commit 5af6561) `[verified: bench version]`
-- **Ugavi:** 0.1.0 (main, commit 69c4b15) `[verified: bench version]`
-- **Site:** ugavi.localhost `[verified: docker exec bench list-apps]`
-- **Database:** MariaDB (devcontainer-mariadb-1) `[verified: docker ps]`
-- **Mail:** Mailpit on :1025/:8025 `[verified: docker ps]`
-- **Valkey:** 2 instances (cache + queue) `[verified: docker ps]`
-- **Test runner:** Frappe test runner, 0 tests found `[verified: bench run-tests --app ugavi]`
-- **Seed script:** LOKADO seed runs successfully `[verified: bench execute ugavi.scripts.seed_lokado.run]`
-- Generic demo seed also available: `bench execute ugavi.scripts.seed_demo.run` (legacy)
-- **Demo checks:** `demo-check` and `fleet-check` both return `"ready": true, "issues": []`
+## Current demo validation — 2026-10-23
+
+This section supersedes historical snapshots below. It certifies only the
+checks actually executed, not every requirement or production deployment.
+
+### Environment and reproducible commands
+
+- Frappe **16.53.0**, ERPNext **16.52.1**, Ugavi **0.1.0** (`bench version`).
+- Site: `ugavi.localhost`; image frontend `:8080`; source-mounted server
+  `http://ugavi.localhost:8000`; Mailpit `http://localhost:8026`.
+- MariaDB 11.4; one Valkey service; no ERPNext/Frappe core source edits.
+- From repository root, development: `make dev-config`, `make dev-seed`,
+  `make dev-check`, `make dev-test`,
+  `UGAVI_BASE_URL=http://ugavi.localhost:8000 make e2e`.
+- Immutable-image rehearsal: `make upgrade-check`, `make demo-check`,
+  `make fleet-check`, `make e2e`.
+- `make help` and the [Make reference](../../README.md#makefile-reference)
+  describe each command. Avoid `seed-generic` on the LOKADO demo.
+
+### Verified outcomes
+
+| Check | Result and scope |
+|---|---|
+| Seed rerun | Exit 0; no FAILED/skipped/tracebacks; pre/post acceptance counts unchanged |
+| Backend tests | 15 integration + 62 unit tests passed; count both Frappe runners |
+| Real opening integration | Generates keys, seals a bid, rejects one/two codes, accepts all three, decrypts original amount, creates immutable BOR/private PDF |
+| Role configuration | Repeated configuration adds no duplicate permission rows and retains native ERPNext permissions; auditor governance and finance Budget/LCV grants are read-only |
+| Browser staff access | 17/17 Chromium tests passed against both image `:8080` and mounted source `:8000`; all 14 staff logins can read documented records without System Manager |
+| Supplier browser | Anonymous sign-in boundary; identity-scoped dashboard, LOKADO brand, mobile single-column layout with no horizontal overflow |
+| LOKADO/fleet gates | `ready: true`, empty issues; source references, supplier scorecards, contracts and donor-isolated fleet reports checked |
+| Monthly donor books | Generated from actual Stock Ledger after all postings; gate compares every item closing quantity/value and finds missing rows; uses posted stock-value differences, not highest historical rate |
+| Image upgrade rehearsal | Rebuild, compatibility (`67` Ugavi / `529` ERPNext DocTypes, no issues/missing controllers), migration, configuration, both test runners and health passed |
+| Documentation checks | Documented Make targets exist; local Markdown file links resolve; `git diff --check` passes |
+
+### Fresh baseline used by gates
+
+| Domain | Evidence |
+|---|---|
+| Identities | 14 staff + 5 supplier portal users; 6 donors; 18 suppliers; 17 Items; 13 Warehouses including groups/defaults |
+| Procurement | 10 PRs; 8 tenders; 26 bids; 15 POs (10 submitted, 5 draft); 15 contracts |
+| Receiving/evaluation | 10 submitted receipts; 8 submitted Quality Inspections; 12 Completed scorecards |
+| Stock | 22 submitted Stock Entries; 36 batches; 8 donor-warehouse links; 6 monthly stock reports; 6 transfers (2 completed, 2 approved, 1 pending, 1 rejected) |
+| Finance | 8 submitted invoices; 5 submitted payments; 6 line-level matches; 3 submitted landed-cost vouchers; 6 submitted donor budgets |
+| Fleet | 4 Vehicles/allocations/reports; 8 reconciliations, submitted fuel logs, spare issues and trips |
+| Assets | 8 Ugavi registers/verifications; 2 movements; 1 authorized disposal |
+
+### Explicit limits / presenter handoff
+
+- **Live opening remains ready:** Solar Water Pumps EU Resilience has an elapsed
+  deadline and four sealed bids. Integration tests use disposable fixtures and
+  do not consume the presenter tender. The UI collects three codes in one
+  authorized session, not three independently signed sessions. Re-request
+  codes after failed partial verification; valid codes are single-use.
+- The seed leaves Draft/Pending PRs, two Approved and one Pending transfer for
+  live actions; repeated seed does not undo completed business transitions.
+- Browser tests prove role access and selected supplier UI, not every PR →
+  award → receipt transition. Follow the [tour](../demo/LOKADO-DEMO-TOUR.md)
+  to demonstrate handoffs; use a disposable site for destructive trials.
+- Native matching creates dispute/review evidence, not a payment mismatch
+  hard block. Demo budgets use Warn actions. Completed supplier evaluations
+  are enforced separately before payments.
+- No real bank/M-Pesa settlement, certified eTIMS, external SMS delivery,
+  production SSO/2FA, client-approved document templates, load/SLA benchmarks
+  or disaster-recovery RTO/RPO certification is claimed.
+- Ugavi Asset Register evidence does not prove capitalized/depreciating
+  ERPNext Assets (zero native Asset records in this demo). The upstream
+  capitalization workflow is separate.
+- Passing the pinned v16 rehearsal does not certify an untested v17 upgrade.
+- Browser timing: in the final run the first image-port (`:8080`) browser
+  pass, started immediately after `upgrade-check` recreated the containers,
+  had one connection-level failure (`chrome-error://chromewebdata/` on the
+  procurement login redirect; 16/17 passed). Two immediate reruns passed 17/17
+  in about 14 s, and the source-mounted `:8000` pass was 17/17. Wait for the
+  stack to settle after recreation before presenting.
+
+### Final run record (2026-10-23, fresh site)
+
+Executed in order from the repository root against working tree based on
+`e9cc177`; every step's full output was retained outside the repository.
+
+| # | Command | Exit | Key output |
+|---|---|---|---|
+| 1 | `make backup` | 0 | Database + public/private file archives written |
+| 2 | `make dev-reset` (reinstall, `setup_config`, seed, gates) | 0 | 0 `FAILED`/`skipped`/tracebacks; all six donor books have ledger rows |
+| 3 | `make dev-seed` (rerun) | 0 | 0 failures; acceptance counts unchanged |
+| 4 | `make dev-check` | 0 | LOKADO and fleet: `"ready": true`, `"issues": []` |
+| 5 | `make dev-test` | 0 | `Ran 15 tests … OK`; `Ran 62 tests … OK` |
+| 6 | `make upgrade-check` | 0 | `compatible: true` (67 Ugavi / 529 ERPNext DocTypes); migrate; 15 + 62 tests OK; `pong` |
+| 7 | `make demo-check` | 0 | `ready: true`, 19 users, 5 supplier portal links, `pong` |
+| 8 | `make fleet-check` | 0 | `ready: true`, no issues |
+| 9 | `make e2e` (`:8080`) | 2, then 0, 0 | 16/17 (transient, see above), then 17/17 twice |
+| 10 | `UGAVI_BASE_URL=http://ugavi.localhost:8000 make e2e` | 0 | 17/17 passed |
+
+Documentation check: every `make <target>` cited in `README.md` and `docs/`
+exists in the Makefile, every Makefile target appears in the README reference
+and `make help`, all local Markdown links resolve, and `git diff --check` passes.
+Rerun the sequence above to reproduce in another environment.
+
+## Historical snapshots (superseded; retained for provenance)
+
+The tables and dated notes below record earlier findings. Old versions,
+counts, missing-schema reports and risk statuses are not the current state.
 
 ## Verified DocTypes (JSON exists)
 | DocType | Path |

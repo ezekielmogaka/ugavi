@@ -33,7 +33,7 @@ class TestSeedScenarioKeys(unittest.TestCase):
             seed_lokado._seed_stock_entries()
 
             lookups = self._stock_entry_lookups(frappe)
-            self.assertEqual(len(lookups), 10)
+            self.assertEqual(len(lookups), 12)
             for call in lookups:
                 filters = call.args[1]
                 self.assertIn("remarks", filters)
@@ -48,13 +48,13 @@ class TestSeedScenarioKeys(unittest.TestCase):
             frappe.get_doc.return_value = MagicMock()
             seed_lokado._seed_stock_entries()
 
-            self.assertEqual(frappe.get_doc.call_count, 10)
+            self.assertEqual(frappe.get_doc.call_count, 12)
             for call in frappe.get_doc.call_args_list:
                 data = call.args[0]
                 self.assertTrue(data["remarks"])
                 self.assertEqual(data["set_posting_time"], 1)
                 self.assertNotIn("purpose", data)
-            self.assertEqual(frappe.get_doc.return_value.submit.call_count, 10)
+            self.assertEqual(frappe.get_doc.return_value.submit.call_count, 12)
             receipt_rows = [
                 call.args[1]
                 for call in frappe.get_doc.return_value.append.call_args_list

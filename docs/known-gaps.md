@@ -1,5 +1,11 @@
 # Known Gaps — Ugavi 0.1.0
 
+> **Historical issue ledger, not a blanket acceptance result.** For current
+> demo evidence and remaining boundaries see the
+> [evidence registry](traceability/evidence.md). A scaffold, test plan or
+> configured setting below is not proof that an external integration,
+> performance target or production security control has passed.
+
 > **Updated:** 2026-10-19 (FINAL v2) | **Source:** `docs/gap-analysis-2.md`
 > **Status legend:** ✅ Fixed | ⚠️ Deferred (CI/infrastructure) | 📝 Accepted (not MVP)
 

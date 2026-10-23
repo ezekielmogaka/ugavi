@@ -2,10 +2,12 @@
 
 import frappe
 from frappe import _
+from frappe.utils import get_datetime, now_datetime
 from frappe.utils.password import check_password
 
 from ugavi.scripts.seed_lokado import (
     LOKADO_USERS,
+    LOKADO_UPSTREAM_ROLES,
     SUPPLIER_PORTAL_LINKS,
     _DEMO_PASSWORD,
 )
@@ -31,6 +33,9 @@ def get_report() -> dict:
             issues.append(f"Demo password mismatch: {email}")
         if role and role not in frappe.get_roles(email):
             issues.append(f"Missing role {role}: {email}")
+        for upstream_role in LOKADO_UPSTREAM_ROLES.get(email, ()):
+            if upstream_role not in frappe.get_roles(email):
+                issues.append(f"Missing upstream role {upstream_role}: {email}")
 
     for email, supplier in SUPPLIER_PORTAL_LINKS.items():
         if not frappe.db.exists("Supplier", supplier):
@@ -47,7 +52,7 @@ def get_report() -> dict:
         "Purchase Requisition": 10,
         "Tender": 8,
         "Bid": 26,
-        "Ugavi Contract": 5,
+        "Ugavi Contract": 15,
         "Donor Warehouse": 8,
         "Monthly Stock Report": 6,
         "Inter Donor Transfer": 6,
@@ -62,11 +67,11 @@ def get_report() -> dict:
         "Asset Verification": 8,
         "Ugavi Asset Movement": 2,
         "Asset Disposal": 1,
-        "Purchase Receipt": 6,
-        "Ugavi Supplier Evaluation": 8,
+        "Purchase Receipt": 10,
+        "Ugavi Supplier Evaluation": 12,
         # ── Supply Chain Depth ──
-        "Quality Inspection": 0,      # items need inspection_required_before_purchase=1
-        "Stock Entry": 11,
+        "Quality Inspection": 8,
+        "Stock Entry": 22,
         "Batch": 8,
         "Material Request": 5,
         # ── Finance + Three-Way Match ──
@@ -80,7 +85,7 @@ def get_report() -> dict:
         # ── Programme ──
         "Project": 3,
         # ── Procurement Depth ──
-        "Purchase Order": 4,
+        "Purchase Order": 15,
     }
     counts = {}
     for doctype, minimum in minimum_counts.items():
@@ -95,8 +100,11 @@ def get_report() -> dict:
         "Payment Entry": 5,
         "Landed Cost Voucher": 3,
         "Budget": 6,
-        "Stock Entry": 11,
+        "Stock Entry": 22,
         "Material Request": 3,
+        "Purchase Order": 10,
+        "Purchase Receipt": 10,
+        "Quality Inspection": 8,
     }
     for doctype, minimum in minimum_submitted.items():
         submitted = frappe.db.count(doctype, {"docstatus": 1})
@@ -104,6 +112,36 @@ def get_report() -> dict:
             issues.append(
                 f"{doctype}: expected at least {minimum} submitted, found {submitted}"
             )
+
+    for name in frappe.get_all("Monthly Stock Report", pluck="name"):
+        report = frappe.get_doc("Monthly Stock Report", name)
+        ledger = {
+            row.item_code: row
+            for row in frappe.db.sql(
+                """SELECT item_code, SUM(actual_qty) AS qty,
+                          SUM(stock_value_difference) AS value
+                   FROM `tabStock Ledger Entry`
+                   WHERE warehouse = %s AND posting_date <= %s AND is_cancelled = 0
+                   GROUP BY item_code""",
+                (report.warehouse, frappe.utils.get_last_day(report.report_month)),
+                as_dict=True,
+            )
+        }
+        recorded = {row.item_code: row for row in report.items}
+        if not recorded:
+            issues.append(f"Monthly Stock Report {name}: donor book has no ledger rows")
+        for item_code in set(ledger) | set(recorded):
+            source = ledger.get(item_code)
+            row = recorded.get(item_code)
+            expected_qty = float(source.qty or 0) if source else 0
+            expected_value = float(source.value or 0) if source else 0
+            if (
+                row is None
+                or abs(float(row.closing_qty or 0) - expected_qty) > 0.00001
+                or abs(float(row.total_value or 0) - expected_value) > 0.01
+                or row.donor != report.donor
+            ):
+                issues.append(f"Monthly Stock Report {name}: {item_code} does not reconcile to donor ledger")
 
     completed_evaluations = frappe.db.count(
         "Ugavi Supplier Evaluation", {"status": "Completed"}
@@ -231,6 +269,20 @@ def get_report() -> dict:
             "Published tenders missing sealed three-officer controls: "
             + ", ".join(row[0] for row in invalid_opening_panels)
         )
+
+    opening_tender = frappe.db.get_value(
+        "Tender", {"title": "Solar Water Pumps EU Resilience"},
+        ["name", "status", "submission_deadline"], as_dict=True,
+    )
+    if not opening_tender:
+        issues.append("Missing solar-pump live-opening demo tender")
+    elif opening_tender.status in ("Published", "Bids Received"):
+        if get_datetime(opening_tender.submission_deadline) >= now_datetime():
+            issues.append("Solar-pump demo tender has not closed for live bid opening")
+        if frappe.db.count("Bid", {"tender": opening_tender.name, "status": "Submitted"}) < 4:
+            issues.append("Solar-pump live-opening demo requires four sealed submissions")
+    elif not frappe.db.exists("Bid Opening Record", {"tender": opening_tender.name}):
+        issues.append("Solar-pump tender advanced without verified bid-opening evidence")
 
     movement_gaps = frappe.db.sql(
         """SELECT name FROM `tabUgavi Asset Movement`
