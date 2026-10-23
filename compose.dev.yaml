@@ -33,7 +33,6 @@ services:
       MPESA_SHORTCODE: ${MPESA_SHORTCODE:-}
     ports:
       - "${DEV_HTTP_PORT:-8000}:8000"
-      - "${SOCKETIO_PORT:-9000}:9000"
     depends_on:
       configurator:
         condition: service_completed_successfully
@@ -46,11 +45,9 @@ services:
 
   dev-socketio:
     image: ${UGAVI_IMAGE:-ugavi}:${UGAVI_TAG:-0.1.0}
-    entrypoint:
-      - bash
-      - -lc
     command:
-      - cd /home/frappe/frappe-bench && exec bench socketio
+      - node
+      - /home/frappe/frappe-bench/apps/frappe/socketio.js
     working_dir: /home/frappe/frappe-bench
     volumes:
       - sites_data:/home/frappe/frappe-bench/sites
