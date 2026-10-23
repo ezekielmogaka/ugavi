@@ -1,45 +1,55 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "warehouse",
-   "fieldtype": "Link",
-   "label": "Warehouse",
-   "options": "Warehouse",
-   "reqd": 1,
-   "unique": 1
-  },
-  {
-   "fieldname": "donor",
-   "fieldtype": "Link",
-   "label": "Donor",
-   "options": "Donor Profile",
-   "reqd": 1
-  },
-  {
-   "fieldname": "grant",
-   "fieldtype": "Link",
-   "label": "Grant Reference",
-   "options": "Donor Profile"
-  },
-  {
-   "fieldname": "restricted_items",
-   "fieldtype": "Check",
-   "label": "Restricted Items Only"
-  },
-  {
-   "fieldname": "notes",
-   "fieldtype": "Small Text",
-   "label": "Notes"
-  }
- ],
- "istable": 0,
- "module": "Logistics",
- "name": "Donor Warehouse",
- "permissions": [
-  {"create": 1, "delete": 0, "read": 1, "role": "System Manager", "write": 1},
-  {"read": 1, "role": "Stock Manager", "write": 0}
- ],
- "track_changes": 1
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "warehouse",
+            "fieldtype": "Link",
+            "label": "Warehouse",
+            "options": "Warehouse",
+            "reqd": 1,
+            "unique": 1
+        },
+        {
+            "fieldname": "donor",
+            "fieldtype": "Link",
+            "label": "Donor",
+            "options": "Donor Profile",
+            "reqd": 1
+        },
+        {
+            "fieldname": "grant",
+            "fieldtype": "Link",
+            "label": "Grant Reference",
+            "options": "Donor Profile"
+        },
+        {
+            "fieldname": "restricted_items",
+            "fieldtype": "Check",
+            "label": "Restricted Items Only"
+        },
+        {
+            "fieldname": "notes",
+            "fieldtype": "Small Text",
+            "label": "Notes"
+        }
+    ],
+    "istable": 0,
+    "module": "Logistics",
+    "name": "Donor Warehouse",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "System Manager",
+            "write": 1
+        },
+        {
+            "read": 1,
+            "role": "Stock Manager",
+            "write": 0
+        }
+    ],
+    "track_changes": 1
 }

@@ -1,0 +1,98 @@
+{
+  "autoname": "AMV-.YYYY.-.####",
+  "custom": 0,
+  "doctype": "DocType",
+  "fields": [
+    {
+      "fieldname": "asset",
+      "fieldtype": "Link",
+      "label": "Asset",
+      "options": "Asset Register",
+      "reqd": 1
+    },
+    {
+      "fieldname": "movement_date",
+      "fieldtype": "Date",
+      "label": "Movement Date",
+      "reqd": 1,
+      "default": "Today"
+    },
+    {
+      "fieldname": "from_location",
+      "fieldtype": "Link",
+      "label": "From Location",
+      "options": "Warehouse",
+      "read_only": 1
+    },
+    {
+      "fieldname": "to_location",
+      "fieldtype": "Link",
+      "label": "To Location",
+      "options": "Warehouse",
+      "reqd": 1
+    },
+    {
+      "fieldname": "from_custodian",
+      "fieldtype": "Link",
+      "label": "From Custodian",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "to_custodian",
+      "fieldtype": "Link",
+      "label": "To Custodian",
+      "options": "User"
+    },
+    {
+      "fieldname": "from_condition",
+      "fieldtype": "Select",
+      "label": "Condition Before Movement",
+      "options": "New\nGood\nFair\nPoor\nDisposed",
+      "read_only": 1
+    },
+    {
+      "fieldname": "to_condition",
+      "fieldtype": "Select",
+      "label": "Condition on Receipt",
+      "options": "New\nGood\nFair\nPoor",
+      "reqd": 1
+    },
+    {
+      "fieldname": "donor",
+      "fieldtype": "Link",
+      "label": "Donor",
+      "options": "Donor Profile",
+      "read_only": 1
+    },
+    {
+      "fieldname": "reason",
+      "fieldtype": "Small Text",
+      "label": "Reason"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Draft\nCompleted",
+      "default": "Draft"
+    }
+  ],
+  "istable": 0,
+  "module": "Ugavi Assets",
+  "permissions": [
+    {
+      "role": "Asset Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    }
+  ],
+  "sort_field": "movement_date",
+  "sort_order": "DESC",
+  "track_changes": 1,
+  "name": "Ugavi Asset Movement",
+  "document_type": "",
+  "engine": "InnoDB"
+}

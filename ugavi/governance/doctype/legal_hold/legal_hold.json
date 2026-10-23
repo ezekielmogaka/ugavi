@@ -1,0 +1,71 @@
+{
+  "autoname": "HOLD-.YYYY.-.####",
+  "custom": 0,
+  "doctype": "DocType",
+  "fields": [
+    {
+      "fieldname": "reference_doctype",
+      "fieldtype": "Link",
+      "label": "DocType",
+      "options": "DocType",
+      "reqd": 1
+    },
+    {
+      "fieldname": "reference_name",
+      "fieldtype": "Dynamic Link",
+      "in_list_view": 1,
+      "label": "Record",
+      "options": "reference_doctype",
+      "reqd": 1
+    },
+    {
+      "fieldname": "reason",
+      "fieldtype": "Text",
+      "label": "Hold Reason",
+      "reqd": 1
+    },
+    {
+      "default": "Active",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Status",
+      "options": "Active\nReleased",
+      "read_only": 1
+    },
+    {
+      "fieldname": "released_by",
+      "fieldtype": "Link",
+      "label": "Released By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "released_at",
+      "fieldtype": "Datetime",
+      "label": "Released At",
+      "read_only": 1
+    },
+    {
+      "fieldname": "release_reason",
+      "fieldtype": "Small Text",
+      "label": "Release Reason",
+      "read_only": 1
+    }
+  ],
+  "module": "Governance",
+  "name": "Legal Hold",
+  "permissions": [
+    {
+      "create": 1,
+      "read": 1,
+      "role": "System Manager",
+      "write": 1
+    },
+    {
+      "read": 1,
+      "role": "Auditor"
+    }
+  ],
+  "track_changes": 1
+}

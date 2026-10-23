@@ -1,0 +1,214 @@
+# Ugavi Development Environment — Docker Compose
+# Follows frappe_docker official pattern:
+#   - Single custom image for backend + frontend (nginx)
+#   - Assets baked into image, symlinked to volume at start
+#   - No PYTHONPATH workaround, no cp -rL asset copy
+#   - Secrets via .env file
+#
+# Setup: make build && make up
+
+x-ugavi-image: &ugavi_image
+  image: ${UGAVI_IMAGE:-ugavi}:${UGAVI_TAG:-0.1.0}
+  restart: ${RESTART_POLICY:-unless-stopped}
+  pull_policy: ${PULL_POLICY:-never}
+
+services:
+  mariadb:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-admin}
+    expose:
+      - "3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-p${MARIADB_ROOT_PASSWORD:-admin}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  valkey:
+    image: valkey/valkey:8.1-alpine
+    restart: unless-stopped
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    expose:
+      - "8025"
+      - "1025"
+    ports:
+      - "${MAILPIT_PORT:-8026}:8025"   # UI
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  configurator:
+    <<: *ugavi_image
+    entrypoint:
+      - bash
+      - -c
+    command:
+      - >
+        ls -1 apps > sites/apps.txt;
+        bench set-config -g db_host ${DB_HOST:-mariadb};
+        bench set-config -gp db_port ${DB_PORT:-3306};
+        bench set-config -g redis_cache "redis://${VALKEY_CACHE:-valkey:6379}";
+        bench set-config -g redis_queue "redis://${VALKEY_QUEUE:-valkey:6379}";
+        bench set-config -g redis_socketio "redis://${VALKEY_QUEUE:-valkey:6379}";
+        bench set-config -gp socketio_port ${SOCKETIO_PORT:-9000}
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+    environment:
+      DB_HOST: ${DB_HOST:-mariadb}
+      SITE_NAME: ${SITE_NAME:-ugavi.localhost}
+      DB_PORT: ${DB_PORT:-3306}
+      VALKEY_CACHE: ${VALKEY_CACHE:-valkey:6379}
+      VALKEY_QUEUE: ${VALKEY_QUEUE:-valkey:6379}
+      SOCKETIO_PORT: ${SOCKETIO_PORT:-9000}
+    restart: on-failure
+
+  backend:
+    <<: *ugavi_image
+    expose:
+      - "8000"
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      DB_HOST: ${DB_HOST:-mariadb}
+      GUNICORN_THREADS: ${GUNICORN_THREADS:-4}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-2}
+      GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT:-120}
+      UGAVI_ENFORCE_2FA: ${UGAVI_ENFORCE_2FA:-0}
+      MPESA_ENVIRONMENT: ${MPESA_ENVIRONMENT:-sandbox}
+      MPESA_CONSUMER_KEY: ${MPESA_CONSUMER_KEY:-}
+      MPESA_CONSUMER_SECRET: ${MPESA_CONSUMER_SECRET:-}
+      MPESA_SECURITY_CREDENTIAL: ${MPESA_SECURITY_CREDENTIAL:-}
+      MPESA_INITIATOR_NAME: ${MPESA_INITIATOR_NAME:-}
+      MPESA_SHORTCODE: ${MPESA_SHORTCODE:-}
+    depends_on:
+      configurator:
+        condition: service_completed_successfully
+      mariadb:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "-H", "X-Frappe-Site-Name: ugavi.localhost", "http://localhost:8000/api/method/frappe.ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  frontend:
+    <<: *ugavi_image
+    command:
+      - nginx-entrypoint.sh
+    ports:
+      - "${NGINX_LISTEN_PORT:-8080}:${NGINX_LISTEN_PORT:-8080}"
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+    environment:
+      BACKEND: backend:8000
+      SOCKETIO: websocket:9000
+      FRAPPE_SITE_NAME_HEADER: ${SITE_NAME:-ugavi.localhost}
+      NGINX_LISTEN_PORT: ${NGINX_LISTEN_PORT:-8080}
+    depends_on:
+      - backend
+      - websocket
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${NGINX_LISTEN_PORT:-8080}/api/method/frappe.ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  websocket:
+    <<: *ugavi_image
+    command:
+      - node
+      - /home/frappe/frappe-bench/apps/frappe/socketio.js
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+    depends_on:
+      configurator:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/socket.io/?EIO=4&transport=polling"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  scheduler:
+    <<: *ugavi_image
+    command: bench schedule
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+    depends_on:
+      backend:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  queue-default:
+    <<: *ugavi_image
+    command: bench worker --queue default,short
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+    depends_on:
+      backend:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  queue-long:
+    <<: *ugavi_image
+    command: bench worker --queue long,default
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+    depends_on:
+      backend:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+volumes:
+  mariadb_data:
+  sites_data:

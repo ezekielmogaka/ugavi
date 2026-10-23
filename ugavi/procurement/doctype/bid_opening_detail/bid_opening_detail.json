@@ -1,48 +1,48 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "bid",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Bid",
-   "options": "Bid",
-   "reqd": 1
-  },
-  {
-   "fieldname": "supplier",
-   "fieldtype": "Link",
-   "label": "Supplier",
-   "options": "Supplier",
-   "read_only": 1
-  },
-  {
-   "fieldname": "bid_amount",
-   "fieldtype": "Currency",
-   "label": "Bid Amount",
-   "read_only": 1
-  },
-  {
-   "fieldname": "delivery_days",
-   "fieldtype": "Int",
-   "label": "Delivery (Days)",
-   "read_only": 1
-  },
-  {
-   "default": "1",
-   "fieldname": "opened_successfully",
-   "fieldtype": "Check",
-   "label": "Opened Successfully"
-  },
-  {
-   "fieldname": "notes",
-   "fieldtype": "Data",
-   "label": "Notes"
-  }
- ],
- "istable": 1,
- "module": "Procurement",
- "name": "Bid Opening Detail",
- "permissions": []
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "bid",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Bid",
+            "options": "Bid",
+            "reqd": 1
+        },
+        {
+            "fieldname": "supplier",
+            "fieldtype": "Link",
+            "label": "Supplier",
+            "options": "Supplier",
+            "read_only": 1
+        },
+        {
+            "fieldname": "bid_amount",
+            "fieldtype": "Currency",
+            "label": "Bid Amount",
+            "read_only": 1
+        },
+        {
+            "fieldname": "delivery_days",
+            "fieldtype": "Int",
+            "label": "Delivery (Days)",
+            "read_only": 1
+        },
+        {
+            "default": "1",
+            "fieldname": "opened_successfully",
+            "fieldtype": "Check",
+            "label": "Opened Successfully"
+        },
+        {
+            "fieldname": "notes",
+            "fieldtype": "Data",
+            "label": "Notes"
+        }
+    ],
+    "istable": 1,
+    "module": "Procurement",
+    "name": "Bid Opening Detail",
+    "permissions": []
 }

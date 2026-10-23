@@ -6,7 +6,6 @@ Determines the approval workflow for Purchase Requisitions based on:
 - Donor/Project
 """
 import frappe
-from frappe import _
 from typing import Optional, List, Dict
 
 
@@ -28,13 +27,28 @@ def get_approval_chain(
             "min_amount": ("<=", amount),
             "department": department,
         },
-        or_filters=[
-            {"donor": donor} if donor else {},
-            {"project": project} if project else {},
+        fields=[
+            "approval_level",
+            "approver_role",
+            "approver_user",
+            "min_amount",
+            "max_amount",
+            "donor",
+            "project",
+            "effective_from",
+            "effective_to",
         ],
-        fields=["approval_level", "approver_role", "approver_user", "min_amount", "max_amount"],
         order_by="approval_level asc",
     )
+    today = frappe.utils.getdate()
+    rules = [
+        rule
+        for rule in rules
+        if (not rule.donor or rule.donor == donor)
+        and (not rule.project or rule.project == project)
+        and (not rule.effective_from or frappe.utils.getdate(rule.effective_from) <= today)
+        and (not rule.effective_to or frappe.utils.getdate(rule.effective_to) >= today)
+    ]
     
     if not rules:
         # Fallback to default approvers from settings
@@ -70,19 +84,20 @@ def validate_approval_chain(chain: List[Dict]) -> bool:
 
 def check_budget(amount: float, donor: str, budget_line: str) -> Dict:
     """Check if sufficient budget exists for the requisition."""
+    if not budget_line:
+        return {"available": True, "message": "No budget control configured"}
     budget = frappe.get_all(
         "Budget Account",
-        filters={"parent": budget_line, "donor": donor},
-        fields=["budget_amount", "actual_amount", "committed_amount"],
+        filters={"account": budget_line},
+        fields=["budget_amount"],
     )
+
     if not budget:
         return {"available": True, "message": "No budget control configured"}
-    
-    available = budget[0].budget_amount - budget[0].actual_amount - budget[0].committed_amount
+
+    total_budget = sum(b.budget_amount or 0 for b in budget)
     return {
-        "available": available >= amount,
-        "budget_total": budget[0].budget_amount,
-        "spent": budget[0].actual_amount,
-        "committed": budget[0].committed_amount,
-        "available_balance": available,
+        "available": total_budget >= amount,
+        "budget_total": total_budget,
+        "available_balance": total_budget,
     }

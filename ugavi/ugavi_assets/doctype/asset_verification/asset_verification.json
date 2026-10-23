@@ -1,0 +1,61 @@
+{
+  "autoname": "AVF-.YYYY.-.####",
+  "custom": 0,
+  "doctype": "DocType",
+  "fields": [
+    {
+      "fieldname": "asset",
+      "fieldtype": "Link",
+      "label": "Asset",
+      "options": "Asset Register",
+      "reqd": 1
+    },
+    {
+      "fieldname": "verification_date",
+      "fieldtype": "Date",
+      "label": "Verification Date",
+      "reqd": 1,
+      "default": "Today"
+    },
+    {
+      "fieldname": "verified_by",
+      "fieldtype": "Link",
+      "label": "Verified By",
+      "options": "User"
+    },
+    {
+      "fieldname": "condition",
+      "fieldtype": "Select",
+      "label": "Condition",
+      "options": "New\nGood\nFair\nPoor\nDisposed"
+    },
+    {
+      "fieldname": "found",
+      "fieldtype": "Select",
+      "label": "Asset Found",
+      "options": "Yes\nNo"
+    },
+    {
+      "fieldname": "notes",
+      "fieldtype": "Small Text",
+      "label": "Notes"
+    }
+  ],
+  "istable": 0,
+  "module": "Ugavi Assets",
+  "permissions": [
+    {
+      "role": "Asset Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    }
+  ],
+  "sort_field": "verification_date",
+  "sort_order": "DESC",
+  "track_changes": 1,
+  "name": "Asset Verification",
+  "document_type": "",
+  "engine": "InnoDB"
+}

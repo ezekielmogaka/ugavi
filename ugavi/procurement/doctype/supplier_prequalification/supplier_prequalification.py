@@ -1,7 +1,7 @@
 """Supplier Prequalification — manages supplier eligibility for tenders."""
 import frappe
 from frappe.model.document import Document
-from frappe.utils import today, add_to_date
+from frappe.utils import today
 
 
 class SupplierPrequalification(Document):
@@ -47,11 +47,14 @@ class SupplierPrequalification(Document):
 
 def is_prequalified(supplier: str, category: str) -> bool:
     """Check if a supplier is currently prequalified for a category."""
-    return bool(frappe.db.exists(
-        "Supplier Prequalification",
-        {"supplier": supplier, "category": category, "status": "Prequalified",
-         "expiry_date": (">=", today())},
-    ))
+    filters = {
+        "supplier": supplier,
+        "status": "Prequalified",
+        "expiry_date": (">=", today()),
+    }
+    if category:
+        filters["category"] = category
+    return bool(frappe.db.exists("Supplier Prequalification", filters))
 
 
 def get_prequalified_suppliers(category: str) -> list:

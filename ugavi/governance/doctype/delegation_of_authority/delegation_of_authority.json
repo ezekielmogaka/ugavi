@@ -1,115 +1,115 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "default": "1",
-   "fieldname": "enabled",
-   "fieldtype": "Check",
-   "in_list_view": 1,
-   "label": "Enabled"
-  },
-  {
-   "fieldname": "department",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Department",
-   "options": "Department",
-   "reqd": 1
-  },
-  {
-   "fieldname": "donor",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Donor",
-   "options": "Donor Profile"
-  },
-  {
-   "fieldname": "section_threshold",
-   "fieldtype": "Section Break",
-   "label": "Amount Threshold"
-  },
-  {
-   "default": "0",
-   "fieldname": "min_amount",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Minimum Amount",
-   "reqd": 1
-  },
-  {
-   "description": "Leave blank for no upper limit",
-   "fieldname": "max_amount",
-   "fieldtype": "Currency",
-   "label": "Maximum Amount"
-  },
-  {
-   "fieldname": "section_approver",
-   "fieldtype": "Section Break",
-   "label": "Approver"
-  },
-  {
-   "description": "1=first, 2=second, etc. Higher levels after lower.",
-   "fieldname": "approval_level",
-   "fieldtype": "Int",
-   "in_list_view": 1,
-   "label": "Approval Level",
-   "reqd": 1
-  },
-  {
-   "fieldname": "approver_role",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Approver Role",
-   "options": "Role",
-   "reqd": 1
-  },
-  {
-   "description": "Optional: override role with specific user",
-   "fieldname": "approver_user",
-   "fieldtype": "Link",
-   "label": "Specific Approver",
-   "options": "User"
-  },
-  {
-   "fieldname": "section_project",
-   "fieldtype": "Section Break",
-   "label": "Project Scope (Optional)"
-  },
-  {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project"
-  },
-  {
-   "fieldname": "effective_from",
-   "fieldtype": "Date",
-   "label": "Effective From",
-   "reqd": 1
-  },
-  {
-   "description": "Leave blank for indefinite",
-   "fieldname": "effective_to",
-   "fieldtype": "Date",
-   "label": "Effective To"
-  }
- ],
- "istable": 0,
- "module": "Governance",
- "name": "Delegation of Authority",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "read": 1,
-   "role": "System Manager",
-   "write": 1
-  }
- ],
- "track_changes": 1,
- "track_seen": 1,
- "track_views": 1
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "default": "1",
+            "fieldname": "enabled",
+            "fieldtype": "Check",
+            "in_list_view": 1,
+            "label": "Enabled"
+        },
+        {
+            "fieldname": "department",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "in_standard_filter": 1,
+            "label": "Department",
+            "options": "Department",
+            "reqd": 1
+        },
+        {
+            "fieldname": "donor",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "in_standard_filter": 1,
+            "label": "Donor",
+            "options": "Donor Profile"
+        },
+        {
+            "fieldname": "section_threshold",
+            "fieldtype": "Section Break",
+            "label": "Amount Threshold"
+        },
+        {
+            "default": "0",
+            "fieldname": "min_amount",
+            "fieldtype": "Currency",
+            "in_list_view": 1,
+            "label": "Minimum Amount",
+            "reqd": 1
+        },
+        {
+            "description": "Leave blank for no upper limit",
+            "fieldname": "max_amount",
+            "fieldtype": "Currency",
+            "label": "Maximum Amount"
+        },
+        {
+            "fieldname": "section_approver",
+            "fieldtype": "Section Break",
+            "label": "Approver"
+        },
+        {
+            "description": "1=first, 2=second, etc. Higher levels after lower.",
+            "fieldname": "approval_level",
+            "fieldtype": "Int",
+            "in_list_view": 1,
+            "label": "Approval Level",
+            "reqd": 1
+        },
+        {
+            "fieldname": "approver_role",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Approver Role",
+            "options": "Role",
+            "reqd": 1
+        },
+        {
+            "description": "Optional: override role with specific user",
+            "fieldname": "approver_user",
+            "fieldtype": "Link",
+            "label": "Specific Approver",
+            "options": "User"
+        },
+        {
+            "fieldname": "section_project",
+            "fieldtype": "Section Break",
+            "label": "Project Scope (Optional)"
+        },
+        {
+            "fieldname": "project",
+            "fieldtype": "Link",
+            "label": "Project",
+            "options": "Project"
+        },
+        {
+            "fieldname": "effective_from",
+            "fieldtype": "Date",
+            "label": "Effective From",
+            "reqd": 1
+        },
+        {
+            "description": "Leave blank for indefinite",
+            "fieldname": "effective_to",
+            "fieldtype": "Date",
+            "label": "Effective To"
+        }
+    ],
+    "istable": 0,
+    "module": "Governance",
+    "name": "Delegation of Authority",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "read": 1,
+            "role": "System Manager",
+            "write": 1
+        }
+    ],
+    "track_changes": 1,
+    "track_seen": 1,
+    "track_views": 1
 }

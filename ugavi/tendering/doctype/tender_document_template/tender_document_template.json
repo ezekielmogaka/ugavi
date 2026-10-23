@@ -1,0 +1,71 @@
+{
+  "autoname": "TDT-.YYYY.-.####",
+  "custom": 0,
+  "doctype": "DocType",
+  "fields": [
+    {
+      "fieldname": "template_name",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Template Name",
+      "reqd": 1
+    },
+    {
+      "fieldname": "document_type",
+      "fieldtype": "Select",
+      "label": "Document Type",
+      "options": "Specifications\nTerms of Reference\nBill of Quantities\nDrawings\nInstructions to Bidders\nEvaluation Criteria\nContract Template\nOther",
+      "reqd": 1
+    },
+    {
+      "default": "1",
+      "fieldname": "version",
+      "fieldtype": "Int",
+      "in_list_view": 1,
+      "label": "Version",
+      "reqd": 1
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Status",
+      "options": "Draft\nActive\nSuperseded\nRetired",
+      "reqd": 1
+    },
+    {
+      "fieldname": "effective_from",
+      "fieldtype": "Date",
+      "label": "Effective From"
+    },
+    {
+      "fieldname": "attachment",
+      "fieldtype": "Attach",
+      "label": "Template File",
+      "reqd": 1
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description"
+    }
+  ],
+  "module": "Tendering",
+  "name": "Tender Document Template",
+  "permissions": [
+    {
+      "create": 1,
+      "read": 1,
+      "role": "Procurement Officer",
+      "write": 1
+    },
+    {
+      "read": 1,
+      "role": "Auditor"
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "track_changes": 1
+}

@@ -1,0 +1,104 @@
+{
+  "doctype": "Workspace",
+  "name": "Ugavi Fleet",
+  "label": "Ugavi Fleet",
+  "icon": "truck",
+  "module": "Fleet",
+  "for_user": "",
+  "hide_custom": 0,
+  "is_hidden": 0,
+  "content": "[{\"id\":\"ugavi-shortcut-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Reconciliation\",\"col\":4}},{\"id\":\"ugavi-shortcut-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Fuel Evidence\",\"col\":4}},{\"id\":\"ugavi-shortcut-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Trip Operations\",\"col\":4}},{\"id\":\"ugavi-workspace-spacer\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"ugavi-card-1\",\"type\":\"card\",\"data\":{\"card_name\":\"Fleet Operations\",\"col\":4}},{\"id\":\"ugavi-card-2\",\"type\":\"card\",\"data\":{\"card_name\":\"Purchase Reconciliation\",\"col\":4}}]",
+  "links": [
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Fleet Operations",
+      "link_count": 4,
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "label": "Vehicle",
+      "link_to": "Vehicle",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Vehicle Allocation",
+      "link_to": "Vehicle Allocation",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Trip Log",
+      "link_to": "Trip Log",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Fleet Utilization Report",
+      "link_to": "Fleet Utilization Report",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Purchase Reconciliation",
+      "link_count": 3,
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "label": "Fleet Purchases",
+      "link_to": "Fleet Purchase Reconciliation",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Fuel Log",
+      "link_to": "Fuel Log",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Spare Parts Issue",
+      "link_to": "Spare Parts Issue",
+      "link_type": "DocType",
+      "type": "Link"
+    }
+  ],
+  "charts": [],
+  "number_cards": [],
+  "shortcuts": [
+    {
+      "color": "Blue",
+      "doc_view": "List",
+      "label": "Purchase Reconciliation",
+      "link_to": "Fleet Purchase Reconciliation",
+      "stats_filter": "[]",
+      "type": "DocType"
+    },
+    {
+      "color": "Green",
+      "doc_view": "List",
+      "label": "Fuel Evidence",
+      "link_to": "Fuel Log",
+      "stats_filter": "[]",
+      "type": "DocType"
+    },
+    {
+      "color": "Purple",
+      "doc_view": "List",
+      "label": "Trip Operations",
+      "link_to": "Trip Log",
+      "stats_filter": "[]",
+      "type": "DocType"
+    }
+  ]
+}

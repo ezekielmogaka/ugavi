@@ -1,0 +1,100 @@
+{
+  "autoname": "TRIP-.YYYY.-.####",
+  "custom": 0,
+  "doctype": "DocType",
+  "fields": [
+    {
+      "fieldname": "vehicle",
+      "fieldtype": "Link",
+      "label": "Vehicle",
+      "options": "Vehicle",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "start_date",
+      "fieldtype": "Datetime",
+      "label": "Start Date",
+      "reqd": 1
+    },
+    {
+      "fieldname": "end_date",
+      "fieldtype": "Datetime",
+      "label": "End Date"
+    },
+    {
+      "fieldname": "start_odometer",
+      "fieldtype": "Float",
+      "label": "Start Odometer (km)"
+    },
+    {
+      "fieldname": "end_odometer",
+      "fieldtype": "Float",
+      "label": "End Odometer (km)"
+    },
+    {
+      "fieldname": "distance",
+      "fieldtype": "Float",
+      "label": "Distance (km)",
+      "read_only": 1
+    },
+    {
+      "fieldname": "driver",
+      "fieldtype": "Link",
+      "label": "Driver",
+      "options": "User"
+    },
+    {
+      "fieldname": "destination",
+      "fieldtype": "Data",
+      "label": "Destination"
+    },
+    {
+      "fieldname": "vehicle_allocation",
+      "fieldtype": "Link",
+      "label": "Vehicle Allocation",
+      "options": "Vehicle Allocation"
+    },
+    {
+      "fieldname": "purpose",
+      "fieldtype": "Small Text",
+      "label": "Purpose"
+    },
+    {
+      "fieldname": "donor",
+      "fieldtype": "Link",
+      "label": "Donor",
+      "options": "Donor Profile"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "In Progress\nCompleted",
+      "default": "In Progress",
+      "in_list_view": 1
+    }
+  ],
+  "istable": 0,
+  "module": "Fleet",
+  "permissions": [
+    {
+      "role": "Fleet Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "submit": 1,
+      "cancel": 1
+    }
+  ],
+  "sort_field": "start_date",
+  "sort_order": "DESC",
+  "track_changes": 1,
+  "title_field": "vehicle",
+  "is_submittable": 1,
+  "name": "Trip Log",
+  "document_type": "",
+  "engine": "InnoDB"
+}

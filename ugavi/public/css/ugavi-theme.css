@@ -1,0 +1,7 @@
+/* Ugavi Desk theme.
+   Intentionally scopes styling to app-owned classes and leaves Frappe internals untouched. */
+
+.ugavi-branded {
+  color: var(--ugavi-text-primary);
+  font-family: var(--ugavi-font);
+}

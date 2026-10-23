@@ -1,138 +1,138 @@
 {
- "autoname": "BOR-.YYYY.-.####",
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "tender",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Tender",
-   "options": "Tender",
-   "reqd": 1
-  },
-  {
-   "fieldname": "opening_date",
-   "fieldtype": "Datetime",
-   "in_list_view": 1,
-   "label": "Opening Date",
-   "reqd": 1
-  },
-  {
-   "fieldname": "officer_1",
-   "fieldtype": "Link",
-   "label": "Officer 1",
-   "options": "User",
-   "reqd": 1
-  },
-  {
-   "fieldname": "officer_2",
-   "fieldtype": "Link",
-   "label": "Officer 2",
-   "options": "User",
-   "reqd": 1
-  },
-  {
-   "fieldname": "officer_3",
-   "fieldtype": "Link",
-   "label": "Officer 3",
-   "options": "User",
-   "reqd": 1
-  },
-  {
-   "default": "Success",
-   "fieldname": "outcome",
-   "fieldtype": "Select",
-   "label": "Outcome",
-   "options": "Success\nPartial\nFailed",
-   "reqd": 1
-  },
-  {
-   "fieldname": "bids_opened",
-   "fieldtype": "Table",
-   "label": "Bids Opened",
-   "options": "Bid Opening Detail"
-  },
-  {
-   "fieldname": "section_details",
-   "fieldtype": "Section Break",
-   "label": "Verification Log"
-  },
-  {
-   "fieldname": "otp_log_1",
-   "fieldtype": "Small Text",
-   "label": "Officer 1 OTP Log"
-  },
-  {
-   "fieldname": "otp_log_2",
-   "fieldtype": "Small Text",
-   "label": "Officer 2 OTP Log"
-  },
-  {
-   "fieldname": "otp_log_3",
-   "fieldtype": "Small Text",
-   "label": "Officer 3 OTP Log"
-  },
-  {
-   "fieldname": "ip_address_1",
-   "fieldtype": "Data",
-   "label": "Officer 1 IP"
-  },
-  {
-   "fieldname": "ip_address_2",
-   "fieldtype": "Data",
-   "label": "Officer 2 IP"
-  },
-  {
-   "fieldname": "ip_address_3",
-   "fieldtype": "Data",
-   "label": "Officer 3 IP"
-  },
-  {
-   "fieldname": "section_signature",
-   "fieldtype": "Section Break",
-   "label": "Digital Record"
-  },
-  {
-   "fieldname": "signed_record",
-   "fieldtype": "Attach",
-   "label": "Signed Bid Opening Record (PDF)"
-  },
-  {
-   "description": "Immutable hash of the opening record",
-   "fieldname": "record_hash",
-   "fieldtype": "Data",
-   "label": "Record Hash (SHA-256)",
-   "read_only": 1
-  }
- ],
- "istable": 0,
- "module": "Procurement",
- "name": "Bid Opening Record",
- "naming_rule": "By script",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 0,
-   "read": 1,
-   "role": "System Manager",
-   "write": 1
-  },
-  {
-   "create": 0,
-   "delete": 0,
-   "read": 1,
-   "role": "Procurement Officer",
-   "write": 0
-  },
-  {
-   "create": 0,
-   "delete": 0,
-   "read": 1,
-   "role": "Bid Opening Officer",
-   "write": 0
-  }
- ],
- "track_changes": 0
+    "autoname": "BOR-.YYYY.-.####",
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "tender",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "in_standard_filter": 1,
+            "label": "Tender",
+            "options": "Tender",
+            "reqd": 1
+        },
+        {
+            "fieldname": "opening_date",
+            "fieldtype": "Datetime",
+            "in_list_view": 1,
+            "label": "Opening Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "officer_1",
+            "fieldtype": "Link",
+            "label": "Officer 1",
+            "options": "User",
+            "reqd": 1
+        },
+        {
+            "fieldname": "officer_2",
+            "fieldtype": "Link",
+            "label": "Officer 2",
+            "options": "User",
+            "reqd": 1
+        },
+        {
+            "fieldname": "officer_3",
+            "fieldtype": "Link",
+            "label": "Officer 3",
+            "options": "User",
+            "reqd": 1
+        },
+        {
+            "default": "Success",
+            "fieldname": "outcome",
+            "fieldtype": "Select",
+            "label": "Outcome",
+            "options": "Success\nPartial\nFailed",
+            "reqd": 1
+        },
+        {
+            "fieldname": "bids_opened",
+            "fieldtype": "Table",
+            "label": "Bids Opened",
+            "options": "Bid Opening Detail"
+        },
+        {
+            "fieldname": "section_details",
+            "fieldtype": "Section Break",
+            "label": "Verification Log"
+        },
+        {
+            "fieldname": "otp_log_1",
+            "fieldtype": "Small Text",
+            "label": "Officer 1 OTP Log"
+        },
+        {
+            "fieldname": "otp_log_2",
+            "fieldtype": "Small Text",
+            "label": "Officer 2 OTP Log"
+        },
+        {
+            "fieldname": "otp_log_3",
+            "fieldtype": "Small Text",
+            "label": "Officer 3 OTP Log"
+        },
+        {
+            "fieldname": "ip_address_1",
+            "fieldtype": "Data",
+            "label": "Officer 1 IP"
+        },
+        {
+            "fieldname": "ip_address_2",
+            "fieldtype": "Data",
+            "label": "Officer 2 IP"
+        },
+        {
+            "fieldname": "ip_address_3",
+            "fieldtype": "Data",
+            "label": "Officer 3 IP"
+        },
+        {
+            "fieldname": "section_signature",
+            "fieldtype": "Section Break",
+            "label": "Digital Record"
+        },
+        {
+            "fieldname": "signed_record",
+            "fieldtype": "Attach",
+            "label": "Signed Bid Opening Record (PDF)"
+        },
+        {
+            "description": "Immutable hash of the opening record",
+            "fieldname": "record_hash",
+            "fieldtype": "Data",
+            "label": "Record Hash (SHA-256)",
+            "read_only": 1
+        }
+    ],
+    "istable": 0,
+    "module": "Procurement",
+    "name": "Bid Opening Record",
+    "naming_rule": "By script",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "System Manager",
+            "write": 0
+        },
+        {
+            "create": 0,
+            "delete": 0,
+            "read": 1,
+            "role": "Procurement Officer",
+            "write": 0
+        },
+        {
+            "create": 0,
+            "delete": 0,
+            "read": 1,
+            "role": "Bid Opening Officer",
+            "write": 0
+        }
+    ],
+    "track_changes": 1
 }

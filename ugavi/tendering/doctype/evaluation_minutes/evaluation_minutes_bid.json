@@ -1,0 +1,69 @@
+{
+ "creation": "2026-10-22 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "bid",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Bid",
+   "options": "Bid",
+   "reqd": 1
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Supplier",
+   "options": "Supplier",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bid_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Bid Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "technical_avg",
+   "fieldtype": "Percent",
+   "label": "Tech Avg %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "financial_avg",
+   "fieldtype": "Percent",
+   "label": "Fin Avg %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_avg",
+   "fieldtype": "Percent",
+   "label": "Total Avg %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "responsive",
+   "fieldtype": "Check",
+   "label": "Responsive",
+   "default": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  }
+ ],
+ "istable": 1,
+ "modified": "2026-10-22 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Tendering",
+ "name": "Evaluation Minutes Bid",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

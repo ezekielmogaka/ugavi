@@ -1,117 +1,117 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "donor_name",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Donor Name",
-   "reqd": 1
-  },
-  {
-   "fieldname": "donor_code",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Donor Code",
-   "reqd": 1,
-   "unique": 1
-  },
-  {
-   "default": "1",
-   "fieldname": "enabled",
-   "fieldtype": "Check",
-   "in_list_view": 1,
-   "label": "Active"
-  },
-  {
-   "fieldname": "section_rules",
-   "fieldtype": "Section Break",
-   "label": "Procurement Rules"
-  },
-  {
-   "fieldname": "donor_rules",
-   "fieldtype": "Table",
-   "label": "Donor Procurement Rules",
-   "options": "Donor Rule"
-  },
-  {
-   "fieldname": "section_financial",
-   "fieldtype": "Section Break",
-   "label": "Financial"
-  },
-  {
-   "default": "KES",
-   "fieldname": "currency",
-   "fieldtype": "Link",
-   "label": "Currency",
-   "options": "Currency"
-  },
-  {
-   "description": "For donor-segregated reporting",
-   "fieldname": "accounting_dimension",
-   "fieldtype": "Data",
-   "label": "Accounting Dimension"
-  },
-  {
-   "fieldname": "section_control",
-   "fieldtype": "Section Break",
-   "label": "Controls"
-  },
-  {
-   "default": "1",
-   "description": "Stock must be tracked separately for this donor",
-   "fieldname": "require_segregated_stock",
-   "fieldtype": "Check",
-   "label": "Require Segregated Stock"
-  },
-  {
-   "default": "0",
-   "fieldname": "require_segregated_assets",
-   "fieldtype": "Check",
-   "label": "Require Segregated Assets"
-  },
-  {
-   "description": "Items above this value become tracked assets",
-   "fieldname": "max_asset_value",
-   "fieldtype": "Currency",
-   "label": "Max Asset Value"
-  },
-  {
-   "fieldname": "section_reporting",
-   "fieldtype": "Section Break",
-   "label": "Reporting"
-  },
-  {
-   "fieldname": "reporting_frequency",
-   "fieldtype": "Select",
-   "label": "Reporting Frequency",
-   "options": "\nMonthly\nQuarterly\nAnnual\nAd-hoc"
-  },
-  {
-   "fieldname": "report_template",
-   "fieldtype": "Attach",
-   "label": "Report Template"
-  },
-  {
-   "fieldname": "contact_email",
-   "fieldtype": "Data",
-   "label": "Donor Contact Email"
-  }
- ],
- "istable": 0,
- "module": "Compliance",
- "name": "Donor Profile",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 0,
-   "read": 1,
-   "role": "System Manager",
-   "write": 1
-  }
- ],
- "track_changes": 1,
- "track_seen": 1,
- "track_views": 1
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "donor_name",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Donor Name",
+            "reqd": 1
+        },
+        {
+            "fieldname": "donor_code",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Donor Code",
+            "reqd": 1,
+            "unique": 1
+        },
+        {
+            "default": "1",
+            "fieldname": "enabled",
+            "fieldtype": "Check",
+            "in_list_view": 1,
+            "label": "Active"
+        },
+        {
+            "fieldname": "section_rules",
+            "fieldtype": "Section Break",
+            "label": "Procurement Rules"
+        },
+        {
+            "fieldname": "donor_rules",
+            "fieldtype": "Table",
+            "label": "Donor Procurement Rules",
+            "options": "Donor Rule"
+        },
+        {
+            "fieldname": "section_financial",
+            "fieldtype": "Section Break",
+            "label": "Financial"
+        },
+        {
+            "default": "KES",
+            "fieldname": "currency",
+            "fieldtype": "Link",
+            "label": "Currency",
+            "options": "Currency"
+        },
+        {
+            "description": "For donor-segregated reporting",
+            "fieldname": "accounting_dimension",
+            "fieldtype": "Data",
+            "label": "Accounting Dimension"
+        },
+        {
+            "fieldname": "section_control",
+            "fieldtype": "Section Break",
+            "label": "Controls"
+        },
+        {
+            "default": "1",
+            "description": "Stock must be tracked separately for this donor",
+            "fieldname": "require_segregated_stock",
+            "fieldtype": "Check",
+            "label": "Require Segregated Stock"
+        },
+        {
+            "default": "0",
+            "fieldname": "require_segregated_assets",
+            "fieldtype": "Check",
+            "label": "Require Segregated Assets"
+        },
+        {
+            "description": "Items above this value become tracked assets",
+            "fieldname": "max_asset_value",
+            "fieldtype": "Currency",
+            "label": "Max Asset Value"
+        },
+        {
+            "fieldname": "section_reporting",
+            "fieldtype": "Section Break",
+            "label": "Reporting"
+        },
+        {
+            "fieldname": "reporting_frequency",
+            "fieldtype": "Select",
+            "label": "Reporting Frequency",
+            "options": "\nMonthly\nQuarterly\nAnnual\nAd-hoc"
+        },
+        {
+            "fieldname": "report_template",
+            "fieldtype": "Attach",
+            "label": "Report Template"
+        },
+        {
+            "fieldname": "contact_email",
+            "fieldtype": "Data",
+            "label": "Donor Contact Email"
+        }
+    ],
+    "istable": 0,
+    "module": "Compliance",
+    "name": "Donor Profile",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "System Manager",
+            "write": 1
+        }
+    ],
+    "track_changes": 1,
+    "track_seen": 1,
+    "track_views": 1
 }

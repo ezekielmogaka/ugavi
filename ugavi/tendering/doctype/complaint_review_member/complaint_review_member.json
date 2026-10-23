@@ -1,0 +1,38 @@
+{
+  "custom": 0,
+  "doctype": "DocType",
+  "fields": [
+    {
+      "fieldname": "user",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Panel Member",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "panel_role",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Panel Role",
+      "options": "Chairperson\nSecretary\nMember",
+      "reqd": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "has_conflict",
+      "fieldtype": "Check",
+      "label": "Conflict Declared"
+    },
+    {
+      "depends_on": "eval:doc.has_conflict",
+      "fieldname": "conflict_details",
+      "fieldtype": "Small Text",
+      "label": "Conflict Details"
+    }
+  ],
+  "istable": 1,
+  "module": "Tendering",
+  "name": "Complaint Review Member",
+  "permissions": []
+}

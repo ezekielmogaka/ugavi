@@ -1,0 +1,88 @@
+{
+    "autoname": "RET-.YYYY.-.####",
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "contract",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Contract",
+            "options": "Contract",
+            "reqd": 1
+        },
+        {
+            "fieldname": "contract_value",
+            "fieldtype": "Currency",
+            "label": "Contract Value",
+            "read_only": 1
+        },
+        {
+            "fieldname": "retention_pct",
+            "fieldtype": "Percent",
+            "label": "Retention Percentage",
+            "default": "5.0"
+        },
+        {
+            "fieldname": "retention_amount",
+            "fieldtype": "Currency",
+            "label": "Retention Amount",
+            "read_only": 1
+        },
+        {
+            "fieldname": "release_date",
+            "fieldtype": "Date",
+            "label": "Release Date",
+            "description": "Date when retention amount becomes payable"
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "in_standard_filter": 1,
+            "label": "Status",
+            "options": "Held\nPartially Released\nReleased\nCancelled",
+            "default": "Held"
+        },
+        {
+            "fieldname": "released_amount",
+            "fieldtype": "Currency",
+            "label": "Released Amount",
+            "read_only": 1
+        },
+        {
+            "fieldname": "released_date",
+            "fieldtype": "Date",
+            "label": "Released Date",
+            "read_only": 1
+        },
+        {
+            "fieldname": "final_acceptance",
+            "fieldtype": "Link",
+            "label": "Final Acceptance Certificate",
+            "options": "Final Acceptance Certificate"
+        }
+    ],
+    "istable": 0,
+    "module": "Procurement",
+    "name": "Contract Retention",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "System Manager",
+            "write": 1
+        },
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "Procurement Officer",
+            "write": 1
+        }
+    ],
+    "sort_field": "creation",
+    "sort_order": "DESC",
+    "track_changes": 1
+}

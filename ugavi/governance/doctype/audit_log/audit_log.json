@@ -1,61 +1,71 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "tender",
-   "fieldtype": "Link",
-   "label": "Tender",
-   "options": "Tender"
-  },
-  {
-   "fieldname": "user",
-   "fieldtype": "Link",
-   "label": "User",
-   "options": "User",
-   "reqd": 1
-  },
-  {
-   "fieldname": "timestamp",
-   "fieldtype": "Datetime",
-   "label": "Timestamp",
-   "reqd": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "action",
-   "fieldtype": "Data",
-   "label": "Action",
-   "reqd": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "outcome",
-   "fieldtype": "Select",
-   "label": "Outcome",
-   "options": "Success\nFailed",
-   "reqd": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "ip_address",
-   "fieldtype": "Data",
-   "label": "IP Address",
-   "read_only": 1
-  },
-  {
-   "fieldname": "record_hash",
-   "fieldtype": "Data",
-   "label": "Hash",
-   "read_only": 1
-  }
- ],
- "istable": 0,
- "module": "Governance",
- "name": "Audit Log",
- "permissions": [
-  {"create": 1, "delete": 0, "read": 1, "role": "System Manager", "write": 0},
-  {"read": 1, "role": "Auditor", "write": 0}
- ],
- "track_changes": 0
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "tender",
+            "fieldtype": "Link",
+            "label": "Tender",
+            "options": "Tender"
+        },
+        {
+            "fieldname": "user",
+            "fieldtype": "Link",
+            "label": "User",
+            "options": "User",
+            "reqd": 1
+        },
+        {
+            "fieldname": "timestamp",
+            "fieldtype": "Datetime",
+            "label": "Timestamp",
+            "read_only": 1,
+            "reqd": 1
+        },
+        {
+            "fieldname": "action",
+            "fieldtype": "Data",
+            "label": "Action",
+            "read_only": 1,
+            "reqd": 1
+        },
+        {
+            "fieldname": "outcome",
+            "fieldtype": "Select",
+            "label": "Outcome",
+            "options": "Success\nFailed",
+            "read_only": 1,
+            "reqd": 1
+        },
+        {
+            "fieldname": "ip_address",
+            "fieldtype": "Data",
+            "label": "IP Address",
+            "read_only": 1
+        },
+        {
+            "fieldname": "record_hash",
+            "fieldtype": "Data",
+            "label": "Hash",
+            "read_only": 1
+        }
+    ],
+    "istable": 0,
+    "module": "Governance",
+    "name": "Audit Log",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "System Manager",
+            "write": 0
+        },
+        {
+            "read": 1,
+            "role": "Auditor",
+            "write": 0
+        }
+    ],
+    "track_changes": 0
 }

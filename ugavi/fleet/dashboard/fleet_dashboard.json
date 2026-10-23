@@ -1,0 +1,41 @@
+{
+ "dashboard_name": "Fleet Dashboard",
+ "charts": [
+  {
+   "chart_name": "Vehicles by Status",
+   "chart_type": "Count",
+   "document_type": "Vehicle",
+   "group_by_based_on": "status",
+   "label": "Vehicle Fleet Status"
+  },
+  {
+   "chart_name": "Fuel Consumption",
+   "chart_type": "Sum",
+   "document_type": "Fuel Log",
+   "group_by_based_on": "vehicle",
+   "aggregate_function": "sum",
+   "aggregate_based_on": "litres",
+   "label": "Fuel Consumption by Vehicle"
+  }
+ ],
+ "number_cards": [
+  {
+   "label": "Active Vehicles",
+   "type": "Document Type",
+   "document_type": "Vehicle",
+   "filters_json": "[[\"Vehicle\",\"status\",\"=\",\"Active\",false]]"
+  },
+  {
+   "label": "Vehicles in Service",
+   "type": "Document Type",
+   "document_type": "Vehicle",
+   "filters_json": "[[\"Vehicle\",\"status\",\"=\",\"In Service\",false]]"
+  },
+  {
+   "label": "Trips This Month",
+   "type": "Document Type",
+   "document_type": "Trip Log",
+   "filters_json": "[[\"Trip Log\",\"creation\",\"Timespan\",\"this month\",false]]"
+  }
+ ]
+}

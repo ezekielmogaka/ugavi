@@ -2,7 +2,7 @@
 ## Architecture Decision Record
 
 **Version:** 0.1.0 | **Date:** 2026-10-19  
-**ERPNext:** v16.51.1 (version-16) | **Frappe:** v16.52.0 (version-16)
+**ERPNext:** v16.52.1 (version-16) | **Frappe:** v16.52.0 (version-16)
 
 ## 1. High-Level Architecture
 
@@ -16,7 +16,7 @@
 ├──────────────────────────────────────────────────────────┤
 │         ERPNext v16 (upstream mirror)                     │
 ├──────────────────────────────────────────────────────────┤
-│  MariaDB 10.11 │ Redis 7 │ Python 3.12 │ Node 20          │
+│  MariaDB 11.8 │ Valkey 8 │ Python 3.14 │ Node 24          │
 └──────────────────────────────────────────────────────────┘
 ```
 

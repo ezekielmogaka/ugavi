@@ -1,0 +1,20 @@
+{
+  "name": "ugavi",
+  "version": "0.1.0",
+  "description": "Enterprise Supply Chain Management for ERPNext",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "echo 'Ugavi uses directly served public assets'",
+    "test": "echo 'Run tests with bench --site <site> run-tests --app ugavi'",
+    "lint": "npx prettier --check ugavi/public/",
+    "format": "npx prettier --write ugavi/public/"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.0",
+    "markdown-link-check": "^3.12.0",
+    "cspell": "^8.0.0"
+  }
+}

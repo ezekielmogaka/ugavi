@@ -1,0 +1,76 @@
+{
+  "doctype": "Workspace",
+  "name": "Ugavi Assets",
+  "label": "Ugavi Assets",
+  "icon": "tool",
+  "module": "Ugavi Assets",
+  "for_user": "",
+  "hide_custom": 0,
+  "is_hidden": 0,
+  "content": "[{\"id\":\"ugavi-shortcut-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Asset Register\",\"col\":4}},{\"id\":\"ugavi-shortcut-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Custody Movements\",\"col\":4}},{\"id\":\"ugavi-shortcut-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Controlled Disposal\",\"col\":4}},{\"id\":\"ugavi-workspace-spacer\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"ugavi-card-1\",\"type\":\"card\",\"data\":{\"card_name\":\"Asset Management\",\"col\":4}}]",
+  "links": [
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Asset Management",
+      "link_count": 4,
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "label": "Asset Register",
+      "link_to": "Asset Register",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Asset Movement",
+      "link_to": "Ugavi Asset Movement",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Asset Disposal",
+      "link_to": "Asset Disposal",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Asset Verification",
+      "link_to": "Asset Verification",
+      "link_type": "DocType",
+      "type": "Link"
+    }
+  ],
+  "charts": [],
+  "number_cards": [],
+  "shortcuts": [
+    {
+      "color": "Blue",
+      "doc_view": "List",
+      "label": "Asset Register",
+      "link_to": "Asset Register",
+      "stats_filter": "[]",
+      "type": "DocType"
+    },
+    {
+      "color": "Green",
+      "doc_view": "List",
+      "label": "Custody Movements",
+      "link_to": "Ugavi Asset Movement",
+      "stats_filter": "[]",
+      "type": "DocType"
+    },
+    {
+      "color": "Orange",
+      "doc_view": "List",
+      "label": "Controlled Disposal",
+      "link_to": "Asset Disposal",
+      "stats_filter": "[]",
+      "type": "DocType"
+    }
+  ]
+}

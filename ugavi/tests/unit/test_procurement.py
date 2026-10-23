@@ -1,5 +1,4 @@
 """Unit tests for Ugavi procurement rules engine."""
-import frappe
 import unittest
 from unittest.mock import patch
 

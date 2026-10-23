@@ -1,0 +1,112 @@
+/* Ugavi Design System — Components
+   Part 2: chips, timeline, approvals, skeleton, empty states, white-label */
+
+.ugavi-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ugavi-space-xs) var(--ugavi-space-sm);
+  border-radius: var(--ugavi-radius-full);
+  font-size: var(--ugavi-font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ugavi-chip--draft { background: var(--ugavi-chip-draft-bg); color: var(--ugavi-chip-draft-text); }
+.ugavi-chip--published { background: var(--ugavi-chip-published-bg); color: var(--ugavi-chip-published-text); }
+.ugavi-chip--awarded { background: var(--ugavi-chip-awarded-bg); color: var(--ugavi-chip-awarded-text); }
+.ugavi-chip--closed { background: var(--ugavi-chip-closed-bg); color: var(--ugavi-chip-closed-text); }
+.ugavi-chip--critical { background: #fecaca; color: #991b1b; }
+.ugavi-chip--success { background: #dcfce7; color: #166534; }
+.ugavi-chip--submitted,
+.ugavi-chip--under-review { background: var(--ugavi-brand-light); color: var(--ugavi-brand-dark); }
+.ugavi-chip--prequalified,
+.ugavi-chip--opened,
+.ugavi-chip--accepted { background: var(--ugavi-accent-soft); color: var(--ugavi-success); }
+.ugavi-chip--rejected,
+.ugavi-chip--expired,
+.ugavi-chip--blacklisted,
+.ugavi-chip--suspended { background: #fee4e2; color: var(--ugavi-critical); }
+
+.ugavi-timeline {
+  position: relative;
+  padding-left: var(--ugavi-space-xl);
+}
+.ugavi-timeline::before {
+  content: "";
+  position: absolute;
+  left: 8px; top: 4px; bottom: 4px;
+  width: 2px;
+  background: var(--ugavi-border);
+}
+.ugavi-timeline-item {
+  position: relative;
+  padding-bottom: var(--ugavi-space-lg);
+}
+.ugavi-timeline-item::before {
+  content: "";
+  position: absolute;
+  left: calc(-1 * var(--ugavi-space-xl) + 4px);
+  top: 4px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--ugavi-brand);
+  border: 2px solid var(--ugavi-surface);
+}
+
+.ugavi-approvals-inbox { display: grid; gap: var(--ugavi-space-sm); }
+.ugavi-approval-card {
+  border: 1px solid var(--ugavi-border);
+  border-radius: var(--ugavi-radius-md);
+  padding: var(--ugavi-space-md);
+  background: var(--ugavi-surface);
+  box-shadow: var(--ugavi-shadow-card);
+  transition: box-shadow var(--ugavi-transition-normal);
+}
+.ugavi-approval-card:hover { box-shadow: var(--ugavi-shadow-card-hover); }
+.ugavi-approval-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--ugavi-space-sm);
+}
+.ugavi-approval-card__actions { display: flex; gap: var(--ugavi-space-sm); }
+
+.ugavi-density--compact .ugavi-approval-card { padding: var(--ugavi-space-sm); }
+.ugavi-density--compact .ugavi-timeline-item { padding-bottom: var(--ugavi-space-sm); }
+
+.ugavi-skeleton {
+  background: linear-gradient(90deg, var(--ugavi-border) 25%, var(--ugavi-surface-alt) 50%, var(--ugavi-border) 75%);
+  background-size: 200% 100%;
+  animation: ugavi-shimmer 1.5s infinite;
+  border-radius: var(--ugavi-radius-sm);
+}
+.ugavi-skeleton--text { height: 1rem; width: 100%; }
+.ugavi-skeleton--title { height: 1.5rem; width: 60%; }
+.ugavi-skeleton--card { height: 120px; width: 100%; }
+@keyframes ugavi-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.ugavi-empty-state {
+  text-align: center;
+  padding: var(--ugavi-space-2xl) var(--ugavi-space-lg);
+  color: var(--ugavi-text-secondary);
+}
+.ugavi-empty-state__icon { font-size: 3rem; margin-bottom: var(--ugavi-space-md); opacity: 0.4; }
+.ugavi-empty-state__title {
+  font-size: var(--ugavi-font-size-lg);
+  font-weight: 600;
+  color: var(--ugavi-text-primary);
+  margin-bottom: var(--ugavi-space-sm);
+}
+
+.ugavi-chart-palette {
+  --chart-1: #2e3194; --chart-2: #61a744; --chart-3: #e8a11a;
+  --chart-4: #5c67c8; --chart-5: #4f8f58; --chart-6: #7255b5;
+  --chart-7: #c56b2d; --chart-8: #3c8196;
+}
+
+.ugavi-branded { --ugavi-brand: var(--brand-accent-color, #2e3194); }
+.ugavi-donor-report { border-top: 4px solid var(--donor-accent-color, var(--ugavi-brand)); }
+.ugavi-donor-report__logo { max-height: 60px; object-fit: contain; }

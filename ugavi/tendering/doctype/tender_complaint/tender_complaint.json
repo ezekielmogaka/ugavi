@@ -1,0 +1,138 @@
+{
+  "autoname": "TPC-.YYYY.-.####",
+  "custom": 0,
+  "doctype": "DocType",
+  "fields": [
+    {
+      "fieldname": "tender",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Tender",
+      "options": "Tender",
+      "reqd": 1
+    },
+    {
+      "fieldname": "standstill_period",
+      "fieldtype": "Link",
+      "label": "Standstill Period",
+      "options": "Standstill Period",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "supplier",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Supplier",
+      "options": "Supplier",
+      "reqd": 1
+    },
+    {
+      "fieldname": "submitted_by",
+      "fieldtype": "Link",
+      "label": "Submitted By",
+      "options": "User",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "submission_date",
+      "fieldtype": "Datetime",
+      "in_list_view": 1,
+      "label": "Submission Date",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "default": "Submitted",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Status",
+      "options": "Submitted\nUnder Review\nUpheld\nPartially Upheld\nRejected\nWithdrawn",
+      "reqd": 1
+    },
+    {
+      "fieldname": "grounds",
+      "fieldtype": "Text Editor",
+      "label": "Grounds",
+      "reqd": 1
+    },
+    {
+      "fieldname": "supporting_document",
+      "fieldtype": "Attach",
+      "label": "Supporting Document"
+    },
+    {
+      "fieldname": "assigned_to",
+      "fieldtype": "Link",
+      "label": "Review Officer",
+      "options": "User"
+    },
+    {
+      "fieldname": "response_due_date",
+      "fieldtype": "Datetime",
+      "label": "Response Due",
+      "read_only": 1
+    },
+    {
+      "fieldname": "review_panel",
+      "fieldtype": "Table",
+      "label": "Review Panel",
+      "options": "Complaint Review Member"
+    },
+    {
+      "fieldname": "outcome",
+      "fieldtype": "Text Editor",
+      "label": "Outcome",
+      "mandatory_depends_on": "eval:['Upheld','Partially Upheld','Rejected'].includes(doc.status)"
+    },
+    {
+      "depends_on": "eval:['Upheld','Partially Upheld'].includes(doc.status)",
+      "fieldname": "remedial_action",
+      "fieldtype": "Select",
+      "label": "Remedial Action",
+      "options": "\nRe-evaluation\nCorrective Notice\nCancel Intended Award"
+    },
+    {
+      "depends_on": "eval:doc.remedial_action",
+      "fieldname": "remedial_details",
+      "fieldtype": "Small Text",
+      "label": "Remedial Action Details"
+    },
+    {
+      "fieldname": "resolution_date",
+      "fieldtype": "Datetime",
+      "label": "Resolution Date",
+      "read_only": 1
+    }
+  ],
+  "istable": 0,
+  "module": "Tendering",
+  "name": "Tender Complaint",
+  "permissions": [
+    {
+      "create": 1,
+      "read": 1,
+      "role": "System Manager",
+      "write": 1
+    },
+    {
+      "create": 1,
+      "read": 1,
+      "role": "Procurement Officer",
+      "write": 1
+    },
+    {
+      "read": 1,
+      "role": "Auditor"
+    }
+  ],
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "track_changes": 1,
+  "track_seen": 1
+}

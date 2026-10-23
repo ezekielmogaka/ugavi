@@ -1,52 +1,52 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "default": "1",
-   "fieldname": "enabled",
-   "fieldtype": "Check",
-   "in_list_view": 1,
-   "label": "Enabled"
-  },
-  {
-   "default": "0",
-   "fieldname": "min_value",
-   "fieldtype": "Currency",
-   "label": "Min Value",
-   "reqd": 1
-  },
-  {
-   "fieldname": "max_value",
-   "fieldtype": "Currency",
-   "label": "Max Value"
-  },
-  {
-   "fieldname": "procurement_method",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Procurement Method",
-   "options": "Request for Quotation (Direct)\nRestricted Tender\nOpen Tender\nSingle Source",
-   "reqd": 1
-  },
-  {
-   "fieldname": "effective_from",
-   "fieldtype": "Date",
-   "label": "Effective From"
-  },
-  {
-   "fieldname": "effective_to",
-   "fieldtype": "Date",
-   "label": "Effective To"
-  },
-  {
-   "fieldname": "notes",
-   "fieldtype": "Small Text",
-   "label": "Notes"
-  }
- ],
- "istable": 1,
- "module": "Compliance",
- "name": "Donor Rule",
- "permissions": []
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "default": "1",
+            "fieldname": "enabled",
+            "fieldtype": "Check",
+            "in_list_view": 1,
+            "label": "Enabled"
+        },
+        {
+            "default": "0",
+            "fieldname": "min_value",
+            "fieldtype": "Currency",
+            "label": "Min Value",
+            "reqd": 1
+        },
+        {
+            "fieldname": "max_value",
+            "fieldtype": "Currency",
+            "label": "Max Value"
+        },
+        {
+            "fieldname": "procurement_method",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Procurement Method",
+            "options": "Request for Quotation (Direct)\nRestricted Tender\nOpen Tender\nSingle Source",
+            "reqd": 1
+        },
+        {
+            "fieldname": "effective_from",
+            "fieldtype": "Date",
+            "label": "Effective From"
+        },
+        {
+            "fieldname": "effective_to",
+            "fieldtype": "Date",
+            "label": "Effective To"
+        },
+        {
+            "fieldname": "notes",
+            "fieldtype": "Small Text",
+            "label": "Notes"
+        }
+    ],
+    "istable": 1,
+    "module": "Compliance",
+    "name": "Donor Rule",
+    "permissions": []
 }

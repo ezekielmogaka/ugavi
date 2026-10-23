@@ -1,35 +1,35 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "item_code",
-   "fieldtype": "Link",
-   "label": "Item",
-   "options": "Item",
-   "reqd": 1
-  },
-  {
-   "fieldname": "qty",
-   "fieldtype": "Float",
-   "label": "Quantity",
-   "reqd": 1
-  },
-  {
-   "fieldname": "uom",
-   "fieldtype": "Link",
-   "label": "UOM",
-   "options": "UOM"
-  },
-  {
-   "fieldname": "batch_no",
-   "fieldtype": "Link",
-   "label": "Batch",
-   "options": "Batch"
-  }
- ],
- "istable": 1,
- "module": "Logistics",
- "name": "Inter Donor Transfer Item",
- "track_changes": 0
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "item_code",
+            "fieldtype": "Link",
+            "label": "Item",
+            "options": "Item",
+            "reqd": 1
+        },
+        {
+            "fieldname": "qty",
+            "fieldtype": "Float",
+            "label": "Quantity",
+            "reqd": 1
+        },
+        {
+            "fieldname": "uom",
+            "fieldtype": "Link",
+            "label": "UOM",
+            "options": "UOM"
+        },
+        {
+            "fieldname": "batch_no",
+            "fieldtype": "Link",
+            "label": "Batch",
+            "options": "Batch"
+        }
+    ],
+    "istable": 1,
+    "module": "Logistics",
+    "name": "Inter Donor Transfer Item",
+    "track_changes": 0
 }

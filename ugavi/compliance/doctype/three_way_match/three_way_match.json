@@ -1,65 +1,82 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "purchase_order",
-   "fieldtype": "Link",
-   "label": "Purchase Order",
-   "options": "Purchase Order",
-   "reqd": 1
-  },
-  {
-   "fieldname": "purchase_receipt",
-   "fieldtype": "Link",
-   "label": "Purchase Receipt",
-   "options": "Purchase Receipt",
-   "reqd": 1
-  },
-  {
-   "fieldname": "purchase_invoice",
-   "fieldtype": "Link",
-   "label": "Purchase Invoice",
-   "options": "Purchase Invoice",
-   "reqd": 1
-  },
-  {
-   "fieldname": "match_status",
-   "fieldtype": "Select",
-   "label": "Match Status",
-   "options": "Unmatched\nMatched\nWithin Tolerance\nDisputed",
-   "default": "Unmatched",
-   "reqd": 1
-  },
-  {
-   "fieldname": "quantity_variance",
-   "fieldtype": "Float",
-   "label": "Quantity Variance %",
-   "read_only": 1
-  },
-  {
-   "fieldname": "price_variance",
-   "fieldtype": "Float",
-   "label": "Price Variance %",
-   "read_only": 1
-  },
-  {
-   "fieldname": "tolerance_percent",
-   "fieldtype": "Float",
-   "label": "Tolerance (%)",
-   "default": "5"
-  },
-  {
-   "fieldname": "remarks",
-   "fieldtype": "Small Text",
-   "label": "Remarks"
-  }
- ],
- "istable": 0,
- "module": "Compliance",
- "name": "Three Way Match",
- "permissions": [
-  {"create": 1, "delete": 0, "read": 1, "role": "System Manager", "write": 1}
- ],
- "track_changes": 1
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "purchase_order",
+            "fieldtype": "Link",
+            "label": "Purchase Order",
+            "options": "Purchase Order",
+            "reqd": 1
+        },
+        {
+            "fieldname": "purchase_receipt",
+            "fieldtype": "Link",
+            "label": "Purchase Receipt",
+            "options": "Purchase Receipt",
+            "reqd": 1
+        },
+        {
+            "fieldname": "purchase_invoice",
+            "fieldtype": "Link",
+            "label": "Purchase Invoice",
+            "options": "Purchase Invoice",
+            "reqd": 1
+        },
+        {
+            "default": "Unmatched",
+            "fieldname": "match_status",
+            "fieldtype": "Select",
+            "label": "Match Status",
+            "options": "Unmatched\nMatched\nWithin Tolerance\nDisputed",
+            "reqd": 1
+        },
+        {
+            "fieldname": "quantity_variance",
+            "fieldtype": "Float",
+            "label": "Quantity Variance %",
+            "read_only": 1
+        },
+        {
+            "fieldname": "price_variance",
+            "fieldtype": "Float",
+            "label": "Price Variance %",
+            "read_only": 1
+        },
+        {
+            "fieldname": "items",
+            "fieldtype": "Table",
+            "label": "Match Details",
+            "options": "Three Way Match Item",
+            "read_only": 1
+        },
+        {
+            "default": "5",
+            "fieldname": "tolerance_percent",
+            "fieldtype": "Float",
+            "label": "Tolerance (%)"
+        },
+        {
+            "fieldname": "remarks",
+            "fieldtype": "Small Text",
+            "label": "Remarks"
+        }
+    ],
+    "istable": 0,
+    "module": "Compliance",
+    "name": "Three Way Match",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "Finance Officer",
+            "write": 1
+        },
+        {
+            "read": 1,
+            "role": "Auditor"
+        }
+    ],
+    "track_changes": 1
 }

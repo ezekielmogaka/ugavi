@@ -40,16 +40,3 @@ class SealedBidKey(Document):
         self.reconstructed_at = now_datetime()
         self.reconstructed_by = user
         self.save(ignore_permissions=True)
-        frappe.db.commit()
-
-    @frappe.whitelist()
-    def get_share_for_officer(self, officer_user: str) -> dict | None:
-        """Return a single share for the given officer (for bid opening)."""
-        for i, fld in [("1", self.share_1_user), ("2", self.share_2_user),
-                        ("3", self.share_3_user)]:
-            if fld == officer_user:
-                return {
-                    "share_x": i,
-                    "share_y": self.get(f"share_{i}_data"),
-                }
-        return None

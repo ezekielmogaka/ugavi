@@ -1,0 +1,136 @@
+{
+  "autoname": "AST-.YYYY.-.####",
+  "custom": 0,
+  "doctype": "DocType",
+  "fields": [
+    {
+      "fieldname": "asset_name",
+      "fieldtype": "Data",
+      "label": "Asset Name",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "asset_category",
+      "fieldtype": "Select",
+      "label": "Category",
+      "options": "Vehicle\nEquipment\nFurniture\nIT Equipment\nBuilding\nOther"
+    },
+    {
+      "fieldname": "serial_number",
+      "fieldtype": "Data",
+      "label": "Serial Number"
+    },
+    {
+      "fieldname": "asset_tag",
+      "fieldtype": "Data",
+      "label": "Asset Tag",
+      "unique": 1
+    },
+    {
+      "fieldname": "qr_code",
+      "fieldtype": "Attach Image",
+      "label": "QR Code"
+    },
+    {
+      "fieldname": "purchase_date",
+      "fieldtype": "Date",
+      "label": "Purchase Date"
+    },
+    {
+      "fieldname": "purchase_price",
+      "fieldtype": "Currency",
+      "label": "Purchase Price"
+    },
+    {
+      "fieldname": "current_value",
+      "fieldtype": "Currency",
+      "label": "Current Value"
+    },
+    {
+      "fieldname": "useful_life_years",
+      "fieldtype": "Int",
+      "label": "Useful Life (Years)"
+    },
+    {
+      "fieldname": "salvage_value",
+      "fieldtype": "Currency",
+      "label": "Salvage Value"
+    },
+    {
+      "fieldname": "annual_depreciation",
+      "fieldtype": "Currency",
+      "label": "Annual Depreciation",
+      "read_only": 1
+    },
+    {
+      "fieldname": "purchase_order",
+      "fieldtype": "Link",
+      "label": "Purchase Order",
+      "options": "Purchase Order"
+    },
+    {
+      "fieldname": "donor",
+      "fieldtype": "Link",
+      "label": "Donor",
+      "options": "Donor Profile"
+    },
+    {
+      "fieldname": "custodian",
+      "fieldtype": "Link",
+      "label": "Custodian",
+      "options": "User"
+    },
+    {
+      "fieldname": "location",
+      "fieldtype": "Link",
+      "label": "Location",
+      "options": "Warehouse"
+    },
+    {
+      "fieldname": "last_verified_date",
+      "fieldtype": "Date",
+      "label": "Last Verified"
+    },
+    {
+      "fieldname": "next_maintenance_date",
+      "fieldtype": "Date",
+      "label": "Next Maintenance"
+    },
+    {
+      "fieldname": "condition",
+      "fieldtype": "Select",
+      "label": "Condition",
+      "options": "New\nGood\nFair\nPoor\nDisposed",
+      "default": "Good",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Active\nInactive\nDisposed",
+      "default": "Active",
+      "in_list_view": 1
+    }
+  ],
+  "istable": 0,
+  "module": "Ugavi Assets",
+  "permissions": [
+    {
+      "role": "Asset Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    }
+  ],
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "track_changes": 1,
+  "track_views": 1,
+  "title_field": "asset_name",
+  "name": "Asset Register",
+  "document_type": "",
+  "engine": "InnoDB"
+}

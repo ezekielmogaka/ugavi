@@ -1,0 +1,85 @@
+{
+    "autoname": "CLR-.YYYY.-.####",
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "tender",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Tender",
+            "options": "Tender",
+            "reqd": 1
+        },
+        {
+            "fieldname": "supplier",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Supplier",
+            "options": "Supplier"
+        },
+        {
+            "fieldname": "asked_by",
+            "fieldtype": "Link",
+            "label": "Asked By",
+            "options": "User",
+            "reqd": 1
+        },
+        {
+            "fieldname": "question",
+            "fieldtype": "Text Editor",
+            "label": "Question",
+            "reqd": 1
+        },
+        {
+            "fieldname": "answer",
+            "fieldtype": "Text Editor",
+            "label": "Answer",
+            "depends_on": "eval:doc.status == 'Answered'"
+        },
+        {
+            "fieldname": "answered_by",
+            "fieldtype": "Link",
+            "label": "Answered By",
+            "options": "User",
+            "read_only": 1
+        },
+        {
+            "fieldname": "answered_date",
+            "fieldtype": "Datetime",
+            "label": "Answered Date",
+            "read_only": 1
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "in_standard_filter": 1,
+            "label": "Status",
+            "options": "Open\nAnswered\nClosed",
+            "default": "Open"
+        }
+    ],
+    "istable": 0,
+    "module": "Tendering",
+    "name": "Clarification",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "System Manager",
+            "write": 1
+        },
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "Procurement Officer",
+            "write": 1
+        }
+    ],
+    "sort_field": "creation",
+    "sort_order": "DESC",
+    "track_changes": 1
+}

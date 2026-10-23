@@ -1,35 +1,50 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "document_name",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Document Name",
-   "reqd": 1
-  },
-  {
-   "fieldname": "document_type",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Type",
-   "options": "Specifications\nTerms of Reference\nBill of Quantities\nDrawings\nInstructions to Bidders\nEvaluation Criteria\nContract Template\nOther",
-   "reqd": 1
-  },
-  {
-   "fieldname": "attachment",
-   "fieldtype": "Attach",
-   "label": "Attachment"
-  },
-  {
-   "fieldname": "description",
-   "fieldtype": "Small Text",
-   "label": "Description"
-  }
- ],
- "istable": 1,
- "module": "Tendering",
- "name": "Tender Document",
- "permissions": []
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "document_name",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Document Name",
+            "reqd": 1
+        },
+        {
+            "fieldname": "document_type",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Type",
+            "options": "Specifications\nTerms of Reference\nBill of Quantities\nDrawings\nInstructions to Bidders\nEvaluation Criteria\nContract Template\nOther",
+            "reqd": 1
+        },
+        {
+            "fieldname": "attachment",
+            "fieldtype": "Attach",
+            "label": "Attachment",
+            "reqd": 1
+        },
+        {
+            "default": "1",
+            "fieldname": "document_version",
+            "fieldtype": "Int",
+            "label": "Version",
+            "reqd": 1
+        },
+        {
+            "fieldname": "source_template",
+            "fieldtype": "Link",
+            "label": "Source Template",
+            "options": "Tender Document Template",
+            "read_only": 1
+        },
+        {
+            "fieldname": "description",
+            "fieldtype": "Small Text",
+            "label": "Description"
+        }
+    ],
+    "istable": 1,
+    "module": "Tendering",
+    "name": "Tender Document",
+    "permissions": []
 }

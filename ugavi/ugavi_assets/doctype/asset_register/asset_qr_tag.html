@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"></head>
+<body>
+    <div class="print-format ugavi-asset-qr">
+        <div class="print-heading">
+            <h2>{{ _("Asset QR Tag — LOKADO") }}</h2>
+        </div>
+
+        <div class="ugavi-asset-qr__container">
+            <div class="ugavi-asset-qr__details">
+                <h3>{{ doc.asset_name or doc.name }}</h3>
+                <dl>
+                    <dt>{{ _("Asset ID") }}</dt>
+                    <dd><strong>{{ doc.name }}</strong></dd>
+
+                    <dt>{{ _("Category") }}</dt>
+                    <dd>{{ doc.asset_category }}</dd>
+
+                    <dt>{{ _("Location") }}</dt>
+                    <dd>{{ doc.location }}</dd>
+
+                    <dt>{{ _("Donor") }}</dt>
+                    <dd>{{ doc.donor or _("LOKADO Own Funds") }}</dd>
+
+                    <dt>{{ _("Custodian") }}</dt>
+                    <dd>{{ doc.custodian }}</dd>
+
+                    <dt>{{ _("Purchase Date") }}</dt>
+                    <dd>{{ frappe.utils.format_date(doc.purchase_date) if doc.purchase_date else "—" }}</dd>
+
+                    <dt>{{ _("Purchase Value") }}</dt>
+                    <dd>{{ frappe.utils.fmt_money(doc.purchase_price, currency="KES") if doc.purchase_price else "—" }}</dd>
+
+                    <dt>{{ _("Last Verified") }}</dt>
+                    <dd>{{ frappe.utils.format_date(doc.last_verified_date) if doc.last_verified_date else _("Not yet verified") }}</dd>
+
+                    <dt>{{ _("Status") }}</dt>
+                    <dd>
+                        <span class="ugavi-chip
+                            {% if doc.status == 'Active' %}ugavi-chip--prequalified
+                            {% elif doc.status == 'Disposed' %}ugavi-chip--rejected
+                            {% else %}ugavi-chip--draft{% endif %}
+                        ">{{ _(doc.status) }}</span>
+                    </dd>
+                </dl>
+            </div>
+
+            <div class="ugavi-asset-qr__code">
+                <img src="{{ doc.get_qr_data_uri() }}"
+                     alt="{{ _('QR code for asset') }} {{ doc.name }}"
+                     width="180"
+                     height="180">
+                <small>{{ doc.name }}</small>
+            </div>
+        </div>
+
+        <div class="ugavi-asset-qr__footer">
+            <p>{{ _("Scan to verify. If found, contact LOKADO Logistics at logistics@lokado.org.") }}</p>
+        </div>
+
+        <div class="print-footer">
+            <p>{{ _("Printed on") }} {{ frappe.utils.format_datetime(frappe.utils.now_datetime()) }}</p>
+        </div>
+    </div>
+
+    <style>
+        .ugavi-asset-qr { font-family: Inter, system-ui, sans-serif; max-width: 100%; }
+        .ugavi-asset-qr h2 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+        .ugavi-asset-qr h3 { font-size: 1.1rem; margin: 0 0 0.75rem; }
+        .ugavi-asset-qr__container {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+            border: 1px solid #dfe3ec;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .ugavi-asset-qr__details { flex: 1; }
+        .ugavi-asset-qr__details dl {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.25rem 1rem;
+            margin: 0;
+        }
+        .ugavi-asset-qr__details dt {
+            color: #5c667a;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .ugavi-asset-qr__details dd { margin: 0 0 0.5rem; font-size: 0.9rem; }
+        .ugavi-asset-qr__code {
+            text-align: center;
+            min-width: 180px;
+        }
+        .ugavi-asset-qr__code img { display: block; margin: 0 auto 0.5rem; }
+        .ugavi-asset-qr__code small { color: #5c667a; font-size: 0.75rem; }
+        .ugavi-asset-qr__footer {
+            font-size: 0.8rem;
+            color: #5c667a;
+            text-align: center;
+            padding: 0.5rem 0;
+            border-top: 1px dashed #dfe3ec;
+        }
+        .ugavi-chip {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .ugavi-chip--prequalified { background: #edf7e9; color: #2f7d32; }
+        .ugavi-chip--rejected { background: #fee4e2; color: #b42318; }
+        .ugavi-chip--draft { background: #eef0f4; color: #50596a; }
+        @media print {
+            .ugavi-asset-qr { page-break-inside: avoid; }
+        }
+    </style>
+</body>
+</html>

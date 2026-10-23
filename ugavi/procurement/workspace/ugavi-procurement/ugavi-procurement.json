@@ -1,0 +1,153 @@
+{
+  "doctype": "Workspace",
+  "name": "Ugavi Procurement",
+  "label": "Ugavi Procurement",
+  "icon": "shopping-cart",
+  "module": "Ugavi Procurement",
+  "for_user": "",
+  "hide_custom": 0,
+  "is_hidden": 0,
+  "content": "[{\"id\":\"ugavi-shortcut-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"New Requisition\",\"col\":4}},{\"id\":\"ugavi-shortcut-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Purchase Orders\",\"col\":4}},{\"id\":\"ugavi-shortcut-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Supplier Readiness\",\"col\":4}},{\"id\":\"ugavi-workspace-spacer\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"ugavi-card-1\",\"type\":\"card\",\"data\":{\"card_name\":\"Requisitions\",\"col\":4}},{\"id\":\"ugavi-card-2\",\"type\":\"card\",\"data\":{\"card_name\":\"Suppliers\",\"col\":4}},{\"id\":\"ugavi-card-3\",\"type\":\"card\",\"data\":{\"card_name\":\"Governance\",\"col\":4}},{\"id\":\"ugavi-card-4\",\"type\":\"card\",\"data\":{\"card_name\":\"Configuration\",\"col\":4}}]",
+  "links": [
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Requisitions",
+      "link_count": 2,
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "label": "Purchase Requisition",
+      "link_to": "Purchase Requisition",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Purchase Order",
+      "link_to": "Purchase Order",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Suppliers",
+      "link_count": 3,
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "label": "Supplier",
+      "link_to": "Supplier",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Supplier Pre-qualification",
+      "link_to": "Supplier Prequalification",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Supplier Evaluation",
+      "link_to": "Ugavi Supplier Evaluation",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Governance",
+      "link_count": 4,
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "label": "Delegation of Authority",
+      "link_to": "Delegation of Authority",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Segregation of Duties",
+      "link_to": "Segregation of Duties",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Approval Delegation",
+      "link_to": "Approval Delegation",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Waiver",
+      "link_to": "Waiver",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Configuration",
+      "link_count": 3,
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "label": "Ugavi Procurement Settings",
+      "link_to": "Ugavi Procurement Settings",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Donor Profile",
+      "link_to": "Donor Profile",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Contract",
+      "link_to": "Contract",
+      "link_type": "DocType",
+      "type": "Link"
+    }
+  ],
+  "charts": [],
+  "number_cards": [],
+  "shortcuts": [
+    {
+      "color": "Blue",
+      "doc_view": "List",
+      "label": "New Requisition",
+      "link_to": "Purchase Requisition",
+      "stats_filter": "[]",
+      "type": "DocType"
+    },
+    {
+      "color": "Green",
+      "doc_view": "List",
+      "label": "Purchase Orders",
+      "link_to": "Purchase Order",
+      "stats_filter": "[]",
+      "type": "DocType"
+    },
+    {
+      "color": "Purple",
+      "doc_view": "List",
+      "label": "Supplier Readiness",
+      "link_to": "Supplier Prequalification",
+      "stats_filter": "[]",
+      "type": "DocType"
+    }
+  ]
+}

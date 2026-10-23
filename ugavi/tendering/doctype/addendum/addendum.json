@@ -1,52 +1,65 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "addendum_number",
-   "fieldtype": "Int",
-   "in_list_view": 1,
-   "label": "Addendum #",
-   "reqd": 1
-  },
-  {
-   "fieldname": "title",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Title",
-   "reqd": 1
-  },
-  {
-   "fieldname": "issue_date",
-   "fieldtype": "Date",
-   "label": "Issue Date",
-   "reqd": 1
-  },
-  {
-   "fieldname": "description",
-   "fieldtype": "Text Editor",
-   "label": "Description",
-   "reqd": 1
-  },
-  {
-   "fieldname": "attachment",
-   "fieldtype": "Attach",
-   "label": "Attachment"
-  },
-  {
-   "fieldname": "extends_deadline",
-   "fieldtype": "Check",
-   "label": "Extends Submission Deadline"
-  },
-  {
-   "depends_on": "eval:doc.extends_deadline",
-   "fieldname": "new_deadline",
-   "fieldtype": "Datetime",
-   "label": "New Deadline"
-  }
- ],
- "istable": 1,
- "module": "Tendering",
- "name": "Addendum",
- "permissions": []
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "addendum_number",
+            "fieldtype": "Int",
+            "in_list_view": 1,
+            "label": "Addendum #",
+            "reqd": 1
+        },
+        {
+            "fieldname": "title",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Title",
+            "reqd": 1
+        },
+        {
+            "fieldname": "issue_date",
+            "fieldtype": "Date",
+            "label": "Issue Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "description",
+            "fieldtype": "Text Editor",
+            "label": "Description",
+            "reqd": 1
+        },
+        {
+            "fieldname": "attachment",
+            "fieldtype": "Attach",
+            "label": "Attachment"
+        },
+        {
+            "fieldname": "issued_by",
+            "fieldtype": "Link",
+            "label": "Issued By",
+            "options": "User",
+            "read_only": 1
+        },
+        {
+            "fieldname": "issued_at",
+            "fieldtype": "Datetime",
+            "label": "Issued At",
+            "read_only": 1
+        },
+        {
+            "fieldname": "extends_deadline",
+            "fieldtype": "Check",
+            "label": "Extends Submission Deadline"
+        },
+        {
+            "depends_on": "eval:doc.extends_deadline",
+            "fieldname": "new_deadline",
+            "fieldtype": "Datetime",
+            "label": "New Deadline"
+        }
+    ],
+    "istable": 1,
+    "module": "Tendering",
+    "name": "Addendum",
+    "permissions": []
 }

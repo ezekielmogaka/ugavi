@@ -49,23 +49,13 @@ class ProcurementRulesEngine:
         self._thresholds = self._build_thresholds()
     
     def _load_settings(self) -> Dict[str, Any]:
-        try:
-            doc = frappe.get_single("Ugavi Procurement Settings")
-            return {
-                "direct_threshold": doc.direct_threshold or 200000,
-                "restricted_threshold": doc.restricted_threshold or 500000,
-                "open_threshold": doc.open_threshold or 500000,
-                "enforce_donor_rules": doc.enforce_donor_rules or 0,
-                "enforce_category_rules": doc.enforce_category_rules or 0,
-            }
-        except Exception:
-            return {
-                "direct_threshold": 200000,
-                "restricted_threshold": 500000,
-                "open_threshold": 500000,
-                "enforce_donor_rules": 0,
-                "enforce_category_rules": 0,
-            }
+        doc = frappe.get_single("Ugavi Procurement Settings")
+        return {
+            "direct_threshold": doc.direct_threshold or 200000,
+            "restricted_threshold": doc.restricted_threshold or 500000,
+            "open_threshold": doc.open_threshold or 500000,
+            "enforce_donor_rules": doc.enforce_donor_rules or 0,
+        }
     
     def _build_thresholds(self) -> list:
         return [
@@ -86,10 +76,6 @@ class ProcurementRulesEngine:
             donor_method = self._check_donor_rules(estimated_value, donor)
             if donor_method:
                 return donor_method
-        if item_category and self.settings.get("enforce_category_rules"):
-            category_method = self._check_category_rules(estimated_value, item_category)
-            if category_method:
-                return category_method
         for rule in self._thresholds:
             if rule.applies(estimated_value):
                 return rule.method
@@ -97,26 +83,24 @@ class ProcurementRulesEngine:
     
     def _check_donor_rules(self, value: float, donor: str) -> Optional[ProcurementMethod]:
         rules = frappe.get_all(
-            "Donor Procurement Rule",
-            filters={"donor": donor, "enabled": 1},
-            fields=["min_value", "max_value", "procurement_method"],
+            "Donor Rule",
+            filters={"parent": donor, "parenttype": "Donor Profile", "enabled": 1},
+            fields=[
+                "min_value",
+                "max_value",
+                "procurement_method",
+                "effective_from",
+                "effective_to",
+            ],
             order_by="min_value asc",
         )
+        today = frappe.utils.getdate()
         for rd in rules:
-            r = ThresholdRule(rd.min_value, rd.get("max_value"), ProcurementMethod(rd.procurement_method))
-            if r.applies(value):
-                return r.method
-        return None
-    
-    def _check_category_rules(self, value: float, category: str) -> Optional[ProcurementMethod]:
-        rules = frappe.get_all(
-            "Category Procurement Rule",
-            filters={"item_category": category, "enabled": 1},
-            fields=["min_value", "max_value", "procurement_method"],
-            order_by="min_value asc",
-        )
-        for rd in rules:
-            r = ThresholdRule(rd.min_value, rd.get("max_value"), ProcurementMethod(rd.procurement_method))
+            if rd.effective_from and frappe.utils.getdate(rd.effective_from) > today:
+                continue
+            if rd.effective_to and frappe.utils.getdate(rd.effective_to) < today:
+                continue
+            r = ThresholdRule(rd.min_value, rd.max_value, ProcurementMethod(rd.procurement_method))
             if r.applies(value):
                 return r.method
         return None
@@ -143,3 +127,23 @@ def determine_procurement_method(estimated_value: float, donor: str = None, item
         "requires_prequalified": engine.requires_prequalified_suppliers(method),
         "can_override": engine.can_override(method),
     }
+
+
+def check_expiring_prequalifications():
+    """Scheduled job: check for supplier prequalifications expiring within 30 days."""
+    from frappe.utils import add_days, nowdate
+
+    expiring = frappe.get_all(
+        "Supplier Prequalification",
+        filters={
+            "status": "Prequalified",
+            "expiry_date": ["between", [nowdate(), add_days(nowdate(), 30)]],
+        },
+        fields=["name", "supplier", "expiry_date"],
+    )
+    for e in expiring:
+        frappe.log_error(
+            title="Prequalification Expiring",
+            message=f"Supplier {e.supplier} prequalification {e.name} expires on {e.expiry_date}"
+        )
+    return expiring

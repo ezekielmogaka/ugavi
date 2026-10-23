@@ -1,0 +1,104 @@
+{
+  "doctype": "Workspace",
+  "name": "Ugavi Logistics",
+  "label": "Ugavi Logistics",
+  "icon": "assets",
+  "module": "Ugavi Logistics",
+  "for_user": "",
+  "hide_custom": 0,
+  "is_hidden": 0,
+  "content": "[{\"id\":\"ugavi-shortcut-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Stock Movement\",\"col\":4}},{\"id\":\"ugavi-shortcut-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Donor Stock Reports\",\"col\":4}},{\"id\":\"ugavi-shortcut-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Controlled Transfer\",\"col\":4}},{\"id\":\"ugavi-workspace-spacer\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"ugavi-card-1\",\"type\":\"card\",\"data\":{\"card_name\":\"Warehouse & Stock\",\"col\":4}},{\"id\":\"ugavi-card-2\",\"type\":\"card\",\"data\":{\"card_name\":\"Transfers & Reports\",\"col\":4}}]",
+  "links": [
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Warehouse & Stock",
+      "link_count": 4,
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "label": "Donor Warehouse",
+      "link_to": "Donor Warehouse",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Stock Ledger",
+      "link_to": "Stock Ledger",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Stock Entry",
+      "link_to": "Stock Entry",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Stock Reconciliation",
+      "link_to": "Stock Reconciliation",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Transfers & Reports",
+      "link_count": 3,
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "label": "Inter-Donor Transfer",
+      "link_to": "Inter Donor Transfer",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Monthly Stock Report",
+      "link_to": "Monthly Stock Report",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Three-Way Match",
+      "link_to": "Three Way Match",
+      "link_type": "DocType",
+      "type": "Link"
+    }
+  ],
+  "charts": [],
+  "number_cards": [],
+  "shortcuts": [
+    {
+      "color": "Blue",
+      "doc_view": "List",
+      "label": "Stock Movement",
+      "link_to": "Stock Entry",
+      "stats_filter": "[]",
+      "type": "DocType"
+    },
+    {
+      "color": "Green",
+      "doc_view": "List",
+      "label": "Donor Stock Reports",
+      "link_to": "Monthly Stock Report",
+      "stats_filter": "[]",
+      "type": "DocType"
+    },
+    {
+      "color": "Orange",
+      "doc_view": "List",
+      "label": "Controlled Transfer",
+      "link_to": "Inter Donor Transfer",
+      "stats_filter": "[]",
+      "type": "DocType"
+    }
+  ]
+}

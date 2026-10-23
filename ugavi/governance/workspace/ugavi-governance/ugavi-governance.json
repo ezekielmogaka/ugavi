@@ -1,0 +1,90 @@
+{
+  "doctype": "Workspace",
+  "name": "Ugavi Governance",
+  "label": "Ugavi Governance",
+  "icon": "shield",
+  "module": "Ugavi Governance",
+  "for_user": "",
+  "hide_custom": 0,
+  "is_hidden": 0,
+  "content": "[{\"id\":\"ugavi-shortcut-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Audit Evidence\",\"col\":4}},{\"id\":\"ugavi-shortcut-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Match Controls\",\"col\":4}},{\"id\":\"ugavi-shortcut-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Approved Waivers\",\"col\":4}},{\"id\":\"ugavi-workspace-spacer\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"ugavi-card-1\",\"type\":\"card\",\"data\":{\"card_name\":\"Governance & Compliance\",\"col\":4}},{\"id\":\"ugavi-card-2\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
+  "links": [
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Governance & Compliance",
+      "link_count": 4,
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "label": "Audit Log",
+      "link_to": "Audit Log",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Waiver",
+      "link_to": "Waiver",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Budget Encumbrance",
+      "link_to": "Budget Encumbrance",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Donor Rule",
+      "link_to": "Donor Rule",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Reports",
+      "link_count": 1,
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "label": "Three-Way Match",
+      "link_to": "Three Way Match",
+      "link_type": "DocType",
+      "type": "Link"
+    }
+  ],
+  "charts": [],
+  "number_cards": [],
+  "shortcuts": [
+    {
+      "color": "Purple",
+      "doc_view": "List",
+      "label": "Audit Evidence",
+      "link_to": "Audit Log",
+      "stats_filter": "[]",
+      "type": "DocType"
+    },
+    {
+      "color": "Blue",
+      "doc_view": "List",
+      "label": "Match Controls",
+      "link_to": "Three Way Match",
+      "stats_filter": "[]",
+      "type": "DocType"
+    },
+    {
+      "color": "Orange",
+      "doc_view": "List",
+      "label": "Approved Waivers",
+      "link_to": "Waiver",
+      "stats_filter": "[]",
+      "type": "DocType"
+    }
+  ]
+}

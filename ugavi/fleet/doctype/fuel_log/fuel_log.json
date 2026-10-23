@@ -1,0 +1,117 @@
+{
+  "autoname": "FL-.YYYY.-.####",
+  "custom": 0,
+  "doctype": "DocType",
+  "fields": [
+    {
+      "fieldname": "vehicle",
+      "fieldtype": "Link",
+      "label": "Vehicle",
+      "options": "Vehicle",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "date",
+      "fieldtype": "Date",
+      "label": "Date",
+      "reqd": 1,
+      "default": "Today"
+    },
+    {
+      "fieldname": "fuel_type",
+      "fieldtype": "Select",
+      "label": "Fuel Type",
+      "options": "Petrol\nDiesel"
+    },
+    {
+      "fieldname": "litres",
+      "fieldtype": "Float",
+      "label": "Litres"
+    },
+    {
+      "fieldname": "cost_per_litre",
+      "fieldtype": "Currency",
+      "label": "Cost per Litre"
+    },
+    {
+      "fieldname": "total_cost",
+      "fieldtype": "Currency",
+      "label": "Total Cost",
+      "read_only": 1
+    },
+    {
+      "fieldname": "odometer",
+      "fieldtype": "Float",
+      "label": "Odometer Reading"
+    },
+    {
+      "fieldname": "station",
+      "fieldtype": "Data",
+      "label": "Fuel Station"
+    },
+    {
+      "fieldname": "receipt_number",
+      "fieldtype": "Data",
+      "label": "Receipt Number"
+    },
+    {
+      "fieldname": "source_reconciliation",
+      "fieldtype": "Link",
+      "label": "Fleet Purchase",
+      "options": "Fleet Purchase Reconciliation",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "purchase_order",
+      "fieldtype": "Link",
+      "label": "Purchase Order",
+      "options": "Purchase Order",
+      "read_only": 1
+    },
+    {
+      "fieldname": "purchase_receipt",
+      "fieldtype": "Link",
+      "label": "Purchase Receipt",
+      "options": "Purchase Receipt",
+      "read_only": 1
+    },
+    {
+      "fieldname": "purchase_invoice",
+      "fieldtype": "Link",
+      "label": "Purchase Invoice",
+      "options": "Purchase Invoice",
+      "read_only": 1
+    },
+    {
+      "fieldname": "donor",
+      "fieldtype": "Link",
+      "label": "Donor",
+      "options": "Donor Profile"
+    }
+  ],
+  "istable": 0,
+  "module": "Fleet",
+  "permissions": [
+    {
+      "role": "Fleet Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "submit": 1,
+      "cancel": 1
+    }
+  ],
+  "sort_field": "date",
+  "sort_order": "DESC",
+  "track_changes": 1,
+  "title_field": "vehicle",
+  "is_submittable": 1,
+  "name": "Fuel Log",
+  "document_type": "",
+  "engine": "InnoDB"
+}

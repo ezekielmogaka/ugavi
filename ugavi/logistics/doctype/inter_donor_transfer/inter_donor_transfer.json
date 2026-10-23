@@ -1,74 +1,86 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "from_warehouse",
-   "fieldtype": "Link",
-   "label": "From Warehouse",
-   "options": "Warehouse",
-   "reqd": 1
-  },
-  {
-   "fieldname": "to_warehouse",
-   "fieldtype": "Link",
-   "label": "To Warehouse",
-   "options": "Warehouse",
-   "reqd": 1
-  },
-  {
-   "fieldname": "from_donor",
-   "fieldtype": "Link",
-   "label": "From Donor",
-   "options": "Donor Profile",
-   "read_only": 1
-  },
-  {
-   "fieldname": "to_donor",
-   "fieldtype": "Link",
-   "label": "To Donor",
-   "options": "Donor Profile",
-   "read_only": 1
-  },
-  {
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "label": "Status",
-   "options": "Draft\nPending Approval\nApproved\nCompleted\nRejected",
-   "default": "Draft",
-   "reqd": 1
-  },
-  {
-   "fieldname": "transfer_date",
-   "fieldtype": "Date",
-   "label": "Transfer Date"
-  },
-  {
-   "fieldname": "reason",
-   "fieldtype": "Text",
-   "label": "Reason",
-   "reqd": 1
-  },
-  {
-   "fieldname": "items",
-   "fieldtype": "Table",
-   "label": "Items",
-   "options": "Inter Donor Transfer Item"
-  },
-  {
-   "fieldname": "approved_by",
-   "fieldtype": "Link",
-   "label": "Approved By",
-   "options": "User",
-   "read_only": 1
-  }
- ],
- "istable": 0,
- "module": "Logistics",
- "name": "Inter Donor Transfer",
- "permissions": [
-  {"create": 1, "delete": 0, "read": 1, "role": "System Manager", "write": 1},
-  {"create": 1, "delete": 0, "read": 1, "role": "Stock Manager", "write": 1}
- ],
- "track_changes": 1
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "from_warehouse",
+            "fieldtype": "Link",
+            "label": "From Warehouse",
+            "options": "Warehouse",
+            "reqd": 1
+        },
+        {
+            "fieldname": "to_warehouse",
+            "fieldtype": "Link",
+            "label": "To Warehouse",
+            "options": "Warehouse",
+            "reqd": 1
+        },
+        {
+            "fieldname": "from_donor",
+            "fieldtype": "Link",
+            "label": "From Donor",
+            "options": "Donor Profile",
+            "read_only": 1
+        },
+        {
+            "fieldname": "to_donor",
+            "fieldtype": "Link",
+            "label": "To Donor",
+            "options": "Donor Profile",
+            "read_only": 1
+        },
+        {
+            "default": "Draft",
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Draft\nPending Approval\nApproved\nCompleted\nRejected",
+            "reqd": 1
+        },
+        {
+            "fieldname": "transfer_date",
+            "fieldtype": "Date",
+            "label": "Transfer Date"
+        },
+        {
+            "fieldname": "reason",
+            "fieldtype": "Text",
+            "label": "Reason",
+            "reqd": 1
+        },
+        {
+            "fieldname": "items",
+            "fieldtype": "Table",
+            "label": "Items",
+            "options": "Inter Donor Transfer Item"
+        },
+        {
+            "fieldname": "approved_by",
+            "fieldtype": "Link",
+            "label": "Approved By",
+            "options": "User",
+            "read_only": 1
+        }
+    ],
+    "istable": 0,
+    "module": "Logistics",
+    "name": "Inter Donor Transfer",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "System Manager",
+            "write": 1
+        },
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "Stock Manager",
+            "write": 1
+        }
+    ],
+    "track_changes": 1
 }

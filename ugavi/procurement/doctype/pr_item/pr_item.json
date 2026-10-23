@@ -1,69 +1,69 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "item_code",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Item",
-   "options": "Item",
-   "reqd": 1
-  },
-  {
-   "fieldname": "item_name",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Item Name",
-   "read_only": 1
-  },
-  {
-   "fieldname": "description",
-   "fieldtype": "Text Editor",
-   "label": "Description"
-  },
-  {
-   "fieldname": "quantity",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Quantity",
-   "reqd": 1
-  },
-  {
-   "default": "Nos",
-   "fieldname": "uom",
-   "fieldtype": "Link",
-   "label": "UOM",
-   "options": "UOM"
-  },
-  {
-   "fieldname": "estimated_unit_price",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Est. Unit Price",
-   "reqd": 1
-  },
-  {
-   "fieldname": "estimated_total",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Est. Total",
-   "read_only": 1
-  },
-  {
-   "fieldname": "required_by",
-   "fieldtype": "Date",
-   "label": "Required By"
-  },
-  {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project"
-  }
- ],
- "istable": 1,
- "module": "Procurement",
- "name": "PR Item",
- "permissions": []
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "item_code",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Item",
+            "options": "Item",
+            "reqd": 1
+        },
+        {
+            "fieldname": "item_name",
+            "fieldtype": "Data",
+            "in_list_view": 1,
+            "label": "Item Name",
+            "read_only": 1
+        },
+        {
+            "fieldname": "description",
+            "fieldtype": "Text Editor",
+            "label": "Description"
+        },
+        {
+            "fieldname": "quantity",
+            "fieldtype": "Float",
+            "in_list_view": 1,
+            "label": "Quantity",
+            "reqd": 1
+        },
+        {
+            "default": "Nos",
+            "fieldname": "uom",
+            "fieldtype": "Link",
+            "label": "UOM",
+            "options": "UOM"
+        },
+        {
+            "fieldname": "estimated_unit_price",
+            "fieldtype": "Currency",
+            "in_list_view": 1,
+            "label": "Est. Unit Price",
+            "reqd": 1
+        },
+        {
+            "fieldname": "estimated_total",
+            "fieldtype": "Currency",
+            "in_list_view": 1,
+            "label": "Est. Total",
+            "read_only": 1
+        },
+        {
+            "fieldname": "required_by",
+            "fieldtype": "Date",
+            "label": "Required By"
+        },
+        {
+            "fieldname": "project",
+            "fieldtype": "Link",
+            "label": "Project",
+            "options": "Project"
+        }
+    ],
+    "istable": 1,
+    "module": "Procurement",
+    "name": "PR Item",
+    "permissions": []
 }

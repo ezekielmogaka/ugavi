@@ -1,0 +1,39 @@
+{
+ "dashboard_name": "Logistics Dashboard",
+ "charts": [
+  {
+   "chart_name": "Stock by Warehouse",
+   "chart_type": "Count",
+   "document_type": "Stock Ledger",
+   "group_by_based_on": "warehouse",
+   "label": "Stock Entries by Warehouse"
+  },
+  {
+   "chart_name": "Stock by Donor",
+   "chart_type": "Count",
+   "document_type": "Stock Ledger",
+   "group_by_based_on": "donor",
+   "label": "Stock Distribution by Donor"
+  }
+ ],
+ "number_cards": [
+  {
+   "label": "Total Stock Items",
+   "type": "Document Type",
+   "document_type": "Item",
+   "filters_json": "[]"
+  },
+  {
+   "label": "Donor Warehouses",
+   "type": "Document Type",
+   "document_type": "Donor Warehouse",
+   "filters_json": "[]"
+  },
+  {
+   "label": "Stock Movements Today",
+   "type": "Document Type",
+   "document_type": "Stock Ledger",
+   "filters_json": "[[\"Stock Ledger\",\"creation\",\"Timespan\",\"today\",false]]"
+  }
+ ]
+}

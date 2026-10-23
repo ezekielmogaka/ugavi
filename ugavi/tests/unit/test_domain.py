@@ -7,9 +7,17 @@ from frappe.utils import today, add_days
 def _ensure_supplier(name):
     if not frappe.db.exists("Supplier", name):
         frappe.get_doc({
-            "doctype": "Supplier", "supplier_name": name,
-            "supplier_group": "All Supplier Groups",
+            "doctype": "Supplier",
+            "supplier_name": name,
+            "supplier_group": _ensure_supplier_group(),
         }).insert(ignore_permissions=True)
+
+
+def _ensure_supplier_group():
+    sg = "All Supplier Groups"
+    if not frappe.db.exists("Supplier Group", sg):
+        frappe.get_doc({"doctype": "Supplier Group", "supplier_group_name": sg}).insert(ignore_permissions=True)
+    return sg
 
 
 class TestContractLifecycle(IntegrationTestCase):
@@ -18,14 +26,14 @@ class TestContractLifecycle(IntegrationTestCase):
     def setUp(self):
         _ensure_supplier("_Test Supplier")
         self.contract = frappe.get_doc({
-            "doctype": "Contract", "supplier": "_Test Supplier",
+            "doctype": "Ugavi Contract", "supplier": "_Test Supplier",
             "start_date": "2025-01-01", "end_date": "2025-12-31",
             "contract_value": 500000, "retention_percentage": 10,
             "expiry_alert_days": 30, "status": "Draft",
         }).insert(ignore_permissions=True)
 
     def tearDown(self):
-        frappe.db.delete("Contract", {"name": self.contract.name})
+        frappe.db.delete("Ugavi Contract", {"name": self.contract.name})
 
     def test_end_date_before_start_should_fail(self):
         self.contract.end_date = "2024-12-31"
@@ -40,7 +48,7 @@ class TestContractLifecycle(IntegrationTestCase):
     def test_expiry_check_within_window(self):
         self.contract.end_date = add_days(today(), 15)
         self.contract.save()
-        doc = frappe.get_doc("Contract", self.contract.name)
+        doc = frappe.get_doc("Ugavi Contract", self.contract.name)
         self.assertTrue(doc.check_expiry())
 
 

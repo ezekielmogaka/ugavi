@@ -4,7 +4,6 @@ Supports Africa's Talking, Twilio, or any provider implementing this interface.
 Configure in Ugavi Settings.
 """
 from abc import ABC, abstractmethod
-from typing import Optional
 import frappe
 
 

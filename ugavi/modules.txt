@@ -4,4 +4,4 @@ Fleet
 Compliance
 Tendering
 Governance
-Assets
+Ugavi Assets

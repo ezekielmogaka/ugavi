@@ -1,0 +1,98 @@
+{
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "supplier",
+            "fieldtype": "Link",
+            "label": "Supplier",
+            "options": "Supplier",
+            "reqd": 1
+        },
+        {
+            "fieldname": "purchase_receipt",
+            "fieldtype": "Link",
+            "label": "Purchase Receipt",
+            "options": "Purchase Receipt",
+            "unique": 1
+        },
+        {
+            "fieldname": "purchase_invoice",
+            "fieldtype": "Link",
+            "label": "Purchase Invoice",
+            "options": "Purchase Invoice",
+            "unique": 1
+        },
+        {
+            "default": "Pending",
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Pending\nCompleted",
+            "read_only": 1
+        },
+        {
+            "fieldname": "evaluation_date",
+            "fieldtype": "Date",
+            "label": "Evaluation Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "quality_score",
+            "fieldtype": "Float",
+            "label": "Quality (0-10)"
+        },
+        {
+            "fieldname": "delivery_score",
+            "fieldtype": "Float",
+            "label": "Delivery (0-10)"
+        },
+        {
+            "fieldname": "compliance_score",
+            "fieldtype": "Float",
+            "label": "Compliance (0-10)"
+        },
+        {
+            "fieldname": "price_competitiveness",
+            "fieldtype": "Float",
+            "label": "Price Competitiveness (0-10)"
+        },
+        {
+            "fieldname": "total_score",
+            "fieldtype": "Float",
+            "label": "Total Score",
+            "read_only": 1
+        },
+        {
+            "fieldname": "cumulative_rating",
+            "fieldtype": "Float",
+            "label": "Cumulative Rating (%)",
+            "read_only": 1
+        },
+        {
+            "fieldname": "remarks",
+            "fieldtype": "Small Text",
+            "label": "Remarks"
+        }
+    ],
+    "istable": 0,
+    "module": "Procurement",
+    "name": "Ugavi Supplier Evaluation",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "System Manager",
+            "write": 1
+        },
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "Procurement Manager",
+            "write": 1
+        }
+    ],
+    "track_changes": 1
+}

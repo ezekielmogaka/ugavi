@@ -1,0 +1,157 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "REGRET-.YYYY.-.####",
+ "creation": "2026-10-22 12:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "tender",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Tender",
+   "options": "Tender",
+   "reqd": 1
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Unsuccessful Supplier",
+   "options": "Supplier",
+   "reqd": 1
+  },
+  {
+   "fieldname": "bid",
+   "fieldtype": "Link",
+   "label": "Bid",
+   "options": "Bid",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_award",
+   "fieldtype": "Section Break",
+   "label": "Award Information"
+  },
+  {
+   "fieldname": "awarded_supplier",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Awarded Supplier",
+   "options": "Supplier",
+   "reqd": 1
+  },
+  {
+   "fieldname": "award_amount",
+   "fieldtype": "Currency",
+   "label": "Award Amount",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_comparison",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bid_amount",
+   "fieldtype": "Currency",
+   "label": "Your Bid Amount",
+   "reqd": 1
+  },
+  {
+   "fieldname": "bid_technical_score",
+   "fieldtype": "Percent",
+   "label": "Your Technical Score"
+  },
+  {
+   "fieldname": "bid_financial_score",
+   "fieldtype": "Percent",
+   "label": "Your Financial Score"
+  },
+  {
+   "fieldname": "section_break_reasons",
+   "fieldtype": "Section Break",
+   "label": "Reason for Non-Award"
+  },
+  {
+   "fieldname": "rejection_reason",
+   "fieldtype": "Select",
+   "label": "Primary Reason",
+   "options": "Price Not Competitive\nTechnical Non-Compliance\nIncomplete Submission\nLate Submission\nFailed Bid Security\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "detailed_reason",
+   "fieldtype": "Text Editor",
+   "label": "Detailed Explanation"
+  },
+  {
+   "fieldname": "section_break_actions",
+   "fieldtype": "Section Break",
+   "label": "Communication"
+  },
+  {
+   "fieldname": "sent_via_email",
+   "fieldtype": "Check",
+   "label": "Sent via Email",
+   "default": 0
+  },
+  {
+   "fieldname": "sent_via_portal",
+   "fieldtype": "Check",
+   "label": "Published on Portal",
+   "default": 0
+  },
+  {
+   "fieldname": "sent_at",
+   "fieldtype": "Datetime",
+   "label": "Sent At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nSent\nAcknowledged",
+   "default": "Draft",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-22 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Tendering",
+ "name": "Regret Notice",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Procurement Officer",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Tender Committee Chair"
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

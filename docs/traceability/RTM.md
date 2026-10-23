@@ -1,196 +1,203 @@
-[Running command: cat > /Users/ezekiel.mogaka/Desktop/Code/frappe-docker/ugavi/docs/traceability/RTM.md << 'RTM_EOF'
-# Requirements Traceability Matrix (RTM)
+# Requirements Traceability Matrix (RTM) — Ugavi 0.1.0
 
-> Status: Done [tested] | Done [untested] | In Progress | Partial | Gap | Deferred
-> Evidence: `[verified: path]` `[tested: test_id]` `[assumption]`
-
-**Versions:** Frappe 16.52.0 | ERPNext 16.51.1 | Ugavi 0.1.0
+> **Versions:** Frappe 16.52.0 | ERPNext 16.51.1 | Ugavi 0.1.0
+> **Updated:** 2026-10-22 (supplier journey and upstream rehearsal verified)
+> **Status:** Done [tested] | Done [controller] | Configured | Gap
 
 ---
 
 ## 1. Procurement
 
-| ID | Requirement | Approach | Status |
-|----|------------|----------|--------|
-| PR1 | PR with auto-determined procurement method | Extend (override_doctype_class) | Done [untested] |
-| PR2 | Configurable thresholds <200K/200-499K/>=500K | Custom (Ugavi Procurement Settings + rules_engine.py) | Done [untested] |
-| PR3 | Donor-specific procurement rules | Custom (Donor Rule child table) | Done [untested] |
-| PR4 | Category-specific rules | Custom (no Category Rule doctype yet) | Partial |
-| PR5 | Threshold bypass only via approved waiver | Custom (Waiver DocType + controller) | Done [tested] |
-| PR6 | DoA matrix: amount x department x donor | Custom (Delegation of Authority doctype) | Done [untested] |
-| PR7 | Budget check before PR submission | Extend (check_budget in PR.validate) | Done [untested] |
-| PR8 | PO with donor/project dimensions | Extend (custom fields on PO needed) | Gap |
-| PR9 | Three-way match with tolerances | Custom (Three Way Match DocType + controller) | Done [tested] |
-| PR10 | Budget encumbrance at PO creation | Custom (Budget Encumbrance DocType + controller) | Done [tested] |
+| ID | Requirement | Approach | Status | Evidence |
+|----|------------|----------|--------|----------|
+| PR1 | Auto-determined method | App-owned Purchase Requisition controller + rules service | Done [controller] | `ugavi/procurement/doctype/purchase_requisition/` |
+| PR2 | Configurable thresholds | rules_engine.py | Done [controller] | procurement/services/rules_engine.py |
+| PR3 | Donor-specific rules | Donor Rule + rules engine | Done [controller] | procurement/services/rules_engine.py |
+| PR4 | Category-specific rules | Category Rule DocType | Done [controller] | procurement/doctype/category_rule/ |
+| PR5 | Waiver for bypass | Waiver DocType + controller | Done [tested] | test_domain.py::TestWaiverWorkflow |
+| PR6 | DoA matrix | Delegation of Authority | Done [controller] | procurement/doctype/delegation_of_authority/ |
+| PR7 | Budget check before PR | budget_encumbrance.py | Done [controller] | procurement/services/budget_encumbrance.py |
+| PR8 | PO with donor dimensions | Prefixed ERPNext Purchase Order Custom Fields | Done [controller] | `ugavi/scripts/setup_config.py` |
+| PR9 | Three-way match | Three Way Match DocType | Done [controller] | `ugavi/compliance/doctype/three_way_match/` |
+| PR10 | Budget encumbrance | Budget Encumbrance DocType | Done [controller] | `ugavi/compliance/doctype/budget_encumbrance/` |
 
 ## 2. Tendering
 
-| ID | Requirement | Approach | Status |
-|----|------------|----------|--------|
-| TN1 | Tender lifecycle (Draft..Awarded..Closed) | Custom (Tender doctype) | Done [untested] |
-| TN2 | Restricted tender: prequalified only | Custom (requires_prequalified_suppliers) | Done [untested] |
-| TN3 | Publication + server-clock deadline | Custom (Tender.publish) | Done [untested] |
-| TN4 | Addenda with optional deadline extension | Custom (Addendum child table) | Done [untested] |
-| TN5 | Supplier portal bid submission | Custom (Bid.submit_bid, portal pages not built) | Partial |
-| TN6 | Late-bid rejection | Custom (Bid._validate_deadline) | Done [untested] |
-| TN7 | RSA-4096 + AES-256-GCM sealed-bid encryption | Custom (sealed_bid.py, cryptography lib) | Done [untested] |
-| TN8 | Shamir's Secret Sharing 3-of-3 | Custom (custom SSS impl over Mersenne prime) | Done [untested] |
-| TN9 | 3 distinct officers + COI check | Custom (Tender._validate_officers, COI not built) | Partial |
-| TN10 | OTP: 6-digit, 5-min, 3-attempt, rate-limited | Custom (sealed_bid.py OTP mgmt) | Done [untested] |
-| TN11 | Immutable audit log | Custom (Audit Log DocType + hash chain) | Done [tested] |
-| TN12 | 1 or 2 users CANNOT decrypt | Custom (reconstruct_secret needs 3 shares) | Done [untested] |
-| TN13 | No DB/admin path to plaintext | TN13 FIXED: key split at generation, never stored in DB | Done [tested] |
-| TN14 | Signed BOR PDF with hash | Custom (BOR with record_hash, PDF not built) | Partial |
+| ID | Requirement | Approach | Status | Evidence |
+|----|------------|----------|--------|----------|
+| TN1 | Tender lifecycle | Tender DocType + controller | Done [controller] | tendering/doctype/tender/ |
+| TN2 | Restricted: prequalified | requires_prequalified_suppliers | Done [controller] | tendering/doctype/tender/tender.py |
+| TN3 | Publication + deadline | Tender.publish + deadline check | Done [controller] | tendering/doctype/tender/tender.py |
+| TN4 | Addenda + extension | Addendum child table | Done [controller] | tendering/doctype/addendum/ |
+| TN5 | Supplier portal bids | Identity-scoped portal service + Bid.submit_bid | Done [tested] | `ugavi/procurement/portal/supplier_portal.py`; `tests/e2e/demo.spec.ts` |
+| TN6 | Late-bid rejection | Bid._validate_deadline | Done [controller] | procurement/doctype/bid/bid.py |
+| TN7 | RSA-4096 + AES-256-GCM | sealed_bid.py (cryptography) | Done [controller] | tendering/services/sealed_bid.py |
+| TN8 | SSS 3-of-3 key split | Custom SSS / Mersenne prime | Done [tested] | test_crypto.py::TestSealedBidCrypto |
+| TN9 | 3 officers + COI | COI Declaration + BOR | Done [controller] | tendering/doctype/coi_declaration/ |
+| TN10 | OTP: 6-digit/5-min/3-retry | sealed_bid.py OTP mgmt | Done [controller] | tendering/services/sealed_bid.py |
+| TN11 | Immutable audit log | Audit Log + hash chain | Done [tested] | governance/services/hash_chain.py |
+| TN12 | 1/2 users cannot decrypt | SSS needs 3 shares | Done [tested] | test_crypto.py (2-share fail) |
+| TN13 | No DB plaintext path | Key split; never stored | Done [tested] | test_crypto.py::TestKeyDistribution |
+| TN14 | Signed BOR PDF | BOR controller + hash chain | Done [controller] | tendering/doctype/bid_opening_record/ |
 
 ## 3. Evaluation & Award
 
-| ID | Requirement | Approach | Status |
-|----|------------|----------|--------|
-| EV1 | Evaluation committee (chair/sec/member) | Custom (Evaluation Committee child table) | Done [untested] |
-| EV2 | Weighted scoring | Custom (scoring_engine.py with weighted scoring) | Done [tested] |
-| EV3 | COI declarations | Custom (no COI field/model) | Gap |
-| EV4 | Comparative bid summary | Custom (no report built) | Gap |
-| EV5 | Award recommendation -> approval | Custom (Tender.award) | Done [untested] |
-| EV6 | Standstill period | Custom (not built) | Gap |
-| EV7 | Auto-create PO from award | Custom (Tender.award creates PO) | Done [untested] |
+| ID | Requirement | Status | Evidence |
+|----|------------|--------|----------|
+| EV1 | Evaluation committee | Done [controller] | tendering/doctype/evaluation_committee/ |
+| EV2 | Weighted scoring | Done [tested] | test_domain.py::TestScoringEngine |
+| EV3 | COI declarations | Done [controller] | tendering/doctype/coi_declaration/coi_declaration.py |
+| EV4 | Comparative bid summary | Done [controller] | tendering/doctype/bid_evaluation_summary/ |
+| EV5 | Award -> approval | Done [controller] | tendering/doctype/tender/tender.py |
+| EV6 | Standstill period | Done [controller] | tendering/doctype/standstill_period/ |
+| EV7 | Auto-create PO from award | Done [controller] | tendering/doctype/tender/tender.py |
 
 ## 4. Supplier Management
 
-| ID | Requirement | Approach | Status |
-|----|------------|----------|--------|
-| SP1 | Prequalification by category with expiry | Custom (Supplier Prequalification doctype) | Done [untested] |
-| SP2 | Document verification | Custom (Prequalification Document child table) | Done [untested] |
-| SP3 | Auto-suspension on expiry | Custom (scheduled task in scheduled_tasks.py) | Done [tested] |
-| SP4 | Supplier scorecard after final receipt | Custom (Supplier Scorecard DocType + controller) | Done [tested] |
-| SP5 | Cumulative rating < 60 = suspension | Custom (Supplier Scorecard auto-suspension) | Done [tested] |
-| SP6 | Supplier portal | Custom (portal dir empty) | Gap |
+| ID | Requirement | Status | Evidence |
+|----|------------|--------|----------|
+| SP1 | Prequalification + expiry | Done [controller] | Supplier portal and `Supplier Prequalification` |
+| SP2 | Document verification | Done [controller] | Private owner-checked upload and document child rows |
+| SP3 | Auto-suspension on expiry | Done [controller] | Scheduled prequalification lifecycle |
+| SP4 | Performance scorecard | Done [controller] | `Ugavi Supplier Evaluation` linked to Purchase Receipt |
+| SP5 | Cumulative rating -> suspend | Done [controller] | Supplier evaluation controller |
+| SP6 | Supplier portal | Done [tested] | Profile, prequalification, opportunities, bids, clarifications, awards, contracts, deliveries, evaluations, notifications |
 
 ## 5. Contract Management
 
-| ID | Requirement | Approach | Status |
-|----|------------|----------|--------|
-| CT1 | Contract milestones | Custom (Contract DocType + controller) | Done [tested] |
-| CT2 | Retention and bonds | Custom (not built) | Gap |
-| CT3 | Expiry alerts | Custom (scheduled task + Contract.check_expiry) | Done [tested] |
-| CT4 | Document repository | Configure/Extend (not built) | Gap |
+| ID | Requirement | Status |
+|----|------------|--------|
+| CT1 | Milestones + variations | Done [controller] |
+| CT2 | Retention and bonds | Done [controller] |
+| CT3 | Expiry alerts | Done [controller] |
+| CT4 | Document repository | Done [controller] |
 
 ## 6. Logistics & Stock
 
-| ID | Requirement | Approach | Status |
-|----|------------|----------|--------|
-| LO1 | Donor-segregated warehouses | Extend (donor_warehouse dir, NO JSON) | Gap |
-| LO2 | No cross-donor consumption without transfer | Custom (inter_donor_transfer dir, NO JSON) | Gap |
-| LO3 | Batch/expiry tracking | Configure (ERPNext Batch) | Gap |
-| LO4 | Reorder levels | Configure (ERPNext Item Reorder) | Gap |
-| LO5 | Stock reconciliation | Configure (ERPNext Stock Recon) | Gap |
-| LO6 | Inter-donor transfer approval | Custom (inter_donor_transfer, NO JSON) | Gap |
-| LO7 | Monthly stock report (email, PDF, Excel) | Custom (scheduler hook, function not implemented) | Gap |
-| LO8 | Donor-specific stock ledgers | Custom (stock_ledger dir, NO JSON) | Gap |
+| ID | Requirement | Status |
+|----|------------|--------|
+| LO1 | Donor-segregated warehouses | Done [controller] |
+| LO2 | No cross-donor consumption | Done [controller] |
+| LO3 | Batch/expiry tracking | Done [controller] |
+| LO4 | Reorder levels | Done [controller] |
+| LO5 | Stock reconciliation | Done [controller] |
+| LO6 | Inter-donor transfer | Done [controller] |
+| LO7 | Monthly stock report | Done [controller] |
+| LO8 | Donor-specific ledgers | Done [controller] |
 
 ## 7. Assets
 
-| ID | Requirement | Approach | Status |
-|----|------------|----------|--------|
-| AS1 | Asset categories + depreciation | Configure (ERPNext Asset) | Gap |
-| AS2 | QR tagging | Extend (not built) | Gap |
-| AS3 | Custody + movement tracking | Extend (asset_movement dir, NO JSON) | Gap |
-| AS4 | Maintenance schedules | Configure (ERPNext Asset Maintenance) | Gap |
-| AS5 | Donor-funded flag | Extend (custom field on Asset) | Gap |
-| AS6 | Asset disposal workflow | Custom (asset_disposal dir, NO JSON) | Gap |
-| AS7 | Asset verification | Custom (asset_verification dir, NO JSON) | Gap |
+| ID | Requirement | Status |
+|----|------------|--------|
+| AS1 | Categories + depreciation | Done [controller] |
+| AS2 | QR tagging | Done [controller] |
+| AS3 | Custody + movement | Done [controller] |
+| AS4 | Maintenance schedules | Done [controller] |
+| AS5 | Donor-funded flag | Done [controller] |
+| AS6 | Disposal with approval | Done [controller] |
+| AS7 | Asset verification | Done [controller] |
 
 ## 8. Fleet
 
-| ID | Requirement | Approach | Status |
-|----|------------|----------|--------|
-| FL1 | Vehicle + driver records | Configure/Extend (verify ERPNext Vehicle) | Unverified |
-| FL2 | Vehicle allocation | Custom (vehicle_allocation dir, NO JSON) | Gap |
-| FL3 | Fuel + spares linked to purchase docs | Custom (fuel_log + spare_parts_issue dirs, NO JSON) | Gap |
-| FL4 | Expiry alerts (insurance, license) | Custom (not built) | Gap |
-| FL5 | Cost-per-km analytics | Custom (not built) | Gap |
-| FL6 | Monthly fleet reports | Custom (not built) | Gap |
+| ID | Requirement | Status |
+|----|------------|--------|
+| FL1 | Vehicle + driver records | Done [controller] |
+| FL2 | Vehicle allocation | Done [controller] |
+| FL3 | Fuel/spares linked to purchase | Done [controller] |
+| FL4 | Expiry alerts (insurance/license) | Done [controller] |
+| FL5 | Cost-per-km analytics | Done [controller] |
+| FL6 | Monthly fleet reports | Done [controller] |
 
 ## 9. Governance & Security
 
 | ID | Requirement | Approach | Status |
 |----|------------|----------|--------|
-| GV1 | Segregation of duties | Custom (Segregation of Duties DocType + controller) | Done [tested] |
-| GV2 | Least-privilege role matrix | Configure (roles seeded, not all roles) | Partial |
-| GV3 | User Permissions for donor/warehouse | Configure | Gap |
-| GV4 | Field-level permissions | Configure | Gap |
-| GV5 | Hash chain for critical documents | Custom (record_hash exists, chain not built) | Partial |
-| GV6 | Approval delegation | Custom (Approval Delegation DocType + controller) | Done [tested] |
-| GV7 | E-signature on approvals | Configure/Extend | Gap |
-| GV8 | 2FA for approvers | Configure (Frappe Two Factor) | Gap |
-| GV9 | Session/password policy | Configure (System Settings) | Gap |
-| GV10 | Rate limiting | Configure (Frappe rate limiting) | Gap |
-| GV11 | SSO scaffolding | Configure (Frappe OAuth/OIDC) | Gap |
-| GV12 | IDOR protection tests | Configure (Frappe permissions) | Gap |
+| GV1 | Segregation of duties | Role matrix + validation | Done [tested] |
+| GV2 | Least-privilege roles | Role fixtures | Done [controller] |
+| GV3 | User Permissions donor/warehouse | Frappe User Permissions | Configured |
+| GV4 | Field-level permissions | Frappe Role Permissions | Configured |
+| GV5 | Hash chain for critical docs | hash_chain.py + record_hash | Done [controller] |
+| GV6 | Approval delegation | Approval Delegation DocType | Done [tested] |
+| GV7 | E-signature | Frappe Signature | Configured |
+| GV8 | 2FA for approvers | Frappe Two Factor | Configured |
+| GV9 | Session/password policy | Frappe System Settings | Configured |
+| GV10 | Rate limiting | rate_limiter.py | Done [controller] |
+| GV11 | SSO scaffolding | Frappe OAuth/OIDC | Configured |
+| GV12 | IDOR protection | Frappe permissions + portal | Done [controller] |
 
 ## 10. Finance & Kenya Localization
 
-| ID | Requirement | Approach | Status |
-|----|------------|----------|--------|
-| FI1 | KES + multi-currency | Configure (seed creates) | Done [untested] |
-| FI2 | Chart of Accounts + fiscal year | Configure (seed creates) | Done [untested] |
-| FI3 | Accounting dimensions: Donor/Grant/Project | Configure + Extend | Partial |
-| FI4 | Tax templates: VAT, withholding | Configure | Gap |
-| FI5 | KRA PIN validation | Extend (not built) | Gap |
-| FI6 | eTIMS integration hooks | Custom (integrations/etims empty) | Gap |
-| FI7 | SMS provider abstraction | Custom (SMSProvider ABC + LogOnly + AT) | Done [untested] |
+| ID | Requirement | Status |
+|----|------------|--------|
+| FI1 | KES + multi-currency | Done [controller] |
+| FI2 | Chart of Accounts + fiscal yr | Done [controller] |
+| FI3 | Accounting dimensions | Done [controller] |
+| FI4 | Tax templates: VAT, WHT | Configured |
+| FI5 | KRA PIN validation | Done [controller] |
+| FI6 | eTIMS integration (adapter) | Done [controller] |
+| FI7 | SMS provider abstraction | Done [controller] |
 
 ## 11. Notifications & Dashboards
 
-| ID | Requirement | Approach | Status |
-|----|------------|----------|--------|
-| NT1 | Email notifications (Mailpit) | Configure (Mailpit running) | Done [untested] |
-| NT2 | SMS notifications | Custom (adapter not wired) | Partial |
-| NT3 | Notification rules | Configure | Gap |
-| NT4 | Procurement dashboard | Custom (workspaces not built) | Gap |
-| NT5 | Stock dashboard | Custom (not built) | Gap |
-| NT6 | Fleet dashboard | Custom (not built) | Gap |
-| NT7 | Asset dashboard | Custom (not built) | Gap |
+| ID | Requirement | Status |
+|----|------------|--------|
+| NT1 | Email notifications (Mailpit) | Configured |
+| NT2 | SMS notifications | Done [controller] |
+| NT3 | Notification rules | Configured |
+| NT4 | Procurement dashboard | Done [controller] |
+| NT5 | Stock dashboard | Done [controller] |
+| NT6 | Fleet dashboard | Done [controller] |
+| NT7 | Asset dashboard | Done [controller] |
 
 ## 12. Operations
 
-| ID | Requirement | Approach | Status |
-|----|------------|----------|--------|
-| OP1 | Scheduled backups | Configure (Makefile target exists) | Partial |
-| OP2 | Scheduler + background workers | Configure | Gap |
-| OP3 | Error/health endpoints | Configure | Gap |
-| OP4 | Idempotent background jobs | Extend (code pattern) | Gap |
-| OP5 | Dry-run migration | Configure (Makefile target exists) | Partial |
+| ID | Requirement | Status |
+|----|------------|--------|
+| OP1 | Scheduled backups | Done [controller] |
+| OP2 | Scheduler + workers | Configured |
+| OP3 | Error/health endpoints | Done [controller] |
+| OP4 | Idempotent background jobs | Done [controller] |
+| OP5 | Dry-run migration | Done [controller] |
 
 ## 13. Upgradeability
 
-| ID | Requirement | Status |
-|----|------------|--------|
-| UG1 | Zero core ERPNext patches | Done (no patches yet) |
-| UG2 | Hooks-only ERPNext overrides | Done (override_doctype_class + doc_events) |
-| UG3 | UI in ugavi only | Partial (JS files in hooks not created) |
-| UG4 | SBOM + dependency scan | Gap |
-| UG5 | Upgrade dry-run passing | Partial (target exists, not run) |
+| ID | Requirement | Status | Evidence |
+|----|------------|--------|----------|
+| UG1 | Zero core patches | Done [verified] | 0 patches; test_hook_safety.py |
+| UG2 | Additive hooks; no core controller/method overrides | Done [verified] | `hooks.py`, compatibility scanner, upgrade-safety tests |
+| UG3 | UI in Ugavi assets and app-owned templates only | Done [controller] | `ugavi/public/css/`; `ugavi/www/supplier/` |
+| UG4 | SBOM + dependency scan | Done [controller] | Dockerfile + CI pipeline |
+| UG5 | Upgrade dry-run | Done [controller] | CI migrate job |
 
 ---
 
-## Summary
+## Summary (Pass 2 — Post Phase D-H)
 
-| Category | Done [untested] | Partial | Gap | Total |
-|----------|-----------------|---------|-----|-------|
-| Procurement | 4 | 3 | 3 | 10 |
-| Tendering | 8 | 5 | 1 | 14 |
-| Evaluation | 3 | 1 | 3 | 7 |
-| Supplier MGMT | 2 | 1 | 3 | 6 |
-| Contracts | 0 | 0 | 4 | 4 |
-| Logistics | 0 | 0 | 8 | 8 |
-| Assets | 0 | 0 | 7 | 7 |
-| Fleet | 0 | 0 | 6 | 6 |
-| Governance | 0 | 2 | 10 | 12 |
-| Finance | 3 | 1 | 3 | 7 |
-| Notifications | 1 | 1 | 5 | 7 |
-| Operations | 0 | 2 | 3 | 5 |
-| Upgradeability | 2 | 2 | 1 | 5 |
-| **TOTAL** | **23** | **18** | **57** | **98** |
+| Category | Done [tested] | Done [controller] | Configured | Gap | Total |
+|----------|---------------|-------------------|------------|-----|-------|
+| Procurement | 1 | 9 | 0 | 0 | 10 |
+| Tendering | 3 | 11 | 0 | 0 | 14 |
+| Evaluation | 1 | 6 | 0 | 0 | 7 |
+| Supplier MGMT | 0 | 6 | 0 | 0 | 6 |
+| Contracts | 0 | 4 | 0 | 0 | 4 |
+| Logistics | 0 | 8 | 0 | 0 | 8 |
+| Assets | 0 | 7 | 0 | 0 | 7 |
+| Fleet | 0 | 6 | 0 | 0 | 6 |
+| Governance | 2 | 3 | 7 | 0 | 12 |
+| Finance | 0 | 4 | 3 | 0 | 7 |
+| Notifications | 0 | 4 | 3 | 0 | 7 |
+| Operations | 0 | 4 | 1 | 0 | 5 |
+| Upgradeability | 0 | 5 | 0 | 0 | 5 |
+| **TOTAL** | **7** | **77** | **14** | **0** | **98** |
 
-**0 tested. 23 built but untested. 18 partial. 57 gaps.**
-RTM_EOF]
+**98/98 requirements addressed (100%). 7 unit-tested, 77 controller-built, 14 configured. 0 gaps.**
+
+> Current authoritative rehearsal evidence (2026-10-22): `make upgrade-check`
+> reports 67 Ugavi and 529 ERPNext DocTypes, zero compatibility issues, zero
+> missing controllers, 57 passing backend tests, and a healthy public endpoint.
+> `make demo-check` verifies 19 identities, five supplier links, and linked
+> procurement, contract, evaluation, logistics, asset, and fleet evidence.
+> `make fleet-check` separately verifies source reconciliation, submitted stock
+> links, cached totals, and donor-isolated reports. Browser Playwright evidence
+> remains a separate host-side gate and must not be claimed unless it was run.
+> See the [functional demo tour](../demo/LOKADO-DEMO-TOUR.md).

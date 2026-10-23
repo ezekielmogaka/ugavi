@@ -1,0 +1,168 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "EVAL-SCORE-.####",
+ "creation": "2026-10-22 12:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "tender",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Tender",
+   "options": "Tender",
+   "reqd": 1
+  },
+  {
+   "fieldname": "evaluator",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Evaluator",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "bid",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Bid",
+   "options": "Bid",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_criteria",
+   "fieldtype": "Section Break",
+   "label": "Scoring Criteria"
+  },
+  {
+   "fieldname": "criteria",
+   "fieldtype": "Table",
+   "label": "Evaluation Criteria",
+   "options": "Evaluation Score Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "anonymized",
+   "fieldtype": "Check",
+   "label": "Anonymized Mode",
+   "default": 1,
+   "description": "Bidder identity is hidden from evaluator"
+  },
+  {
+   "fieldname": "column_break_scores",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "technical_score",
+   "fieldtype": "Percent",
+   "label": "Technical Score (%)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "financial_score",
+   "fieldtype": "Percent",
+   "label": "Financial Score (%)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "delivery_score",
+   "fieldtype": "Percent",
+   "label": "Delivery Score (%)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "past_performance_score",
+   "fieldtype": "Percent",
+   "label": "Past Performance (%)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "weighted_total",
+   "fieldtype": "Percent",
+   "label": "Weighted Total Score (%)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "comments",
+   "fieldtype": "Text Editor",
+   "label": "Evaluator Comments"
+  },
+  {
+   "fieldname": "section_break_sign",
+   "fieldtype": "Section Break",
+   "label": "Submission"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nSubmitted\nReviewed",
+   "default": "Draft",
+   "reqd": 1
+  },
+  {
+   "fieldname": "submitted_by",
+   "fieldtype": "Data",
+   "label": "Submitted By",
+   "read_only": 1
+  },
+  {
+   "fieldname": "submitted_at",
+   "fieldtype": "Datetime",
+   "label": "Submitted At",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-22 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Tendering",
+ "name": "Evaluation Score",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Evaluation Committee",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Procurement Officer",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Tender Committee Chair"
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "track_seen": 1
+}

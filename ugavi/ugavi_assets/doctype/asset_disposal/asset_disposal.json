@@ -1,0 +1,79 @@
+{
+  "autoname": "ADP-.YYYY.-.####",
+  "custom": 0,
+  "doctype": "DocType",
+  "fields": [
+    {
+      "fieldname": "asset",
+      "fieldtype": "Link",
+      "label": "Asset",
+      "options": "Asset Register",
+      "reqd": 1
+    },
+    {
+      "fieldname": "disposal_date",
+      "fieldtype": "Date",
+      "label": "Disposal Date",
+      "reqd": 1,
+      "default": "Today"
+    },
+    {
+      "fieldname": "disposal_method",
+      "fieldtype": "Select",
+      "label": "Method",
+      "options": "Sale\nAuction\nScrap\nDonation\nTransfer"
+    },
+    {
+      "fieldname": "disposal_value",
+      "fieldtype": "Currency",
+      "label": "Disposal Value"
+    },
+    {
+      "fieldname": "book_value",
+      "fieldtype": "Currency",
+      "label": "Book Value",
+      "read_only": 1
+    },
+    {
+      "fieldname": "gain_loss",
+      "fieldtype": "Currency",
+      "label": "Gain/Loss",
+      "read_only": 1
+    },
+    {
+      "fieldname": "authorized_by",
+      "fieldtype": "Link",
+      "label": "Authorized By",
+      "options": "User"
+    },
+    {
+      "fieldname": "remarks",
+      "fieldtype": "Small Text",
+      "label": "Remarks"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Draft\nApproved\nCompleted",
+      "default": "Draft"
+    }
+  ],
+  "istable": 0,
+  "module": "Ugavi Assets",
+  "permissions": [
+    {
+      "role": "Asset Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    }
+  ],
+  "sort_field": "disposal_date",
+  "sort_order": "DESC",
+  "track_changes": 1,
+  "name": "Asset Disposal",
+  "document_type": "",
+  "engine": "InnoDB"
+}

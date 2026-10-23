@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"></head>
+<body>
+    <div class="print-format">
+        <div class="print-heading">
+            <h2>{{ _("Tender Document") }}</h2>
+            <p><strong>Tender No:</strong> {{ doc.tender_no or doc.name }}</p>
+            <p><strong>Title:</strong> {{ doc.tender_title }}</p>
+            <p><strong>Type:</strong> {{ doc.tender_type or _("Open") }}</p>
+            <p><strong>Status:</strong> {{ doc.status }}</p>
+            <p><strong>Submission Deadline:</strong> {{ frappe.utils.format_datetime(doc.submission_deadline) }}</p>
+            <p><strong>Opening Date:</strong> {{ frappe.utils.format_datetime(doc.opening_date_time) }}</p>
+        </div>
+        <div class="print-footer">
+            <p>{{ _("Printed on") }} {{ frappe.utils.now_datetime() }}</p>
+        </div>
+    </div>
+</body>
+</html>

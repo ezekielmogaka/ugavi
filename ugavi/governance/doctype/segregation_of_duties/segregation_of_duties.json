@@ -1,46 +1,52 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "role_1",
-   "fieldtype": "Link",
-   "label": "Role 1",
-   "options": "Role",
-   "reqd": 1
-  },
-  {
-   "fieldname": "role_2",
-   "fieldtype": "Link",
-   "label": "Role 2",
-   "options": "Role",
-   "reqd": 1
-  },
-  {
-   "fieldname": "conflict_type",
-   "fieldtype": "Select",
-   "label": "Conflict Type",
-   "options": "Create + Approve Same Doc\nApprover + Auditor\nBuyer + Receiver",
-   "reqd": 1
-  },
-  {
-   "fieldname": "enforcement",
-   "fieldtype": "Select",
-   "label": "Enforcement",
-   "options": "Warning Only\nBlock",
-   "default": "Block"
-  },
-  {
-   "fieldname": "description",
-   "fieldtype": "Small Text",
-   "label": "Description"
-  }
- ],
- "istable": 0,
- "module": "Governance",
- "name": "Segregation of Duties",
- "permissions": [
-  {"create": 1, "delete": 0, "read": 1, "role": "System Manager", "write": 1}
- ],
- "track_changes": 1
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "role_1",
+            "fieldtype": "Link",
+            "label": "Role 1",
+            "options": "Role",
+            "reqd": 1
+        },
+        {
+            "fieldname": "role_2",
+            "fieldtype": "Link",
+            "label": "Role 2",
+            "options": "Role",
+            "reqd": 1
+        },
+        {
+            "fieldname": "conflict_type",
+            "fieldtype": "Select",
+            "label": "Conflict Type",
+            "options": "Create + Approve Same Doc\nApprover + Auditor\nBuyer + Receiver",
+            "reqd": 1
+        },
+        {
+            "default": "Block",
+            "fieldname": "enforcement",
+            "fieldtype": "Select",
+            "label": "Enforcement",
+            "options": "Warning Only\nBlock"
+        },
+        {
+            "fieldname": "description",
+            "fieldtype": "Small Text",
+            "label": "Description"
+        }
+    ],
+    "istable": 0,
+    "module": "Governance",
+    "name": "Segregation of Duties",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "System Manager",
+            "write": 1
+        }
+    ],
+    "track_changes": 1
 }

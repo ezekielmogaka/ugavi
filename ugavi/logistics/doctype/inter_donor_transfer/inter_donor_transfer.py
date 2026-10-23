@@ -1,7 +1,6 @@
 import frappe
 from frappe.model.document import Document
 from frappe import _
-from frappe.utils import now_datetime
 
 
 class InterDonorTransfer(Document):
@@ -22,33 +21,37 @@ class InterDonorTransfer(Document):
         if from_dw and to_dw and from_dw == to_dw:
             frappe.throw(_("Cannot transfer within the same donor warehouse mapping"))
 
-    def approve(self, user: str):
+    @frappe.whitelist()
+    def approve(self):
+        if self.status != "Pending Approval":
+            frappe.throw(_("Only pending transfers can be approved"))
+        if "Stock Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
+            frappe.throw(_("Stock Manager role is required"))
         self.status = "Approved"
-        self.approved_by = user
+        self.approved_by = frappe.session.user
         self.save()
         frappe.msgprint(_("Inter-donor transfer approved"))
 
+    @frappe.whitelist()
     def complete(self):
+        if self.status != "Approved":
+            frappe.throw(_("Transfer must be approved before completion"))
+        se = frappe.get_doc({
+            "doctype": "Stock Entry",
+            "stock_entry_type": "Material Transfer",
+            "from_warehouse": self.from_warehouse,
+            "to_warehouse": self.to_warehouse,
+            "ugavi_inter_donor_transfer": self.name,
+            "items": [{
+                "item_code": item.item_code,
+                "qty": item.qty,
+                "s_warehouse": self.from_warehouse,
+                "t_warehouse": self.to_warehouse,
+            } for item in self.items],
+        })
+        se.insert()
+        se.submit()
         self.status = "Completed"
         self.transfer_date = frappe.utils.today()
         self.save()
-        # Create a Stock Entry for the actual movement
-        try:
-            se = frappe.get_doc({
-                "doctype": "Stock Entry",
-                "stock_entry_type": "Material Transfer",
-                "from_warehouse": self.from_warehouse,
-                "to_warehouse": self.to_warehouse,
-                "ugavi_inter_donor_transfer": self.name,
-                "items": [{
-                    "item_code": item.item_code,
-                    "qty": item.qty,
-                    "s_warehouse": self.from_warehouse,
-                    "t_warehouse": self.to_warehouse,
-                } for item in self.items],
-            })
-            se.insert()
-            se.submit()
-            frappe.msgprint(_("Stock Entry {0} created").format(se.name))
-        except Exception as e:
-            frappe.log_error(f"Inter-donor transfer: {e}", "Logistics")
+        frappe.msgprint(_("Stock Entry {0} created").format(se.name))

@@ -1,64 +1,76 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "purchase_requisition",
-   "fieldtype": "Link",
-   "label": "Purchase Requisition",
-   "options": "Purchase Requisition"
-  },
-  {
-   "fieldname": "requested_by",
-   "fieldtype": "Link",
-   "label": "Requested By",
-   "options": "User",
-   "reqd": 1
-  },
-  {
-   "fieldname": "reason",
-   "fieldtype": "Text",
-   "label": "Justification",
-   "reqd": 1
-  },
-  {
-   "fieldname": "rule_to_override",
-   "fieldtype": "Data",
-   "label": "Rule Being Overridden"
-  },
-  {
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "label": "Status",
-   "options": "Draft\nPending Approval\nApproved\nRejected",
-   "default": "Draft",
-   "reqd": 1
-  },
-  {
-   "fieldname": "approved_by",
-   "fieldtype": "Link",
-   "label": "Approved By",
-   "options": "User",
-   "read_only": 1
-  },
-  {
-   "fieldname": "approval_date",
-   "fieldtype": "Datetime",
-   "label": "Approval Date",
-   "read_only": 1
-  },
-  {
-   "fieldname": "approval_remarks",
-   "fieldtype": "Small Text",
-   "label": "Approval Remarks"
-  }
- ],
- "istable": 0,
- "module": "Governance",
- "name": "Waiver",
- "permissions": [
-  {"create": 1, "delete": 0, "read": 1, "role": "System Manager", "write": 1},
-  {"create": 1, "delete": 0, "read": 1, "role": "Procurement Manager", "write": 1}
- ],
- "track_changes": 1
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "purchase_requisition",
+            "fieldtype": "Link",
+            "label": "Purchase Requisition",
+            "options": "Purchase Requisition"
+        },
+        {
+            "fieldname": "requested_by",
+            "fieldtype": "Link",
+            "label": "Requested By",
+            "options": "User",
+            "reqd": 1
+        },
+        {
+            "fieldname": "reason",
+            "fieldtype": "Text",
+            "label": "Justification",
+            "reqd": 1
+        },
+        {
+            "fieldname": "rule_to_override",
+            "fieldtype": "Data",
+            "label": "Rule Being Overridden"
+        },
+        {
+            "default": "Draft",
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Draft\nPending Approval\nApproved\nRejected",
+            "reqd": 1
+        },
+        {
+            "fieldname": "approved_by",
+            "fieldtype": "Link",
+            "label": "Approved By",
+            "options": "User",
+            "read_only": 1
+        },
+        {
+            "fieldname": "approval_date",
+            "fieldtype": "Datetime",
+            "label": "Approval Date",
+            "read_only": 1
+        },
+        {
+            "fieldname": "approval_remarks",
+            "fieldtype": "Small Text",
+            "label": "Approval Remarks"
+        }
+    ],
+    "istable": 0,
+    "module": "Governance",
+    "name": "Waiver",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "System Manager",
+            "write": 1
+        },
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "Procurement Manager",
+            "write": 1
+        }
+    ],
+    "track_changes": 1
 }

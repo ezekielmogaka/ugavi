@@ -1,0 +1,68 @@
+{
+ "actions": [],
+ "creation": "2026-10-22 12:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "criterion_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Criterion",
+   "reqd": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Category",
+   "options": "Technical\nFinancial\nDelivery\nPast Performance",
+   "reqd": 1
+  },
+  {
+   "fieldname": "max_score",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Max Score",
+   "reqd": 1
+  },
+  {
+   "fieldname": "score",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Score Awarded",
+   "reqd": 1
+  },
+  {
+   "fieldname": "weight",
+   "fieldtype": "Percent",
+   "label": "Weight (%)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "weighted_score",
+   "fieldtype": "Float",
+   "label": "Weighted Score",
+   "read_only": 1
+  },
+  {
+   "fieldname": "justification",
+   "fieldtype": "Small Text",
+   "label": "Justification"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-22 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Tendering",
+ "name": "Evaluation Score Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

@@ -1,42 +1,42 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "document_type",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Document Type",
-   "options": "Registration Certificate\nTax Compliance\nBusiness Permit\nBank Reference\nTrade Reference\nInsurance\nOther",
-   "reqd": 1
-  },
-  {
-   "fieldname": "attachment",
-   "fieldtype": "Attach",
-   "label": "Attachment"
-  },
-  {
-   "fieldname": "expiry_date",
-   "fieldtype": "Date",
-   "in_list_view": 1,
-   "label": "Document Expiry"
-  },
-  {
-   "default": "0",
-   "fieldname": "verified",
-   "fieldtype": "Check",
-   "label": "Verified"
-  },
-  {
-   "depends_on": "eval:doc.verified",
-   "fieldname": "verified_by",
-   "fieldtype": "Link",
-   "label": "Verified By",
-   "options": "User"
-  }
- ],
- "istable": 1,
- "module": "Procurement",
- "name": "Prequalification Document",
- "permissions": []
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "document_type",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Document Type",
+            "options": "Registration Certificate\nTax Compliance\nBusiness Permit\nBank Reference\nTrade Reference\nInsurance\nOther",
+            "reqd": 1
+        },
+        {
+            "fieldname": "attachment",
+            "fieldtype": "Attach",
+            "label": "Attachment"
+        },
+        {
+            "fieldname": "expiry_date",
+            "fieldtype": "Date",
+            "in_list_view": 1,
+            "label": "Document Expiry"
+        },
+        {
+            "default": "0",
+            "fieldname": "verified",
+            "fieldtype": "Check",
+            "label": "Verified"
+        },
+        {
+            "depends_on": "eval:doc.verified",
+            "fieldname": "verified_by",
+            "fieldtype": "Link",
+            "label": "Verified By",
+            "options": "User"
+        }
+    ],
+    "istable": 1,
+    "module": "Procurement",
+    "name": "Prequalification Document",
+    "permissions": []
 }

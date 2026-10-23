@@ -1,0 +1,55 @@
+{
+ "dashboard_name": "Procurement Dashboard",
+ "charts": [
+  {
+   "chart_name": "PRs by Status",
+   "chart_type": "Count",
+   "document_type": "Purchase Requisition",
+   "group_by_based_on": "status",
+   "label": "Purchase Requisitions by Status"
+  },
+  {
+   "chart_name": "Tenders by Status",
+   "chart_type": "Count",
+   "document_type": "Tender",
+   "group_by_based_on": "status",
+   "label": "Tenders by Status"
+  },
+  {
+   "chart_name": "Bids by Tender",
+   "chart_type": "Count",
+   "document_type": "Bid",
+   "group_by_based_on": "tender",
+   "label": "Bids Received per Tender"
+  },
+  {
+   "chart_name": "Procurement Value by Donor",
+   "chart_type": "Sum",
+   "document_type": "Purchase Requisition",
+   "group_by_based_on": "donor",
+   "aggregate_function": "sum",
+   "aggregate_based_on": "estimated_cost",
+   "label": "Total Procurement Value by Donor"
+  }
+ ],
+ "number_cards": [
+  {
+   "label": "Open Tenders",
+   "type": "Document Type",
+   "document_type": "Tender",
+   "filters_json": "[[\"Tender\",\"status\",\"=\",\"Published\",false]]"
+  },
+  {
+   "label": "Pending Approvals",
+   "type": "Document Type",
+   "document_type": "Purchase Requisition",
+   "filters_json": "[[\"Purchase Requisition\",\"status\",\"=\",\"Pending Approval\",false]]"
+  },
+  {
+   "label": "Bids Received Today",
+   "type": "Document Type",
+   "document_type": "Bid",
+   "filters_json": "[[\"Bid\",\"creation\",\"Timespan\",\"today\",false]]"
+  }
+ ]
+}

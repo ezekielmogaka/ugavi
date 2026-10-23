@@ -1,0 +1,90 @@
+{
+  "autoname": "SPI-.YYYY.-.####",
+  "custom": 0,
+  "doctype": "DocType",
+  "fields": [
+    {
+      "fieldname": "vehicle",
+      "fieldtype": "Link",
+      "label": "Vehicle",
+      "options": "Vehicle",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "warehouse",
+      "fieldtype": "Link",
+      "label": "Warehouse",
+      "options": "Warehouse",
+      "reqd": 1
+    },
+    {
+      "fieldname": "donor",
+      "fieldtype": "Link",
+      "label": "Donor",
+      "options": "Donor Profile"
+    },
+    {
+      "fieldname": "purchase_order",
+      "fieldtype": "Link",
+      "label": "Originating Purchase Order",
+      "options": "Purchase Order",
+      "read_only": 1
+    },
+    {
+      "fieldname": "purchase_invoice",
+      "fieldtype": "Link",
+      "label": "Originating Purchase Invoice",
+      "options": "Purchase Invoice"
+    },
+    {
+      "fieldname": "issue_date",
+      "fieldtype": "Date",
+      "label": "Issue Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Draft\nIssued",
+      "default": "Draft",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Spare Parts Items",
+      "options": "Fleet Spare Part Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "stock_entry",
+      "fieldtype": "Link",
+      "label": "Stock Entry",
+      "options": "Stock Entry",
+      "read_only": 1
+    }
+  ],
+  "istable": 0,
+  "module": "Fleet",
+  "permissions": [
+    {
+      "role": "Fleet Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "submit": 1,
+      "cancel": 1
+    }
+  ],
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "track_changes": 1,
+  "is_submittable": 1,
+  "name": "Spare Parts Issue",
+  "document_type": "",
+  "engine": "InnoDB"
+}

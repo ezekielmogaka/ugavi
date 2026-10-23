@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"></head>
+<body>
+    <div class="print-format">
+        <div class="print-heading">
+            <h2>{{ _("Bid Confirmation") }}</h2>
+            <p><strong>Bid No:</strong> {{ doc.name }}</p>
+            <p><strong>Tender:</strong> {{ doc.tender }}</p>
+            <p><strong>Supplier:</strong> {{ doc.supplier }}</p>
+            <p><strong>Amount:</strong> {{ frappe.utils.fmt_money(doc.bid_amount, currency=doc.bid_currency) }}</p>
+            <p><strong>Currency:</strong> {{ doc.bid_currency }}</p>
+            <p><strong>Status:</strong> {{ doc.status }}</p>
+            <p><strong>Submitted:</strong> {{ frappe.utils.format_datetime(doc.creation) }}</p>
+        </div>
+        <div class="print-footer">
+            <p><em>{{ _("This is a sealed bid. Contents are encrypted until tender opening.") }}</em></p>
+            <p>{{ _("Printed on") }} {{ frappe.utils.now_datetime() }}</p>
+        </div>
+    </div>
+</body>
+</html>

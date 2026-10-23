@@ -1,0 +1,51 @@
+{
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "asset_category",
+            "fieldtype": "Select",
+            "label": "Filter by Category",
+            "options": "\nIT Equipment\nEquipment\nFurniture\nVehicle\nBuilding\nLand"
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Filter by Status",
+            "options": "\nActive\nUnder Repair\nDisposed\nWritten Off"
+        },
+        {
+            "fieldname": "generated_at",
+            "fieldtype": "Datetime",
+            "label": "Generated At",
+            "read_only": 1
+        },
+        {
+            "fieldname": "report_data",
+            "fieldtype": "Long Text",
+            "label": "Report Data (JSON)",
+            "read_only": 1,
+            "hidden": 1
+        }
+    ],
+    "istable": 0,
+    "module": "Ugavi Assets",
+    "name": "Asset Register Report",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "System Manager",
+            "write": 1
+        },
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "Asset Manager",
+            "write": 1
+        }
+    ],
+    "track_changes": 0
+}

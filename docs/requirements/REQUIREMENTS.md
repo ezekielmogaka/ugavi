@@ -132,3 +132,43 @@
 96. **UG3** – UI customizations in ugavi assets only
 97. **UG4** – SBOM and dependency scan
 98. **UG5** – Minor and major upgrade dry-run passing
+
+---
+
+## 14. Non-Functional Requirements
+
+### 14.1 Performance
+99. **NF1** – PR/Tender list loads: <2s for 1000 records
+100. **NF2** – Sealed-bid opening: <5s for 3-key reconstruction
+101. **NF3** – Bid submission: <3s for 1MB encrypted payload
+102. **NF4** – Concurrent bidders: 50 simultaneous bid submissions without error
+
+### 14.2 Security
+103. **NF5** – OWASP ASVS Level 2 compliance (see `docs/security/owasp-asvs-mapping.md`)
+104. **NF6** – All communications over TLS 1.3
+105. **NF7** – Secrets never in logs, commits, backups — verified by detect-secrets CI
+106. **NF8** – Private keys split via 3-of-3 SSS; never stored whole
+107. **NF9** – Container images scanned for CRITICAL/HIGH CVEs (Trivy in CI)
+108. **NF10** – Rate limiting: 3 bid attempts per hour per supplier
+
+### 14.3 Availability
+109. **NF11** – Health check endpoint returning 200 with db + cache status
+110. **NF12** – Automated daily backups (with files, retention 90 days)
+111. **NF13** – RPO: <1 hour | RTO: <4 hours (from backup restore)
+
+### 14.4 Maintainability
+112. **NF14** – Test coverage: all new features require at minimum FrappeTestCase
+113. **NF15** – Zero ERPNext core patches (hooks-only customization)
+114. **NF16** – SBOM generated on every PR (SPDX JSON, Anchore Syft)
+115. **NF17** – Upgrade dry-run CI job validates bench migrate without errors
+
+### 14.5 Compliance & Audit
+116. **NF18** – Immutable hash chain on all critical documents (Tender, Bid, BOR, Contract)
+117. **NF19** – Segregation of duties enforced at controller level (not UI-only)
+118. **NF20** – Full audit trail: who, when, IP, action, outcome on every state change
+
+### 14.6 Demo-Specific (LOKADO)
+119. **NFD1** – Seed script idempotent (safe to re-run, `_ensure` upsert pattern)
+120. **NFD2** – Seed script production-guarded (refuses non-demo environments)
+121. **NFD3** – LOKADO demo covers 98/98 functional requirements in demo tour
+122. **NFD4** – All demo users have realistic Turkana/Kenyan names and roles

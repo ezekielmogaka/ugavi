@@ -1,0 +1,231 @@
+name: Ugavi CI/CD Pipeline
+# GA-041-043, GA-089-091: Secret scanning, SBOM, security headers, docs CI, link check, prose lint
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly security scan (Monday 6am)
+
+env:
+  PYTHON_VERSION: '3.14.9'
+  NODE_VERSION: '24.22.1'
+
+jobs:
+  # --- Lint & Format ---
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install ruff
+      - run: ruff check ugavi/
+      - name: JSON format check
+        run: npx prettier --check "ugavi/**/*.json" "ugavi/**/*.md"
+
+  # --- Unit Tests ---
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: admin
+        ports:
+          - 3306:3306
+      valkey:
+        image: valkey/valkey:8.1-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: pip install frappe-bench
+      - run: bench init --frappe-branch version-16 frappe-bench
+      - run: cd frappe-bench && bench get-app --branch version-16 erpnext
+      - run: cd frappe-bench && bench get-app ugavi ${{ github.workspace }}
+      - run: cd frappe-bench && bench new-site test.local --mariadb-root-password=admin --admin-password=admin
+      - run: cd frappe-bench && bench --site test.local install-app erpnext
+      - run: cd frappe-bench && bench --site test.local install-app ugavi
+      - run: cd frappe-bench && bench --site test.local set-config allow_tests true
+      - run: cd frappe-bench && bench --site test.local execute ugavi.scripts.check_upstream_compatibility.run
+      - run: cd frappe-bench && bench --site test.local execute ugavi.fixtures.demo_data.run
+      - run: cd frappe-bench && bench --site test.local run-tests --app ugavi --verbose
+
+# --- LOKADO Smoke Test ---
+  lokado-smoke:
+    needs: test
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: admin
+        ports:
+          - 3306:3306
+      valkey:
+        image: valkey/valkey:8.1-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install frappe-bench
+      - run: bench init --frappe-branch version-16 frappe-bench
+      - run: cd frappe-bench && bench get-app --branch version-16 erpnext
+      - run: cd frappe-bench && bench get-app ugavi ${{ github.workspace }}
+      - run: cd frappe-bench && bench new-site lokado.local --mariadb-root-password=admin --admin-password=admin
+      - run: cd frappe-bench && bench --site lokado.local install-app erpnext
+      - run: cd frappe-bench && bench --site lokado.local install-app ugavi
+      - run: cd frappe-bench && bench --site lokado.local set-config developer_mode 1
+      - run: cd frappe-bench && bench --site lokado.local set-config allow_tests true
+      - run: cd frappe-bench && bench --site lokado.local execute ugavi.scripts.check_upstream_compatibility.run
+      - run: cd frappe-bench && bench --site lokado.local execute ugavi.scripts.seed_lokado.run
+      - run: cd frappe-bench && bench --site lokado.local run-tests --app ugavi --verbose
+      - name: Verify LOKADO demo data
+        run: cd frappe-bench && bench --site lokado.local execute ugavi.scripts.check_lokado_demo.run
+      - name: Verify fleet reconciliation
+        run: cd frappe-bench && bench --site lokado.local execute ugavi.scripts.check_fleet_demo.run
+  # --- Security Scan ---
+  security-scan:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: SAST — Bandit
+        uses: PyCQA/bandit-action@v1
+        with:
+          path: ugavi/
+          format: html
+          output: bandit-report.html
+      
+      - name: Dependency Scan — Safety
+        run: |
+          pip install safety
+          safety check --full-report || true
+      
+      - name: Secret Scan — detect-secrets
+        run: |
+          pip install detect-secrets
+          detect-secrets scan --all-files ugavi/ --config .detect-secrets-config.yaml > .secrets.baseline
+      
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            bandit-report.html
+            .secrets.baseline
+
+  # --- SBOM Generation ---
+  sbom:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate SPDX SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: ugavi/
+          format: spdx-json
+          output-file: sbom.spdx.json
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.spdx.json
+
+  # --- Container Security Scan ---
+  container-scan:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t ugavi:test .
+      - name: Scan with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ugavi:test
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+
+  # --- E2E Tests ---
+  e2e:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: cd tests/e2e && npm ci
+      - run: cd tests/e2e && npx playwright install chromium
+      - name: Start fresh demo site
+        run: |
+          cp .env.example .env
+          docker compose build
+          docker compose up -d
+          timeout 360 bash -c 'until curl -fsS http://localhost:8080/api/method/frappe.ping; do sleep 5; done'
+          make seed-lokado
+      - run: cd tests/e2e && npx playwright test
+        env:
+          UGAVI_BASE_URL: http://localhost:8080
+      - name: Collect container logs
+        if: failure()
+        run: docker compose logs --no-color > docker-compose.log
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: tests/e2e/playwright-report/
+
+  # --- Documentation Checks ---
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Broken link check
+        run: npx markdown-link-check docs/**/*.md CHANGELOG.md || true
+      
+      - name: Spell check
+        run: |
+          npm install -g cspell
+          cspell "docs/**/*.md" "*.md" || true
+
+  # --- Load Tests (manual trigger) ---
+  load-test:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: grafana/setup-k6-action@v1
+      - run: k6 run tests/load/procurement_load.js --summary-export=load-test-summary.json
+      - name: Upload load test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-results
+          path: load-test-summary.json

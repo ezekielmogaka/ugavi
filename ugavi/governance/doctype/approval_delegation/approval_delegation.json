@@ -1,62 +1,68 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "delegated_from",
-   "fieldtype": "Link",
-   "label": "Delegated From",
-   "options": "User",
-   "reqd": 1
-  },
-  {
-   "fieldname": "delegated_to",
-   "fieldtype": "Link",
-   "label": "Delegated To",
-   "options": "User",
-   "reqd": 1
-  },
-  {
-   "fieldname": "delegation_type",
-   "fieldtype": "Select",
-   "label": "Delegation Type",
-   "options": "Purchase Requisition\nPurchase Order\nTender Award\nAll Procurement",
-   "reqd": 1
-  },
-  {
-   "fieldname": "max_amount",
-   "fieldtype": "Currency",
-   "label": "Max Amount"
-  },
-  {
-   "fieldname": "start_date",
-   "fieldtype": "Date",
-   "label": "Start Date",
-   "reqd": 1
-  },
-  {
-   "fieldname": "end_date",
-   "fieldtype": "Date",
-   "label": "End Date",
-   "reqd": 1
-  },
-  {
-   "fieldname": "active",
-   "fieldtype": "Check",
-   "label": "Active",
-   "default": "1"
-  },
-  {
-   "fieldname": "reason",
-   "fieldtype": "Small Text",
-   "label": "Reason"
-  }
- ],
- "istable": 0,
- "module": "Governance",
- "name": "Approval Delegation",
- "permissions": [
-  {"create": 1, "delete": 0, "read": 1, "role": "System Manager", "write": 1}
- ],
- "track_changes": 1
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "delegated_from",
+            "fieldtype": "Link",
+            "label": "Delegated From",
+            "options": "User",
+            "reqd": 1
+        },
+        {
+            "fieldname": "delegated_to",
+            "fieldtype": "Link",
+            "label": "Delegated To",
+            "options": "User",
+            "reqd": 1
+        },
+        {
+            "fieldname": "delegation_type",
+            "fieldtype": "Select",
+            "label": "Delegation Type",
+            "options": "Purchase Requisition\nPurchase Order\nTender Award\nAll Procurement",
+            "reqd": 1
+        },
+        {
+            "fieldname": "max_amount",
+            "fieldtype": "Currency",
+            "label": "Max Amount"
+        },
+        {
+            "fieldname": "start_date",
+            "fieldtype": "Date",
+            "label": "Start Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "end_date",
+            "fieldtype": "Date",
+            "label": "End Date",
+            "reqd": 1
+        },
+        {
+            "default": "1",
+            "fieldname": "active",
+            "fieldtype": "Check",
+            "label": "Active"
+        },
+        {
+            "fieldname": "reason",
+            "fieldtype": "Small Text",
+            "label": "Reason"
+        }
+    ],
+    "istable": 0,
+    "module": "Governance",
+    "name": "Approval Delegation",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "System Manager",
+            "write": 1
+        }
+    ],
+    "track_changes": 1
 }

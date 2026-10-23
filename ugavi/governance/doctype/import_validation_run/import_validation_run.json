@@ -1,0 +1,77 @@
+{
+  "autoname": "IVR-.YYYY.-.####",
+  "custom": 0,
+  "doctype": "DocType",
+  "fields": [
+    {
+      "fieldname": "target_doctype",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Import Target",
+      "options": "Supplier\nItem\nAsset Register\nVehicle\nUser",
+      "reqd": 1
+    },
+    {
+      "fieldname": "source_file",
+      "fieldtype": "Attach",
+      "label": "Private CSV/XLSX File",
+      "reqd": 1
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Status",
+      "options": "Draft\nValidated\nFailed",
+      "read_only": 1
+    },
+    {
+      "fieldname": "total_rows",
+      "fieldtype": "Int",
+      "label": "Rows",
+      "read_only": 1
+    },
+    {
+      "fieldname": "error_count",
+      "fieldtype": "Int",
+      "label": "Errors",
+      "read_only": 1
+    },
+    {
+      "fieldname": "validation_report",
+      "fieldtype": "Code",
+      "label": "Validation Report",
+      "options": "JSON",
+      "read_only": 1
+    },
+    {
+      "fieldname": "validated_by",
+      "fieldtype": "Link",
+      "label": "Validated By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "validated_at",
+      "fieldtype": "Datetime",
+      "label": "Validated At",
+      "read_only": 1
+    }
+  ],
+  "module": "Governance",
+  "name": "Import Validation Run",
+  "permissions": [
+    {
+      "create": 1,
+      "read": 1,
+      "role": "System Manager",
+      "write": 1
+    },
+    {
+      "read": 1,
+      "role": "Auditor"
+    }
+  ],
+  "track_changes": 1
+}

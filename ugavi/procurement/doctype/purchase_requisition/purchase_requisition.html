@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"></head>
+<body>
+    <div class="print-format">
+        <div class="print-heading">
+            <h2>{{ _("Purchase Requisition") }}</h2>
+            <p><strong>PR No:</strong> {{ doc.name }}</p>
+            <p><strong>Date:</strong> {{ frappe.utils.format_date(doc.requisition_date) }}</p>
+            <p><strong>Donor:</strong> {{ doc.donor or _("N/A") }}</p>
+            <p><strong>Status:</strong> {{ doc.status }}</p>
+        </div>
+
+        {% if doc.items %}
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>{{ _("Item") }}</th>
+                    <th>{{ _("Description") }}</th>
+                    <th>{{ _("Qty") }}</th>
+                    <th>{{ _("UOM") }}</th>
+                    <th>{{ _("Estimated Cost") }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set total = namespace(value=0) %}
+                {% for item in doc.items %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ item.item_code }}</td>
+                    <td>{{ item.description or "" }}</td>
+                    <td>{{ item.qty }}</td>
+                    <td>{{ item.uom or "" }}</td>
+                    <td>{{ frappe.utils.fmt_money(item.estimated_cost or 0) }}</td>
+                </tr>
+                {% set total.value = total.value + (item.estimated_cost or 0) %}
+                {% endfor %}
+                <tr>
+                    <td colspan="5" class="text-right"><strong>{{ _("Total Estimated") }}</strong></td>
+                    <td><strong>{{ frappe.utils.fmt_money(total.value) }}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        {% endif %}
+
+        <div class="print-footer">
+            <p>{{ _("Printed on") }} {{ frappe.utils.now_datetime() }}</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "tenants": [
+    {
+      "tenant_id": "lokado",
+      "site_name": "scm.lokado.example",
+      "compose_project": "ugavi-lokado",
+      "http_port": 8443,
+      "primary_region": "ke-nairobi-primary",
+      "dr_region": "ke-nairobi-dr"
+    }
+  ]
+}

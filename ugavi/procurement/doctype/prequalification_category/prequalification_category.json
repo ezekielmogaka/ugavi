@@ -1,26 +1,26 @@
 {
- "custom": 0,
- "doctype": "DocType",
- "fields": [
-  {
-   "fieldname": "category",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Category",
-   "options": "Item Group",
-   "reqd": 1
-  },
-  {
-   "default": "Pending",
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Status",
-   "options": "Prequalified\nPending\nExpired"
-  }
- ],
- "istable": 1,
- "module": "Procurement",
- "name": "Prequalification Category",
- "permissions": []
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "category",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Category",
+            "options": "Item Group",
+            "reqd": 1
+        },
+        {
+            "default": "Pending",
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Status",
+            "options": "Prequalified\nPending\nExpired"
+        }
+    ],
+    "istable": 1,
+    "module": "Procurement",
+    "name": "Prequalification Category",
+    "permissions": []
 }

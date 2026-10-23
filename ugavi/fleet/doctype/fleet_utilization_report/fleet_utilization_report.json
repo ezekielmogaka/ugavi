@@ -1,0 +1,63 @@
+{
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "from_date",
+            "fieldtype": "Date",
+            "label": "From Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "to_date",
+            "fieldtype": "Date",
+            "label": "To Date"
+        },
+        {
+            "fieldname": "donor",
+            "fieldtype": "Link",
+            "label": "Donor",
+            "options": "Donor Profile",
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "vehicle",
+            "fieldtype": "Link",
+            "label": "Specific Vehicle",
+            "options": "Vehicle"
+        },
+        {
+            "fieldname": "generated_at",
+            "fieldtype": "Datetime",
+            "label": "Generated At",
+            "read_only": 1
+        },
+        {
+            "fieldname": "report_data",
+            "fieldtype": "Long Text",
+            "label": "Report Data (JSON)",
+            "read_only": 1,
+            "hidden": 1
+        }
+    ],
+    "istable": 0,
+    "module": "Fleet",
+    "name": "Fleet Utilization Report",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "System Manager",
+            "write": 1
+        },
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "Fleet Manager",
+            "write": 1
+        }
+    ],
+    "track_changes": 0
+}

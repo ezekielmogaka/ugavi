@@ -8,26 +8,55 @@ app_license = "MIT"
 
 # DocTypes registered in this app
 doctype_js = {
-    "Purchase Requisition": "procurement/doctype/purchase_requisition/purchase_requisition.js",
-    "Supplier Prequalification": "procurement/doctype/supplier_prequalification/supplier_prequalification.js",
-    "Tender": "tendering/doctype/tender/tender.js",
-    "Bid": "procurement/doctype/bid/bid.js",
-    "Bid Opening Record": "procurement/doctype/bid_opening_record/bid_opening_record.js",
+    "Purchase Requisition": "js/purchase_requisition.js",
+    "Supplier Prequalification": "js/supplier_prequalification.js",
+    "Tender": "js/tender.js",
+    "Bid": "js/bid.js",
+    "Bid Opening Record": "js/bid_opening_record.js",
 }
 
-# DocType event hooks
+# Cross-DocType integrations with ERPNext-owned transactions.
 doc_events = {
-    "Purchase Requisition": {
-        "validate": "ugavi.procurement.doctype.purchase_requisition.purchase_requisition.validate",
+    "*": {
+        "before_trash": "ugavi.governance.services.retention.enforce_record_disposal",
     },
-    "Supplier Prequalification": {
-        "validate": "ugavi.procurement.doctype.supplier_prequalification.supplier_prequalification.validate",
+    "Purchase Receipt": {
+        "validate": "ugavi.procurement.events.validate_purchase_receipt",
+        "before_cancel": "ugavi.fleet.services.purchase_reconciliation.prevent_source_cancellation",
+        "on_submit": [
+            "ugavi.procurement.events.create_supplier_evaluation",
+            "ugavi.fleet.services.purchase_reconciliation.create_for_purchase_receipt",
+        ],
+        "on_cancel": "ugavi.fleet.services.purchase_reconciliation.cancel_source_reconciliations",
     },
-    "Tender": {
-        "validate": "ugavi.tendering.doctype.tender.tender.validate",
+    "Purchase Invoice": {
+        "before_cancel": "ugavi.fleet.services.purchase_reconciliation.prevent_source_cancellation",
+        "on_submit": [
+            "ugavi.compliance.doctype.three_way_match.three_way_match.create_for_purchase_invoice",
+            "ugavi.fleet.services.purchase_reconciliation.create_or_link_for_purchase_invoice",
+            "ugavi.procurement.events.create_direct_invoice_evaluation",
+        ],
+        "on_cancel": "ugavi.fleet.services.purchase_reconciliation.cancel_source_reconciliations",
     },
-    "Bid": {
-        "validate": "ugavi.procurement.doctype.bid.bid.validate",
+    "Purchase Order": {
+        "on_submit": [
+            "ugavi.compliance.doctype.budget_encumbrance.budget_encumbrance.create_for_purchase_order",
+            "ugavi.procurement.doctype.ugavi_contract.ugavi_contract.ensure_contract_for_purchase_order",
+        ],
+        "on_cancel": "ugavi.compliance.doctype.budget_encumbrance.budget_encumbrance.reverse_for_purchase_order",
+    },
+    "Stock Entry": {
+        "validate": "ugavi.logistics.services.donor_ledger_integrity.validate_stock_entry",
+    },
+    "Payment Entry": {
+        "validate": "ugavi.procurement.events.validate_supplier_evaluation_before_payment",
+        "on_submit": [
+            "ugavi.integrations.mpesa.queue_supplier_payment",
+        ],
+    },
+    "Evaluation Score": {
+        "validate": "ugavi.tendering.doctype.evaluation_score.evaluation_score.validate",
+        "on_trash": "ugavi.tendering.doctype.evaluation_score.evaluation_score.on_trash",
     },
 }
 
@@ -36,9 +65,16 @@ scheduler_events = {
     "daily": [
         "ugavi.procurement.services.rules_engine.check_expiring_prequalifications",
         "ugavi.scripts.scheduled_tasks.check_contract_expiry",
+        "ugavi.scripts.scheduled_tasks.check_vehicle_service_due",
+    ],
+    "weekly": [
+        "ugavi.scripts.scheduled_tasks.flag_inactive_suppliers",
+        "ugavi.compliance.services.donor_report_scheduler.generate_scheduled_donor_reports",
     ],
     "monthly": [
         "ugavi.scripts.scheduled_tasks.generate_monthly_stock_reports",
+        "ugavi.scripts.scheduled_tasks.generate_asset_verification_reminder",
+        "ugavi.scripts.scheduled_tasks.generate_monthly_fleet_reports",
     ],
     "cron": {
         "0 3 1,15 * *": [
@@ -52,9 +88,23 @@ fixtures = [
     {"doctype": "Role", "filters": [["name", "in", ["Procurement Officer", "Bid Opening Officer", "Approver Level 1", "Approver Level 2", "Evaluation Committee"]]]},
 ]
 
-website_route_rules = []
+website_route_rules = [
+    {"from_route": "/supplier/portal", "to_route": "supplier/dashboard"},
+]
 
-# Override standard ERPNext hooks
-override_doctype_class = {
-    "Purchase Requisition": "ugavi.procurement.doctype.purchase_requisition.purchase_requisition.PurchaseRequisition",
-}
+get_website_user_home_page = (
+    "ugavi.procurement.portal.supplier_portal.get_home_page"
+)
+
+# CSS theme injection
+app_include_css = [
+    "/assets/ugavi/css/ugavi-tokens.css",
+    "/assets/ugavi/css/ugavi-theme.css",
+    "/assets/ugavi/css/ugavi-components.css",
+]
+
+web_include_css = [
+    "/assets/ugavi/css/ugavi-tokens.css",
+    "/assets/ugavi/css/ugavi-components.css",
+    "/assets/ugavi/css/ugavi-portal.css",
+]

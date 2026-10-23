@@ -1,0 +1,74 @@
+{
+  "custom": 0,
+  "doctype": "DocType",
+  "fields": [
+    {
+      "fieldname": "purchase_order_item",
+      "fieldtype": "Data",
+      "label": "Purchase Order Item",
+      "read_only": 1
+    },
+    {
+      "fieldname": "item_code",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Item",
+      "options": "Item",
+      "read_only": 1
+    },
+    {
+      "fieldname": "ordered_qty",
+      "fieldtype": "Float",
+      "label": "Ordered Qty",
+      "read_only": 1
+    },
+    {
+      "fieldname": "received_qty",
+      "fieldtype": "Float",
+      "label": "Accepted Qty",
+      "read_only": 1
+    },
+    {
+      "fieldname": "invoiced_qty",
+      "fieldtype": "Float",
+      "label": "Invoiced Qty",
+      "read_only": 1
+    },
+    {
+      "fieldname": "purchase_order_rate",
+      "fieldtype": "Currency",
+      "label": "PO Rate",
+      "read_only": 1
+    },
+    {
+      "fieldname": "invoice_rate",
+      "fieldtype": "Currency",
+      "label": "Invoice Rate",
+      "read_only": 1
+    },
+    {
+      "fieldname": "quantity_variance",
+      "fieldtype": "Float",
+      "label": "Quantity Variance %",
+      "read_only": 1
+    },
+    {
+      "fieldname": "price_variance",
+      "fieldtype": "Float",
+      "label": "Price Variance %",
+      "read_only": 1
+    },
+    {
+      "fieldname": "match_status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Status",
+      "options": "Matched\nWithin Tolerance\nDisputed",
+      "read_only": 1
+    }
+  ],
+  "istable": 1,
+  "module": "Compliance",
+  "name": "Three Way Match Item",
+  "permissions": []
+}

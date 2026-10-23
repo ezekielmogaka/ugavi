@@ -1,0 +1,79 @@
+{
+    "autoname": "BID-SUB-.YYYY.-.####",
+    "custom": 0,
+    "doctype": "DocType",
+    "fields": [
+        {
+            "fieldname": "tender",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Tender",
+            "options": "Tender",
+            "reqd": 1
+        },
+        {
+            "fieldname": "bid",
+            "fieldtype": "Link",
+            "in_list_view": 1,
+            "label": "Bid",
+            "options": "Bid",
+            "reqd": 1
+        },
+        {
+            "fieldname": "supplier",
+            "fieldtype": "Link",
+            "label": "Supplier",
+            "options": "Supplier",
+            "reqd": 1
+        },
+        {
+            "fieldname": "submission_date",
+            "fieldtype": "Datetime",
+            "in_list_view": 1,
+            "label": "Submission Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "encrypted",
+            "fieldtype": "Check",
+            "label": "Encrypted Submission",
+            "default": "0"
+        },
+        {
+            "fieldname": "receipt_hash",
+            "fieldtype": "Data",
+            "label": "Submission Receipt",
+            "read_only": 1
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "in_list_view": 1,
+            "label": "Status",
+            "options": "Received\nAccepted\nRejected",
+            "default": "Received"
+        }
+    ],
+    "istable": 0,
+    "module": "Tendering",
+    "name": "Bid Submission",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "System Manager",
+            "write": 1
+        },
+        {
+            "create": 1,
+            "delete": 0,
+            "read": 1,
+            "role": "Procurement Officer",
+            "write": 1
+        }
+    ],
+    "sort_field": "creation",
+    "sort_order": "DESC",
+    "track_changes": 1
+}

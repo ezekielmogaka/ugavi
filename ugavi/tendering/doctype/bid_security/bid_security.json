@@ -1,0 +1,36 @@
+{
+    "autoname": "BS-.YYYY.-.####",
+    "custom": 0,
+    "document_type": "",
+    "engine": "InnoDB",
+    "doctype": "DocType",
+    "name": "Bid Security",
+    "fields": [
+        {"fieldname": "tender", "fieldtype": "Link", "label": "Tender", "options": "Tender", "reqd": 1, "in_list_view": 1, "in_standard_filter": 1},
+        {"fieldname": "bid", "fieldtype": "Link", "label": "Bid", "options": "Bid"},
+        {"fieldname": "supplier", "fieldtype": "Link", "label": "Supplier", "options": "Supplier", "reqd": 1, "in_list_view": 1},
+        {"fieldname": "security_type", "fieldtype": "Select", "label": "Security Type", "options": "Bid Bond\nBank Guarantee\nCash Deposit\nInsurance Bond", "reqd": 1},
+        {"fieldname": "security_amount", "fieldtype": "Currency", "label": "Security Amount", "reqd": 1},
+        {"fieldname": "currency", "fieldtype": "Link", "label": "Currency", "options": "Currency", "default": "KES"},
+        {"fieldname": "received_date", "fieldtype": "Date", "label": "Received Date", "default": "Today"},
+        {"fieldname": "valid_until", "fieldtype": "Date", "label": "Valid Until"},
+        {"fieldname": "reference_number", "fieldtype": "Data", "label": "Reference Number", "unique": 1},
+        {"fieldname": "issuing_bank", "fieldtype": "Data", "label": "Issuing Bank/Institution"},
+        {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Held\nReleased\nForfeited", "default": "Held", "in_list_view": 1},
+        {"fieldname": "verification_status", "fieldtype": "Select", "label": "Verification Status", "options": "Pending\nVerified\nRejected", "default": "Pending", "in_list_view": 1},
+        {"fieldname": "verified_by", "fieldtype": "Link", "label": "Verified By", "options": "User", "read_only": 1},
+        {"fieldname": "verified_at", "fieldtype": "Datetime", "label": "Verified At", "read_only": 1},
+        {"fieldname": "verification_notes", "fieldtype": "Small Text", "label": "Verification Notes"},
+        {"fieldname": "release_date", "fieldtype": "Date", "label": "Release Date", "read_only": 1},
+        {"fieldname": "forfeit_date", "fieldtype": "Date", "label": "Forfeit Date", "read_only": 1},
+        {"fieldname": "remarks", "fieldtype": "Small Text", "label": "Remarks"}
+    ],
+    "istable": 0,
+    "module": "Tendering",
+    "permissions": [
+        {"role": "Procurement Officer", "read": 1, "write": 1, "create": 1, "delete": 0}
+    ],
+    "sort_field": "creation",
+    "sort_order": "DESC",
+    "track_changes": 1
+}

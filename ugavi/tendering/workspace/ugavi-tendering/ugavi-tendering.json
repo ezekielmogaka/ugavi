@@ -1,0 +1,132 @@
+{
+  "doctype": "Workspace",
+  "name": "Ugavi Tendering",
+  "label": "Ugavi Tendering",
+  "icon": "milestone",
+  "module": "Ugavi Tendering",
+  "for_user": "",
+  "hide_custom": 0,
+  "is_hidden": 0,
+  "content": "[{\"id\":\"ugavi-shortcut-1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Tender Pipeline\",\"col\":4}},{\"id\":\"ugavi-shortcut-2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Bid Register\",\"col\":4}},{\"id\":\"ugavi-shortcut-3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Opening Ceremony\",\"col\":4}},{\"id\":\"ugavi-workspace-spacer\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"ugavi-card-1\",\"type\":\"card\",\"data\":{\"card_name\":\"Tenders\",\"col\":4}},{\"id\":\"ugavi-card-2\",\"type\":\"card\",\"data\":{\"card_name\":\"Bid Opening\",\"col\":4}},{\"id\":\"ugavi-card-3\",\"type\":\"card\",\"data\":{\"card_name\":\"Evaluation & Review\",\"col\":4}}]",
+  "links": [
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Tenders",
+      "link_count": 3,
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "label": "Tender",
+      "link_to": "Tender",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Bid",
+      "link_to": "Bid",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Tender Document",
+      "link_to": "Tender Document",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Bid Opening",
+      "link_count": 3,
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "label": "Bid Opening Record",
+      "link_to": "Bid Opening Record",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Sealed Bid Key",
+      "link_to": "Sealed Bid Key",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Audit Log",
+      "link_to": "Audit Log",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Evaluation & Review",
+      "link_count": 4,
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "label": "Evaluation Committee",
+      "link_to": "Evaluation Committee",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Clarification",
+      "link_to": "Clarification",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Standstill Period",
+      "link_to": "Standstill Period",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "label": "Tender Complaint",
+      "link_to": "Tender Complaint",
+      "link_type": "DocType",
+      "type": "Link"
+    }
+  ],
+  "charts": [],
+  "number_cards": [],
+  "shortcuts": [
+    {
+      "color": "Blue",
+      "doc_view": "List",
+      "label": "Tender Pipeline",
+      "link_to": "Tender",
+      "stats_filter": "[]",
+      "type": "DocType"
+    },
+    {
+      "color": "Purple",
+      "doc_view": "List",
+      "label": "Bid Register",
+      "link_to": "Bid",
+      "stats_filter": "[]",
+      "type": "DocType"
+    },
+    {
+      "color": "Orange",
+      "doc_view": "List",
+      "label": "Opening Ceremony",
+      "link_to": "Bid Opening Record",
+      "stats_filter": "[]",
+      "type": "DocType"
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+{
+  "autoname": "FPR-.YYYY.-.#####",
+  "doctype": "DocType",
+  "module": "Fleet",
+  "name": "Fleet Purchase Reconciliation",
+  "title_field": "item_code",
+  "track_changes": 1,
+  "fields": [
+    {
+      "fieldname": "fleet_category",
+      "fieldtype": "Select",
+      "label": "Fleet Category",
+      "options": "Fuel\nSpare Part",
+      "reqd": 1,
+      "read_only": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "item_code",
+      "fieldtype": "Link",
+      "label": "Item",
+      "options": "Item",
+      "reqd": 1,
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "donor",
+      "fieldtype": "Link",
+      "label": "Donor",
+      "options": "Donor Profile",
+      "read_only": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "purchase_order",
+      "fieldtype": "Link",
+      "label": "Purchase Order",
+      "options": "Purchase Order",
+      "read_only": 1
+    },
+    {
+      "fieldname": "purchase_order_item",
+      "fieldtype": "Data",
+      "label": "Purchase Order Item",
+      "read_only": 1,
+      "hidden": 1
+    },
+    {
+      "fieldname": "purchase_receipt",
+      "fieldtype": "Link",
+      "label": "Purchase Receipt",
+      "options": "Purchase Receipt",
+      "read_only": 1
+    },
+    {
+      "fieldname": "purchase_receipt_item",
+      "fieldtype": "Data",
+      "label": "Purchase Receipt Item",
+      "read_only": 1,
+      "hidden": 1
+    },
+    {
+      "fieldname": "purchase_invoice",
+      "fieldtype": "Link",
+      "label": "Purchase Invoice",
+      "options": "Purchase Invoice",
+      "read_only": 1
+    },
+    {
+      "fieldname": "purchase_invoice_item",
+      "fieldtype": "Data",
+      "label": "Purchase Invoice Item",
+      "read_only": 1,
+      "hidden": 1
+    },
+    {
+      "fieldname": "warehouse",
+      "fieldtype": "Link",
+      "label": "Warehouse",
+      "options": "Warehouse",
+      "read_only": 1
+    },
+    {
+      "fieldname": "purchased_qty",
+      "fieldtype": "Float",
+      "label": "Purchased Quantity",
+      "reqd": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "stock_uom",
+      "fieldtype": "Link",
+      "label": "Stock UOM",
+      "options": "UOM",
+      "read_only": 1
+    },
+    {
+      "fieldname": "valuation_rate",
+      "fieldtype": "Currency",
+      "label": "Source Rate",
+      "read_only": 1
+    },
+    {
+      "fieldname": "allocated_qty",
+      "fieldtype": "Float",
+      "label": "Allocated Quantity",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "remaining_qty",
+      "fieldtype": "Float",
+      "label": "Remaining Quantity",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Open\nPartially Allocated\nReconciled\nCancelled",
+      "default": "Open",
+      "read_only": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Fleet Manager",
+      "read": 1
+    },
+    {
+      "role": "Procurement Officer",
+      "read": 1
+    },
+    {
+      "role": "Stock Manager",
+      "read": 1
+    },
+    {
+      "role": "Auditor",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ]
+}

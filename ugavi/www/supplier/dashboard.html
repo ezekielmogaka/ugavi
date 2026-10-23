@@ -1,0 +1,448 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<main class="ugavi-portal" aria-labelledby="supplier-portal-title">
+    <a class="ugavi-portal__skip-link" href="#supplier-dashboard-content">{{ _("Skip to dashboard") }}</a>
+    <header class="ugavi-portal__hero">
+        <div class="ugavi-portal__identity">
+            <span class="ugavi-portal__eyebrow">{{ _("LOKADO supply partnerships") }}</span>
+            <h1 id="supplier-portal-title">{{ _("Supplier Portal") }}</h1>
+            <p>{{ _("Manage your organization from prequalification through delivery and performance review.") }}</p>
+            <div class="ugavi-portal__assurance" aria-label="{{ _('Platform capabilities') }}">
+                <span>{{ _("Secure bid exchange") }}</span>
+                <span>{{ _("Donor traceability") }}</span>
+                <span>{{ _("ERPNext connected") }}</span>
+            </div>
+        </div>
+        <div class="ugavi-portal__mark" aria-hidden="true">
+            <span>LOKADO</span>
+            <small>{{ _("Action for development") }}</small>
+        </div>
+    </header>
+
+    {% if supplier %}
+    <section id="supplier-dashboard-content" class="ugavi-portal__welcome" aria-labelledby="supplier-welcome-title">
+        <div>
+            <span class="ugavi-portal__eyebrow">{{ _("Registered supplier") }}</span>
+            <h2 id="supplier-welcome-title">{{ profile.supplier_name or supplier }}</h2>
+            <small>{{ supplier }}</small>
+        </div>
+        <a class="ugavi-portal__secondary-action" href="/me">{{ _("Manage account") }}</a>
+    </section>
+
+    <nav class="ugavi-portal__journey" aria-label="{{ _('Supplier journey') }}">
+        <a href="#profile">{{ _("Profile") }}</a>
+        <a href="#prequalification">{{ _("Prequalification") }}</a>
+        <a href="#opportunities">{{ _("Opportunities") }}</a>
+        <a href="#bids">{{ _("Bids") }}</a>
+        <a href="#clarifications">{{ _("Clarifications") }}</a>
+        <a href="#complaints">{{ _("Complaints") }}</a>
+        <a href="#awards">{{ _("Awards") }}</a>
+        <a href="#contracts">{{ _("Contracts") }}</a>
+        <a href="#deliveries">{{ _("Deliveries") }}</a>
+        <a href="#invoices">{{ _("Invoices") }}</a>
+        <a href="#evaluations">{{ _("Evaluations") }}</a>
+        <a href="#notifications">{{ _("Notifications") }}</a>
+    </nav>
+
+    <section class="ugavi-portal__readiness" aria-labelledby="journey-readiness-title">
+        <div>
+            <span class="ugavi-portal__eyebrow">{{ _("Journey readiness") }}</span>
+            <h2 id="journey-readiness-title">
+                {{ _("{0}% complete").format(journey_progress) }}
+            </h2>
+            <p>{{ _("Progress is based on profile, eligibility, bids, awards, orders, receipts and evaluations.") }}</p>
+        </div>
+        <div class="ugavi-portal__readiness-action">
+            <div class="ugavi-portal__progress" role="progressbar"
+                 aria-label="{{ _('Supplier journey completion') }}"
+                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ journey_progress }}">
+                <span style="width: {{ journey_progress }}%"></span>
+            </div>
+            {% if next_action %}
+            <a class="ugavi-portal__secondary-action" href="{{ next_action.href }}">
+                {{ next_action.label }}
+            </a>
+            {% else %}
+            <span class="ugavi-chip ugavi-chip--active">{{ _("Up to date") }}</span>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="ugavi-portal__metrics" aria-label="{{ _('Supplier overview') }}">
+        <article class="ugavi-portal__metric">
+            <span>{{ _("Open opportunities") }}</span>
+            <strong>{{ open_tenders | length }}</strong>
+            <small>{{ _("Eligible and accepting bids") }}</small>
+        </article>
+        <article class="ugavi-portal__metric">
+            <span>{{ _("Active submissions") }}</span>
+            <strong>{{ pending_bids }}</strong>
+            <small>{{ _("Draft or securely submitted") }}</small>
+        </article>
+        <article class="ugavi-portal__metric">
+            <span>{{ _("Active categories") }}</span>
+            <strong>{{ active_prequalifications }}</strong>
+            <small>{{ _("Current prequalifications") }}</small>
+        </article>
+        <article class="ugavi-portal__metric">
+            <span>{{ _("Unread notifications") }}</span>
+            <strong>{{ unread_notifications }}</strong>
+            <small>{{ _("Journey updates requiring attention") }}</small>
+        </article>
+    </section>
+
+    <div class="ugavi-portal__layout">
+        <section id="profile" class="ugavi-portal__card" aria-labelledby="profile-title">
+            <div class="ugavi-portal__section-heading">
+                <div>
+                    <span class="ugavi-portal__eyebrow">{{ _("Organization") }}</span>
+                    <h2 id="profile-title">{{ _("Supplier profile") }}</h2>
+                </div>
+            </div>
+            <form class="ugavi-portal__form" data-ugavi-method="update_supplier_profile">
+                <label>{{ _("Email") }}<input type="email" name="email_id" value="{{ profile.email_id or '' }}"></label>
+                <label>{{ _("Mobile") }}<input type="tel" name="mobile_no" value="{{ profile.mobile_no or '' }}"></label>
+                <label>{{ _("Website") }}<input type="url" name="website" value="{{ profile.website or '' }}" placeholder="https://"></label>
+                <label>{{ _("Tax ID") }}<input type="text" name="tax_id" value="{{ profile.tax_id or '' }}"></label>
+                <button class="ugavi-portal__primary-action" type="submit">{{ _("Save profile") }}</button>
+            </form>
+        </section>
+
+        <section id="prequalification" class="ugavi-portal__card" aria-labelledby="prequalification-title">
+            <div class="ugavi-portal__section-heading">
+                <div>
+                    <span class="ugavi-portal__eyebrow">{{ _("Eligibility") }}</span>
+                    <h2 id="prequalification-title">{{ _("Prequalification") }}</h2>
+                </div>
+            </div>
+            <form id="prequalification-form" class="ugavi-portal__form">
+                <label>{{ _("Category") }}
+                    <select name="category" required>
+                        <option value="">{{ _("Select a category") }}</option>
+                        {% for category in categories %}<option value="{{ category }}">{{ category }}</option>{% endfor %}
+                    </select>
+                </label>
+                <label>{{ _("Requested expiry date") }}<input type="date" name="expiry_date" required></label>
+                <label>{{ _("Supporting document type") }}
+                    <select name="document_type">
+                        <option value="">{{ _("No attachment") }}</option>
+                        <option>Registration Certificate</option><option>Tax Compliance</option>
+                        <option>Business Permit</option><option>Bank Reference</option>
+                        <option>Trade Reference</option><option>Insurance</option><option>Other</option>
+                    </select>
+                </label>
+                <label>{{ _("Private supporting document") }}<input type="file" name="document"></label>
+                <button class="ugavi-portal__primary-action" type="submit">{{ _("Apply") }}</button>
+            </form>
+            {% if prequalifications %}
+            <ul class="ugavi-portal__status-list">
+                {% for item in prequalifications %}
+                <li><div><strong>{{ item.name }}</strong>{% if item.expiry_date %}<small>{{ _("Expires {0}").format(frappe.utils.format_date(item.expiry_date)) }}</small>{% endif %}</div>
+                    <span class="ugavi-chip ugavi-chip--{{ item.status | lower | replace(' ', '-') }}">{{ item.status }}</span></li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </section>
+
+        <section id="opportunities" class="ugavi-portal__card ugavi-portal__card--full" aria-labelledby="opportunities-title">
+            <div class="ugavi-portal__section-heading">
+                <div><span class="ugavi-portal__eyebrow">{{ _("Opportunities") }}</span><h2 id="opportunities-title">{{ _("Open tenders") }}</h2></div>
+                <span class="ugavi-chip ugavi-chip--published">{{ _("{0} open").format(open_tenders | length) }}</span>
+            </div>
+            {% if open_tenders %}
+            <div class="ugavi-portal__table-wrap"><table class="ugavi-portal__table">
+                <thead><tr><th>{{ _("Tender") }}</th><th>{{ _("Method") }}</th><th>{{ _("Value") }}</th><th>{{ _("Deadline") }}</th><th>{{ _("Action") }}</th></tr></thead>
+                <tbody>{% for tender in open_tenders %}<tr>
+                    <td><strong>{{ tender.title }}</strong><small>{{ tender.name }} · {{ tender.item_category or _("General") }}</small></td>
+                    <td>{{ tender.procurement_method }}</td>
+                    <td>{{ frappe.format_value(tender.estimated_value, {"fieldtype": "Currency"}) }}</td>
+                    <td><time datetime="{{ tender.submission_deadline }}">{{ frappe.utils.format_datetime(tender.submission_deadline) }}</time></td>
+                    <td><button type="button" class="ugavi-portal__text-action" data-select-tender="{{ tender.name }}">{{ _("Prepare bid") }}</button></td>
+                </tr>{% endfor %}</tbody>
+            </table></div>
+            {% else %}<div class="ugavi-empty-state"><div class="ugavi-empty-state__title">{{ _("No open tenders") }}</div><p>{{ _("New eligible opportunities will appear here.") }}</p></div>{% endif %}
+        </section>
+
+        <section id="bids" class="ugavi-portal__card" aria-labelledby="bids-title">
+            <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Secure submission") }}</span><h2 id="bids-title">{{ _("Submit a bid") }}</h2></div></div>
+            <form id="bid-form" class="ugavi-portal__form">
+                <label>{{ _("Tender") }}<select name="tender" required><option value="">{{ _("Select an opportunity") }}</option>{% for tender in open_tenders %}<option value="{{ tender.name }}">{{ tender.title }}</option>{% endfor %}</select></label>
+                <div class="ugavi-portal__form-row">
+                    <label>{{ _("Amount") }}<input type="number" name="bid_amount" min="0.01" step="0.01" required></label>
+                    <label>{{ _("Currency") }}<input type="text" name="bid_currency" value="KES" maxlength="3" required></label>
+                </div>
+                <label>{{ _("Delivery days") }}<input type="number" name="delivery_days" min="0" value="0" required></label>
+                <label>{{ _("Private technical proposal") }}<input type="file" name="technical_proposal"></label>
+                <button class="ugavi-portal__primary-action" type="submit">{{ _("Encrypt and submit bid") }}</button>
+                <small>{{ _("Submitted bids are immutable and sealed until the three-officer opening ceremony.") }}</small>
+            </form>
+            {% if bids %}<ul class="ugavi-portal__status-list">{% for bid in bids %}<li><div><strong>{{ bid.tender }}</strong><small>{{ bid.name }}{% if bid.submission_receipt %} · {{ _("Receipt") }} {{ bid.submission_receipt[:12] }}…{% endif %}</small></div><span class="ugavi-chip ugavi-chip--{{ bid.status | lower }}">{{ bid.status }}</span></li>{% endfor %}</ul>{% endif %}
+        </section>
+
+        <section id="clarifications" class="ugavi-portal__card" aria-labelledby="clarifications-title">
+            <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Questions") }}</span><h2 id="clarifications-title">{{ _("Clarifications") }}</h2></div></div>
+            <form class="ugavi-portal__form" data-ugavi-method="submit_clarification">
+                <label>{{ _("Tender") }}<select name="tender" required><option value="">{{ _("Select an opportunity") }}</option>{% for tender in open_tenders %}<option value="{{ tender.name }}">{{ tender.title }}</option>{% endfor %}</select></label>
+                <label>{{ _("Question") }}<textarea name="question" maxlength="4000" required></textarea></label>
+                <button class="ugavi-portal__primary-action" type="submit">{{ _("Send question") }}</button>
+            </form>
+            {% if clarifications %}<ul class="ugavi-portal__status-list">{% for item in clarifications %}<li><div><strong>{{ item.tender }}</strong><small>{{ item.question | striptags | truncate(90) }}{% if item.answer %}<br>{{ _("Answer") }}: {{ item.answer | striptags | truncate(90) }}{% endif %}</small></div><span class="ugavi-chip ugavi-chip--{{ item.status | lower }}">{{ item.status }}</span></li>{% endfor %}</ul>{% endif %}
+        </section>
+
+        <section id="complaints" class="ugavi-portal__card" aria-labelledby="complaints-title">
+            <div class="ugavi-portal__section-heading">
+                <div>
+                    <span class="ugavi-portal__eyebrow">{{ _("MVP2 readiness") }}</span>
+                    <h2 id="complaints-title">{{ _("Tender complaints") }}</h2>
+                </div>
+            </div>
+            {% if complaint_windows %}
+            <form id="complaint-form" class="ugavi-portal__form">
+                <label>{{ _("Tender under standstill") }}
+                    <select name="tender" required>
+                        <option value="">{{ _("Select a tender") }}</option>
+                        {% for window in complaint_windows %}
+                        <option value="{{ window.tender }}">
+                            {{ window.tender }} · {{ _("closes {0}").format(frappe.utils.format_date(window.end_date)) }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>{{ _("Grounds") }}
+                    <textarea name="grounds" maxlength="8000" required></textarea>
+                </label>
+                <label>{{ _("Private supporting document") }}
+                    <input type="file" name="supporting_document">
+                </label>
+                <button class="ugavi-portal__primary-action" type="submit">
+                    {{ _("Submit complaint") }}
+                </button>
+                <small>{{ _("Complaints are accepted only from bidders during an active standstill window.") }}</small>
+            </form>
+            {% else %}
+            <div class="ugavi-empty-state ugavi-empty-state--compact">
+                <p>{{ _("No active standstill complaint window is available for your bids.") }}</p>
+            </div>
+            {% endif %}
+            {% if complaints %}
+            <ul class="ugavi-portal__status-list">
+                {% for item in complaints %}
+                <li>
+                    <div>
+                        <strong>{{ item.tender }}</strong>
+                        <small>{{ item.name }} · {{ item.grounds | striptags | truncate(90) }}
+                            {% if item.outcome %}<br>{{ _("Outcome") }}: {{ item.outcome | striptags | truncate(90) }}{% endif %}
+                        </small>
+                    </div>
+                    <span class="ugavi-chip ugavi-chip--{{ item.status | lower | replace(' ', '-') }}">{{ item.status }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </section>
+
+        <section id="awards" class="ugavi-portal__card" aria-labelledby="awards-title">
+            <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Results") }}</span><h2 id="awards-title">{{ _("Awards") }}</h2></div></div>
+            {% if awards %}<ul class="ugavi-portal__status-list">{% for item in awards %}<li><div><strong>{{ item.title }}</strong><small>{{ item.name }} · {{ frappe.format_value(item.award_amount, {"fieldtype": "Currency"}) }}</small></div><span class="ugavi-chip ugavi-chip--awarded">{{ item.status }}</span></li>{% endfor %}</ul>
+            {% else %}<div class="ugavi-empty-state ugavi-empty-state--compact"><p>{{ _("Award notices issued to your organization will appear here.") }}</p></div>{% endif %}
+        </section>
+
+        <section id="contracts" class="ugavi-portal__card" aria-labelledby="contracts-title">
+            <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Commitments") }}</span><h2 id="contracts-title">{{ _("Contracts") }}</h2></div></div>
+            {% if contracts %}<ul class="ugavi-portal__status-list">{% for item in contracts %}<li><div><strong>{{ item.name }}</strong><small>{{ item.purchase_order }} · {{ frappe.format_value(item.contract_value, {"fieldtype": "Currency"}) }}</small></div><span class="ugavi-chip ugavi-chip--{{ item.status | lower }}">{{ item.status }}</span></li>{% endfor %}</ul>
+            {% else %}<div class="ugavi-empty-state ugavi-empty-state--compact"><p>{{ _("Active and completed contracts will appear here.") }}</p></div>{% endif %}
+        </section>
+
+        <section id="deliveries" class="ugavi-portal__card ugavi-portal__card--full" aria-labelledby="deliveries-title">
+            <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Fulfilment") }}</span><h2 id="deliveries-title">{{ _("Orders and deliveries") }}</h2></div></div>
+            {% if purchase_orders %}
+            <div class="ugavi-portal__table-wrap"><table class="ugavi-portal__table"><thead><tr><th>{{ _("Purchase order") }}</th><th>{{ _("Required by") }}</th><th>{{ _("Received") }}</th><th>{{ _("Status") }}</th><th>{{ _("Action") }}</th></tr></thead><tbody>
+                {% for item in purchase_orders %}<tr><td><strong>{{ item.name }}</strong><small>{{ frappe.format_value(item.grand_total, {"fieldtype": "Currency"}) }} {{ item.currency }}</small></td><td>{{ frappe.utils.format_date(item.schedule_date) }}</td><td>{{ item.per_received }}%</td><td>{{ item.status }}</td><td>{% if item.ugavi_supplier_acknowledged %}<span class="ugavi-chip ugavi-chip--active">{{ _("Acknowledged") }}</span>{% else %}<button type="button" class="ugavi-portal__text-action" data-acknowledge-order="{{ item.name }}">{{ _("Acknowledge") }}</button>{% endif %}</td></tr>{% endfor %}
+            </tbody></table></div>
+            {% else %}<div class="ugavi-empty-state"><p>{{ _("Purchase orders will appear here after award.") }}</p></div>{% endif %}
+            {% if deliveries %}<h3>{{ _("Recorded receipts") }}</h3><ul class="ugavi-portal__status-list">{% for item in deliveries %}<li><div><strong>{{ item.name }}</strong><small>{{ frappe.utils.format_date(item.posting_date) }} · {{ frappe.format_value(item.grand_total, {"fieldtype": "Currency"}) }} {{ item.currency }}</small></div><span class="ugavi-chip ugavi-chip--{{ item.status | lower | replace(' ', '-') }}">{{ item.status }}</span></li>{% endfor %}</ul>{% endif %}
+        </section>
+
+        <section id="invoices" class="ugavi-portal__card ugavi-portal__card--full" aria-labelledby="invoices-title">
+            <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Procure to pay") }}</span><h2 id="invoices-title">{{ _("Supplier invoices") }}</h2></div></div>
+            {% if deliveries %}
+            <form id="supplier-invoice-form" class="ugavi-portal__form">
+                <label>{{ _("Purchase receipt") }}
+                    <select name="purchase_receipt" required>
+                        <option value="">{{ _("Select a submitted receipt") }}</option>
+                        {% for item in deliveries %}{% if item.docstatus == 1 %}<option value="{{ item.name }}">{{ item.name }} · {{ frappe.utils.format_date(item.posting_date) }}</option>{% endif %}{% endfor %}
+                    </select>
+                </label>
+                <label>{{ _("Invoice number") }}<input type="text" name="supplier_invoice_number" maxlength="140" required></label>
+                <label>{{ _("Invoice date") }}<input type="date" name="supplier_invoice_date" required></label>
+                <label>{{ _("Private invoice file") }}<input type="file" name="invoice_file" accept=".pdf,.png,.jpg,.jpeg" required></label>
+                <button class="ugavi-portal__primary-action" type="submit">{{ _("Submit invoice") }}</button>
+            </form>
+            {% endif %}
+            {% if purchase_invoices %}
+            <div class="ugavi-portal__table-wrap"><table class="ugavi-portal__table"><thead><tr><th>{{ _("Invoice") }}</th><th>{{ _("Supplier reference") }}</th><th>{{ _("Amount") }}</th><th>{{ _("Outstanding") }}</th><th>{{ _("Status") }}</th></tr></thead><tbody>
+                {% for item in purchase_invoices %}<tr><td><strong>{{ item.name }}</strong><small>{{ frappe.utils.format_date(item.bill_date or item.posting_date) }}</small></td><td>{{ item.bill_no }}</td><td>{{ frappe.format_value(item.grand_total, {"fieldtype": "Currency"}) }} {{ item.currency }}</td><td>{{ frappe.format_value(item.outstanding_amount, {"fieldtype": "Currency"}) }}</td><td><span class="ugavi-chip ugavi-chip--{{ item.status | lower | replace(' ', '-') }}">{{ item.status }}</span></td></tr>{% endfor %}
+            </tbody></table></div>
+            {% else %}<div class="ugavi-empty-state ugavi-empty-state--compact"><p>{{ _("Invoices created from accepted receipts will appear here.") }}</p></div>{% endif %}
+        </section>
+
+        <section id="evaluations" class="ugavi-portal__card" aria-labelledby="evaluations-title">
+            <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Performance") }}</span><h2 id="evaluations-title">{{ _("Supplier evaluations") }}</h2></div></div>
+            {% if evaluations %}<ul class="ugavi-portal__status-list">{% for item in evaluations %}<li><div><strong>{{ item.purchase_receipt }}</strong><small>{{ frappe.utils.format_date(item.evaluation_date) }}{% if item.remarks %} · {{ item.remarks | truncate(70) }}{% endif %}</small></div><span class="ugavi-chip ugavi-chip--{{ item.status | lower }}">{{ item.cumulative_rating or item.total_score or 0 }}%</span></li>{% endfor %}</ul>
+            {% else %}<div class="ugavi-empty-state ugavi-empty-state--compact"><p>{{ _("Performance results are published after completed deliveries.") }}</p></div>{% endif %}
+        </section>
+
+        <section id="notifications" class="ugavi-portal__card" aria-labelledby="notifications-title">
+            <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Updates") }}</span><h2 id="notifications-title">{{ _("Notifications") }}</h2></div></div>
+            {% if notifications %}<ul class="ugavi-portal__status-list">{% for item in notifications %}<li class="{% if not item.read %}ugavi-portal__notification--unread{% endif %}"><div><strong>{{ item.title }}</strong><small>{{ item.description | striptags | truncate(100) }} · {{ frappe.utils.format_datetime(item.creation) }}</small></div>{% if not item.read %}<button type="button" class="ugavi-portal__text-action" data-read-notification="{{ item.name }}">{{ _("Mark read") }}</button>{% endif %}</li>{% endfor %}</ul>
+            {% else %}<div class="ugavi-empty-state ugavi-empty-state--compact"><p>{{ _("Journey updates and receipts will appear here.") }}</p></div>{% endif %}
+        </section>
+    </div>
+    {% else %}
+    <section class="ugavi-portal__sign-in" aria-labelledby="supplier-sign-in-title">
+        <span class="ugavi-portal__eyebrow">{{ _("Supplier access") }}</span>
+        <h2 id="supplier-sign-in-title">{{ _("Continue with your registered account") }}</h2>
+        <p>{{ _("Sign in to manage your complete supplier journey securely.") }}</p>
+        <a href="/login?redirect-to=/supplier/dashboard" class="ugavi-portal__primary-action">{{ _("Sign in securely") }}</a>
+        <small>{{ _("Need access? Contact the LOKADO procurement team.") }}</small>
+    </section>
+    {% endif %}
+</main>
+{% endblock %}
+
+{% block script %}
+{{ super() }}
+{% if supplier %}
+<script>
+(() => {
+    const methodRoot = "ugavi.procurement.portal.supplier_portal.";
+    const call = (method, args) => new Promise((resolve, reject) => {
+        frappe.call({ method: methodRoot + method, args, freeze: true, callback: (response) => resolve(response.message), error: reject });
+    });
+    const upload = async (file) => {
+        if (!file || !file.size) return null;
+        const data = new FormData();
+        data.append("file", file);
+        data.append("is_private", "1");
+        const response = await fetch("/api/method/upload_file", {
+            method: "POST",
+            headers: { "X-Frappe-CSRF-Token": frappe.csrf_token },
+            body: data,
+        });
+        const payload = await response.json();
+        if (!response.ok || payload.exc) throw new Error(payload.exception || "{{ _('Upload failed') }}");
+        return payload.message.file_url;
+    };
+    const reloadAfter = async (button, work) => {
+        button.disabled = true;
+        try {
+            await work();
+            window.location.reload();
+        } catch (error) {
+            button.disabled = false;
+            frappe.msgprint(error.message || "{{ _('The request could not be completed.') }}");
+        }
+    };
+
+    document.querySelectorAll("form[data-ugavi-method]").forEach((form) => {
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const button = form.querySelector("button[type=submit]");
+            reloadAfter(button, () => call(form.dataset.ugaviMethod, Object.fromEntries(new FormData(form))));
+        });
+    });
+    document.querySelector("#prequalification-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const data = new FormData(form);
+        reloadAfter(form.querySelector("button[type=submit]"), async () => {
+            const attachment = await upload(data.get("document"));
+            const documents = data.get("document_type") ? [{
+                document_type: data.get("document_type"),
+                attachment,
+            }] : [];
+            await call("submit_prequalification", {
+                category: data.get("category"),
+                expiry_date: data.get("expiry_date"),
+                documents: JSON.stringify(documents),
+            });
+        });
+    });
+    document.querySelector("#bid-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const data = new FormData(form);
+        reloadAfter(form.querySelector("button[type=submit]"), async () => {
+            const technicalProposal = await upload(data.get("technical_proposal"));
+            await call("submit_bid", {
+                tender: data.get("tender"),
+                bid_amount: data.get("bid_amount"),
+                bid_currency: data.get("bid_currency").toUpperCase(),
+                delivery_days: data.get("delivery_days"),
+                technical_proposal: technicalProposal,
+            });
+        });
+    });
+    const complaintForm = document.querySelector("#complaint-form");
+    if (complaintForm) complaintForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const data = new FormData(form);
+        reloadAfter(form.querySelector("button[type=submit]"), async () => {
+            const supportingDocument = await upload(data.get("supporting_document"));
+            await call("submit_tender_complaint", {
+                tender: data.get("tender"),
+                grounds: data.get("grounds"),
+                supporting_document: supportingDocument,
+            });
+        });
+    });
+    document.querySelectorAll("[data-select-tender]").forEach((button) => button.addEventListener("click", () => {
+        document.querySelector("#bid-form [name=tender]").value = button.dataset.selectTender;
+        document.querySelector("#bids").scrollIntoView({ behavior: "smooth" });
+    }));
+    document.querySelectorAll("[data-acknowledge-order]").forEach((button) => button.addEventListener("click", () => {
+        reloadAfter(button, () => call("acknowledge_purchase_order", { purchase_order: button.dataset.acknowledgeOrder }));
+    }));
+    const invoiceForm = document.querySelector("#supplier-invoice-form");
+    if (invoiceForm) invoiceForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const button = form.querySelector("button[type=submit]");
+        reloadAfter(button, async () => {
+            const file = await upload(form.elements.invoice_file.files[0]);
+            return call("submit_supplier_invoice", {
+                purchase_receipt: form.elements.purchase_receipt.value,
+                supplier_invoice_number: form.elements.supplier_invoice_number.value,
+                supplier_invoice_date: form.elements.supplier_invoice_date.value,
+                invoice_file: file,
+            });
+        });
+    });
+    document.querySelectorAll("[data-read-notification]").forEach((button) => button.addEventListener("click", () => {
+        reloadAfter(button, () => call("mark_notification_read", { notification: button.dataset.readNotification }));
+    }));
+    const journeyLinks = [...document.querySelectorAll(".ugavi-portal__journey a")];
+    const journeySections = journeyLinks
+        .map((link) => document.querySelector(link.getAttribute("href")))
+        .filter(Boolean);
+    if ("IntersectionObserver" in window) {
+        const observer = new IntersectionObserver((entries) => {
+            const visible = entries
+                .filter((entry) => entry.isIntersecting)
+                .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
+            if (!visible) return;
+            journeyLinks.forEach((link) => {
+                const isActive = link.getAttribute("href") === `#${visible.target.id}`;
+                link.classList.toggle("ugavi-portal__journey-link--active", isActive);
+                if (isActive) link.setAttribute("aria-current", "location");
+                else link.removeAttribute("aria-current");
+            });
+        }, { rootMargin: "-20% 0px -65% 0px", threshold: [0.1, 0.5] });
+        journeySections.forEach((section) => observer.observe(section));
+    }
+})();
+</script>
+{% endif %}
+{% endblock %}

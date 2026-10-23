@@ -1,0 +1,51 @@
+{
+  "autoname": "RRP-.####",
+  "custom": 0,
+  "doctype": "DocType",
+  "fields": [
+    {
+      "fieldname": "reference_doctype",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Protected DocType",
+      "options": "DocType",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "default": "7",
+      "fieldname": "retention_years",
+      "fieldtype": "Int",
+      "label": "Retention (years)",
+      "reqd": 1
+    },
+    {
+      "default": "1",
+      "fieldname": "archive_before_disposal",
+      "fieldtype": "Check",
+      "label": "Require Archive Before Disposal"
+    },
+    {
+      "default": "1",
+      "fieldname": "enabled",
+      "fieldtype": "Check",
+      "in_list_view": 1,
+      "label": "Enabled"
+    }
+  ],
+  "module": "Governance",
+  "name": "Record Retention Policy",
+  "permissions": [
+    {
+      "create": 1,
+      "read": 1,
+      "role": "System Manager",
+      "write": 1
+    },
+    {
+      "read": 1,
+      "role": "Auditor"
+    }
+  ],
+  "track_changes": 1
+}
