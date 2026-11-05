@@ -1,7 +1,7 @@
 # Ugavi Demo — Presenter Runbook
 
 > **Audience:** LOKADO (Lotus Kenya Action for Development Organization) leadership  
-> **Stack verified 2026-10-23:** Frappe 16.53.0 + ERPNext 16.52.1 + Ugavi 0.1.0
+> **Historical stack verified 2026-10-23:** Frappe 16.53.0 + ERPNext 16.52.1 + Ugavi 0.1.0
 > **Duration:** 55-75 minutes (full tour) or ~15 minutes per scene for standalone  
 > **Business persona passwords:** `Ugavi@2024` (development-only; seed-script enforced)
 
@@ -13,8 +13,9 @@ it includes exact record locators, inputs, role handoffs, expected outcomes,
 and intentional live-workflow boundaries. On 2026-11-05 `ugavi.localhost` was
 rebuilt from scratch with `make clean && make setup && make seed-lokado`; the
 acceptance and fleet gates reported `"ready": true` with no issues, and the
-`make backup-demo` → `make restore-demo` round-trip passed. Counts elsewhere in
-this shorter guide describe the October baseline.
+`make backup-demo` → `make restore-demo` round-trip passed. These are historical
+results, not proof of the current site's state. The expanded tour is the
+authoritative source for current scene prerequisites and limitations.
 Use the [requirement-to-scene map](demo/LOKADO-DEMO-TOUR.md#4-requirement-to-scene-map)
 for the original client scope and the [evidence registry](traceability/evidence.md)
 for the distinction between automated checks and live presenter actions.
@@ -26,7 +27,7 @@ for the distinction between automated checks and live presenter actions.
 Everything is a `make` target run from the repository root:
 
 ```bash
-# Fresh demo from scratch (DESTRUCTIVE: deletes DB, files and backups/)
+# Fresh disposable demo only (DESTRUCTIVE: deletes DB, files and backups/)
 make clean && make setup && make seed-lokado
 
 # Or, keep the data and load new code / refresh the seed (idempotent)
@@ -40,14 +41,16 @@ make backup-demo              # snapshot DB + files to backups/lokado-demo/
 ```
 
 After a rehearsal that opened tenders or posted stock, `make restore-demo`
-returns to the snapshot. `make reset-lokado` reinstalls the site and reseeds
-without rebuilding containers. `make upgrade-check` rehearses an upstream
-upgrade (rebuild, migrate, configure, backend tests).
+returns to the snapshot. `make backup-demo` replaces any previous demo
+snapshot; preserve older backups elsewhere first. `make clean` also deletes
+the local `backups/` contents. `make reset-lokado` reinstalls the site and
+reseeds without rebuilding containers. `make upgrade-check` rehearses an
+upstream upgrade (rebuild, migrate, configure, backend tests).
 
 `make seed-lokado`/`demo-check` run the code baked into the image; `make setup`
-rebuilds it. If the gate reports `expected at least 40`, unreconciled Monthly
-Stock Reports or invalid tender lineage, the site has old data or the image
-holds old code. Run `make clean && make setup && make seed-lokado`.
+rebuilds it. If a count, ledger reconciliation or lineage gate fails, capture
+the output and investigate the image and data; do not reset a shared site
+without preserving the data and backups needed.
 
 For source-mounted development, run `make dev-up` in one terminal, then
 `make dev-config dev-seed dev-check dev-test` in another, and test it with
@@ -60,7 +63,6 @@ Expected output:
 - `{"compatible": true, "issues": [], "missing_controllers": []}`
 - `{"message":"pong"}` from `curl http://localhost:8080/api/method/frappe.ping`
 - backend output: integration and unit runners both finish with `OK`
-  (15 integration + 62 unit tests at this checkpoint)
 - demo and fleet checks: `"ready": true` with an empty `issues` list
 
 Browser automation is a separate host-side gate. Prepare it once, then run it
@@ -83,7 +85,10 @@ Open separate browser profiles/private sessions before the demo, not just tabs
 (tabs in one profile share the login cookie):
 1. **Desk** at `http://localhost:8080` (log in with the persona for the first scene)
 2. **Supplier portal** at `http://localhost:8080/supplier/dashboard` (logged in as `lodwar-supplies@outlook.com`)
-3. **Mailpit** at `http://localhost:8026` (local email capture; no external delivery)
+3. **Mailpit** at `http://localhost:8026` (local email capture; no external delivery).
+   Before sending, verify the default outgoing account actually points to
+   `mailpit:1025`; the seed preserves an existing default. See the
+   [mail preflight](demo/LOKADO-DEMO-TOUR.md#14-communication-and-message-evidence).
 
 ---
 
@@ -113,9 +118,9 @@ Open separate browser profiles/private sessions before the demo, not just tabs
 
 ### Supplier portal users (5 supplier organizations)
 
-| Supplier | Contact email | Password | Used for |
+| Supplier | Portal login | Password | Used for |
 |---|---|---|---|
-| Turkana Construction Ltd | `turkana-construction@outlook.com` | `Ugavi@2024` | Awarded open-tender bidder |
+| Turkana Construction Ltd | `turkana-construction@outlook.com` | `Ugavi@2024` | Prepared receipt-backed PO and contract |
 | Nadirkonyen Women's Group | `nadirkonyen-women@outlook.com` | `Ugavi@2024` | Restricted-tender community supplier |
 | Rift Valley Hardware Ltd | `riftvalley-hardware@outlook.com` | `Ugavi@2024` | Open-tender opportunity |
 | Jopeji Enterprises | `jopeji@outlook.com` | `Ugavi@2024` | Identity isolation demo |
@@ -141,9 +146,10 @@ Open separate browser profiles/private sessions before the demo, not just tabs
 
 ## 3. Scene-by-scene walkthrough
 
-> **Narrative:** LOKADO runs 6 donor-funded programmes across Turkana County with annual
-> procurement of ~KES 240M. The demo follows a real purchase through the system:
-> hygiene kit request -> open tender -> evaluation -> award -> delivery -> stock reporting.
+> **Narrative:** LOKADO works across donor-funded programmes in Turkana County.
+> The demonstration connects a live requisition and tender exercise to
+> separately prepared opening, standstill, receipt and finance evidence.
+> Follow saved links; do not present separate branches as one completed purchase.
 
 ---
 
@@ -167,7 +173,7 @@ rehearsal passes; every future upstream version must pass that rehearsal too."
   department, and donor
 ---
 
-### Scene 1: Purchase Requisition — Alice needs 500 hygiene kits (5 min)
+### Scene 1: Purchase Requisition — Alice needs water tanks (5 min)
 
 ```
 Log out Administrator
@@ -176,19 +182,17 @@ Navigate: Purchase Requisition list -> + New
 ```
 
 **What to show:**
-1. Alice Akol creates a PR for 500 hygiene kits (KES 250,000) for the IOM
-   Women's Empowerment Programme.
-2. Select item "HYGIENE-KIT", quantity 500, rate KES 500, programme
-   "Women's Empowerment", donor "IOM".
-3. Before saving, show the **procurement method** auto-calculates to
-   "Restricted" (200K-499K range).
+1. Follow [Scene 7](demo/LOKADO-DEMO-TOUR.md#scene-7-purchase-requisition-and-approval)
+   to create Alice's IOM WASH request for 12 water tanks at KES 37,500 each.
+2. Select the IOM donor and `Emergency WASH - LOKADO` department.
+3. Save and show the **procurement method** is Restricted for KES 450,000.
 4. Save -> system identifier generates `PR-<DONOR>-<YEAR>-<SEQUENCE>`.
 5. Click **Submit for Approval** -> the displayed DoA chain determines the next role.
 
 **What to say:** "Every purchase starts with a requisition. The system
 automatically determines the procurement method based on your configured
-thresholds. Alice doesn't need to know procurement rules — the system
-applies them. The donor dimension and programme code are mandatory."
+thresholds. The saved donor and department determine the applicable context;
+inspect the displayed budget response rather than assuming funds are available."
 
 **Validation checkpoint:** PR status = `Pending Approval`,
 method = `Restricted Tender`, donor = IOM.
@@ -216,10 +220,9 @@ Log in as: approver2@lokado.org / Ugavi@2024
 4. Only if the displayed chain requires a second step, Paul opens the PR and approves.
 5. Status = `Approved`. Show the approval history with actor, role and timestamp.
 
-**What to say:** "The approval chain enforces LOKADO's Delegation of Authority
-matrix. Every approval is audited — immutable record of who, when, and from
-where. Segregation of Duties prevents the same person from both requesting
-and approving."
+**What to say:** "The displayed Delegation of Authority chain controls the
+required roles. Inspect the saved approval actor, time and remarks.
+The requester cannot approve their own requisition."
 
 **Validation checkpoint:** PR status = `Approved`, with every required step in history.
 Do not promise two approvals for a value/donor whose DoA chain requires only one.
@@ -247,16 +250,21 @@ Navigate to: Field Motorcycles Peace Building USAID
 
 5. Show this is the tender with active standstill period for complaint demo.
 
-**What to say:** "LOKADO has 5 tenders in the system. The IOM warehouse tender
-has 3 bids sealed with RSA-4096 encryption — not even Peter can see bid
-amounts before the opening ceremony."
+**What to say:** "The seeded solar tender has four submitted sealed bids.
+Supplier submission uses a different, still-open opportunity. Publishing
+an opportunity does not itself send supplier invitation emails."
 
-**Validation checkpoint:** 5 tenders visible, 3 bids with "status: Sealed".
+**Validation checkpoint:** use `make demo-index`; solar is closed with four
+Submitted bids and no Bid Opening Record before the live ceremony.
+The current PR **Create Tender** shortcut calls an unavailable method: use
+the manual approved-PR link in
+[Scene 9](demo/LOKADO-DEMO-TOUR.md#scene-9-tender-publication-and-opportunities).
 ---
 
 ### Scene 4: Sealed-Bid Opening Ceremony — 3 officers, 3 keys (8 min)
 
-> This is the security showcase. Use 3 incognito windows for best effect.
+> This is the security showcase. Mary conducts one authorized session; each
+> of the three officers supplies their own code.
 
 ```
 Keep Peter Ekai logged in
@@ -281,13 +289,13 @@ Have the 3 opening officers ready:
 it does not persist separate officer-session approvals. Never describe it as
 three independently signed browser approvals. Mailpit is shared demo
 infrastructure; production delivery must be private to each officer.
-For negative-code trials, request a fresh set of codes before retrying,
-because successfully verified codes are single-use.
+Codes expire; the current flow permits correction of a mistyped code before
+successful opening. Avoid turning the live fixture into a rate-limit test.
 
 **Step E — Decryption:**
 6. All 3 shares verified -> Shamir's 3-of-3 key reconstruction.
 7. All four bid amounts are decrypted and revealed.
-8. BOR signed with hash chain, locked as immutable.
+8. Inspect the generated BOR, its private PDF and recorded opening evidence.
 
 **What to say:** "No single officer can open bids alone. No two officers can.
 You need all three valid codes. The private key is encrypted at rest and its
@@ -296,32 +304,34 @@ record and hash evidence."
 
 **Validation checkpoint:** BOR `outcome = Success`, private PDF attached, four
 bid amounts visible, Tender `Under Evaluation`. The seed does not undo this
-ceremony. Use `make backup` before it; a destructive reset is needed for an exact replay.
+ceremony. Use `make backup-demo` beforehand and `make restore-demo` to return
+to that snapshot after the rehearsal.
 
 ---
 
-### Scene 5: Bid Evaluation -> Award -> Contract (7 min)
+### Scene 5: Evaluation -> Standstill -> Contract evidence (7 min)
 
 ```
 Log in as: procurement@lokado.org / Ugavi@2024
 ```
 
-1. Navigate to `Evaluation Committee` for IOM Warehouse.
-2. Show: Chairperson, Secretary, 3 members, COI declarations submitted.
-3. Show `Bid Evaluation Summary` — weighted scoring (technical 60%, financial 40%).
-4. System recommends Turkana Construction Ltd (KES 1,150,000, score 82/100).
-5. This warehouse tender is already awarded: show its existing Purchase Order
-   and contract. For a fresh award, first complete evaluation, COI declarations
-   and a resolved `Award Confirmed` standstill on the newly opened tender.
-6. Open `Ugavi Contract` -> 4 milestones, 10% retention, KES 50K bond.
-7. Navigate to `Standstill Period` — 14-day challenge window.
-8. Show `Tender Complaint` feature.
+1. Follow [Scene 12](demo/LOKADO-DEMO-TOUR.md#scene-12-evaluation-and-award-decision)
+   for Livestock Galla Goats USAID: three COI declarations, nine individual
+   scores, chair-approved minutes and Nadirkonyen's KES 365,000 recommendation.
+2. Start the genuine standstill if it is still available. Show the default
+   14-day challenge window and explain the complaint gate.
+3. Stop before award: confirmation requires the period to end and open
+   complaints to be resolved. Do not edit the deadline.
+4. For contract evidence, follow the separate receipt-backed Turkana
+   Construction PO and its Ugavi Contract. Inspect its actual milestone,
+   agreement, retention and bond fields.
 
-**What to say:** "The award creates a Purchase Order, a Contract, and updates
-the audit trail — all in one transaction. The standstill period gives
-unsuccessful bidders a formal challenge window."
+**What to say:** "After a genuinely confirmed standstill, the award action can
+create a Purchase Order and contract. Today we show the gate and a separate
+prepared contract rather than inventing a same-day award."
 
-**Validation checkpoint:** Awarded bid, Purchase Order, Contract with 4 milestones.
+**Validation checkpoint:** prepared recommendation and a real active standstill;
+the separately linked PO/contract is not proof of this tender's award.
 
 ---
 
@@ -341,15 +351,22 @@ Or navigate to: http://localhost:8080/supplier/dashboard
    sealed bid form with encrypted amount.
 6. **Complaints** — tender complaint form for Field Motorcycles (active
    standstill window).
-7. **Awards & Contracts** — awarded IOM Warehouse tender, contract details.
+7. **Awards & Contracts** — actual supplier-scoped records; the prepared
+   contract belongs to a separate receipt-backed PO and Awards may be empty.
 8. **Deliveries** — Purchase Order with Acknowledge button, receipt progress
    from ERPNext.
 9. **Evaluations** — post-receipt performance scores.
 10. **Notifications** — submission receipts, award notifications.
 
-**What to say:** "Each supplier gets a dedicated dashboard without exposing
-other suppliers' data. Identity isolation is enforced at the controller level
-— a supplier can never see another supplier's bids, contracts, or evaluations."
+**What to say:** "The portal resolves the signed-in supplier and scopes its
+records accordingly. Compare two demo accounts without claiming this single
+observation proves every possible access path is secure."
+
+**Known limitation:** the supplier invoice form currently fails the native
+invoice mapper's create-permission check for the seeded website user. Show a
+prepared invoice; do not broaden Desk permissions to work around it. A
+disabled Supplier was also able to submit an open-tender bid in a rollback-only
+probe; do not claim suspension currently blocks every bid.
 ---
 
 ### Scene 7: Logistics & Donor Stock Segregation (6 min)
@@ -360,17 +377,22 @@ Log in as: logistics@lokado.org / Ugavi@2024
 Navigate: Ugavi Logistics -> Donor Warehouse list
 ```
 
-1. 8 donor-warehouse links across the six donors.
+1. Donor-warehouse links across six donors.
 2. Monthly Stock Report for IOM — opening/closing balance, consumption, value.
-3. Inter Donor Transfer — Japan -> IOM approved transfer.
-4. Stock Ledger filtered by donor — no cross-donor consumption.
-5. Scheduled monthly report generation and email dispatch.
+3. Inter Donor Transfer — inspect the prepared IOM -> CONCERN completed
+   transfer and its linked stock entry.
+4. Filter the native Stock Ledger by the mapped warehouse and item; compare
+   the prepared donor-book snapshot.
+5. Scheduled report email depends on recipients and workers. The current
+   Monthly Stock Report Desk form has no supported Generate action.
 
-**What to say:** "Every item is tagged by donor. Stock from IOM cannot be
-consumed for a USAID programme without an approved inter-donor transfer."
+**What to say:** "The donor book is tied to its mapped warehouse. Show the
+governed inter-donor transfer and its stock posting rather than claiming that
+every item master is itself donor-specific."
 
-**Validation checkpoint:** 8 donor-warehouse links, 6 stock reports and 6
-transfers (2 Completed, 2 Approved, 1 Pending Approval, 1 Rejected).
+**Validation checkpoint:** six donor books and prepared report/transfer
+evidence; use the [full scene](demo/LOKADO-DEMO-TOUR.md#scene-14-receipt-dispatch-stock-ledger-and-donor-books)
+for actual links and current balances.
 
 ---
 
@@ -382,28 +404,28 @@ Log in as: fleet@lokado.org / Ugavi@2024
 Navigate: Ugavi Fleet -> Fleet Dashboard
 ```
 
-1. Fleet Dashboard: 4 vehicles, utilization chart, service schedule.
-2. Vehicle Allocations — 4 active allocations.
-3. Fuel Log — 8 submitted entries linked to fuel purchases.
-4. Trip Log — 8 submitted trips with odometer readings.
-5. Spare Parts Issue — parts issued to vehicles.
+1. Find the IOM vehicle `KDM 271I` and its active allocation.
+2. Follow its submitted purchase receipt to fuel and spare reconciliation.
+3. Inspect the linked Fuel Log, Spare Parts Issue and Trip Log records.
+4. Open the prepared donor Fleet Utilization Report: its range is about
+   60 days, not one calendar month. The current form has no Generate button.
 
 ```
 Log out and log in as: assets@lokado.org / Ugavi@2024
 Navigate: Ugavi Assets -> Asset Register
 ```
 
-6. Asset Register — 8 assets with donor and QR evidence.
-7. Asset Movement records — custody tracking.
-8. Asset Verification — scheduled reminders (every 180 days).
+5. Asset Register — inspect donor, current custodian, location and condition.
+6. Asset Movement and Verification — inspect prepared completed evidence.
+7. Asset Disposal — inspect its independent authorizer and recorded outcome.
 
-**What to say:** "LOKADO's fleet tracks every trip, fuel purchase, and spare
-part issue. Assets are QR-tagged and tracked through movement and verification
-cycles — essential for donor audit requirements."
+**What to say:** "These prepared records connect fleet consumption to purchase
+sources and track asset custody. They do not prove a generated monthly fleet
+report, live reminder delivery or native ERPNext asset depreciation."
 
-**Validation checkpoint:** 4 vehicles, 4 allocations, 8 fuel logs, 8 spare
-issues, 8 trips, 4 donor fleet reports, 8 asset verifications, 2 movements and
-1 independently authorized disposal.
+**Validation checkpoint:** follow the exact source records and the
+[asset](demo/LOKADO-DEMO-TOUR.md#scene-17-asset-management) and
+[fleet](demo/LOKADO-DEMO-TOUR.md#scene-18-fleet-management) scene boundaries.
 
 ---
 
@@ -415,16 +437,17 @@ Log in as: auditor@lokado.org / Ugavi@2024
 Navigate: Governance module
 ```
 
-1. Audit Log — hash chain on a tender document.
+1. Audit Log — compare actual session events with illustrative seed entries.
 2. Delegation of Authority — 5-tier matrix (amount x department x donor).
-3. Segregation of Duties — 3 enforced separation rules.
+3. Segregation of Duties — inspect each rule's actual enforcement; a
+   `Warning Only` rule is not a block.
 4. Waiver — threshold bypass with all approvals logged.
 
-**What to say:** "Every state change creates an audit log entry. Critical
-documents use a hash chain — any tampering breaks the chain and is instantly
-detectable. SoD is enforced at the server level, not just the UI."
+**What to say:** "Inspect the recorded actor, event and outcome, and demonstrate
+the requester/approver separation on the live PR. An illustrative audit row
+does not prove complete coverage or independently verify every hash chain."
 
-**Validation checkpoint:** 5 DoA rules, 3 SoD rules, 1 Waiver, hash chain.
+**Validation checkpoint:** actual applicable DoA, SoD, waiver and audit records.
 
 ---
 
@@ -436,23 +459,25 @@ Log in as: finance@lokado.org / Ugavi@2024
 Navigate: Finance -> Three-Way Match
 ```
 
-1. Open the Three-Way Match list: 6 records, one per receipt-linked supplier
-   invoice (e.g. `LOK-INV-TCL-0412`, Turkana Construction → IOM Kakuma).
+1. Open the Three-Way Match for a prepared receipt-linked invoice, e.g.
+   `LOK-INV-TCL-0412`, Turkana Construction -> IOM Kakuma.
 2. Drill into the linked Purchase Order → Purchase Receipt → Purchase Invoice
    and show the PO/GRN/Invoice quantity and rate comparison.
-3. Payments: 5 submitted Payment Entries (full and partial). Lodwar General
+3. Payments: inspect submitted full and partial Payment Entries. Lodwar General
    Supplies (`LOK-INV-LGS-1190`) is deliberately left unpaid to show an open
-   payable; every payment passed the completed-supplier-evaluation gate.
-4. Landed Cost Vouchers: 3 submitted, spreading freight onto receipt valuation.
-5. Budgets: 6 submitted donor budgets (`Budget Against = Donor Profile`), e.g.
+   payable; inspect the linked purchase evaluations for the shown entries.
+4. Landed Cost Vouchers: inspect freight allocated to a receipt's valuation.
+5. Budgets: inspect donor budgets (`Budget Against = Donor Profile`), e.g.
    IOM Freight KES 1,150,000, CONCERN Admin KES 1,200,000, with Warn actions.
-6. Budget Encumbrance — every submitted Purchase Order commits funds against
-   its donor at PO submission.
+6. Budget Encumbrance is conditional on a submitted PO having `ugavi_budget`;
+   the inspected seed contains no encumbrance rows.
 
 **What to say:** "Invoice submission creates PO/GRN/invoice matching evidence
 and flags disputes for review. Finance must review it; this is not a claim of
-an automatic mismatch-payment block. A separate completed-supplier-evaluation
-gate is enforced on payments. Encumbrance is created at PO submission."
+an automatic mismatch-payment block. A separate evaluation gate checks
+supplier Pay entries that reference Purchase Invoices; do not generalize it
+to unallocated advances. Do not claim a budget commitment where no encumbrance
+record was created."
 ---
 
 ### Scene 11: Finale — Upgrade Safety & Health Check (3 min)
@@ -462,11 +487,8 @@ Back to terminal
 ```
 
 ```bash
-curl -s http://localhost:8080/api/method/frappe.ping
-# -> {"message":"pong"}
-
 make demo-check
-# -> All users valid, all passwords match, all record counts pass
+# -> Review ready/issue output and ping result
 ```
 
 **What to say:** "Ugavi has zero ERPNext core patches. We use hooks, custom
@@ -479,12 +501,13 @@ still requires compatibility review, migration tests and a backup/restore rehear
 
 **Already implemented for MVP2:**
 1. Standstill Period + Tender Complaints — supplier challenge workflow.
-2. Fleet Maintenance Schedule — upcoming service dates, cost per km tracking.
-3. Asset QR Verification — print format with QR code for field verification.
+2. Fleet source records and a prepared date-range report; a calendar-month
+   report and cost-per-km analytics are not demonstrated.
+3. Asset custody and verification records; QR scanning is not rehearsed.
 4. Contract milestones, retention/bond tracking and completion checks;
    demonstrate only the verified lifecycle, not an external cash release.
-5. Monthly donor stock reports and app-owned report generation; client-specific
-   narrative layouts still need approved templates.
+5. Prepared monthly donor stock-report snapshots; the current Desk form has no
+   Generate action, and client-specific layouts still need approved templates.
 
 **Planned for MVP2 (awaiting external inputs):**
 6. eTIMS integration (KRA registration required)
@@ -500,7 +523,7 @@ still requires compatibility review, migration tests and a backup/restore rehear
 | Time | Scene | Who logs in |
 |---|---|---|
 | 0:00 | Scene 4: Sealed-Bid Opening | `procurement@lokado.org` + 3 opening officers |
-| 8:00 | Scene 5: Evaluation -> Award | `procurement@lokado.org` |
+| 8:00 | Scene 5: Evaluation -> Standstill gate | `procurement@lokado.org` |
 | 12:00 | Scene 6: Supplier Portal | `lodwar-supplies@outlook.com` |
 | 14:00 | Scene 11: Health Check + Upgrade | Terminal |
 | 15:00 | Done | — |
@@ -511,83 +534,62 @@ still requires compatibility review, migration tests and a backup/restore rehear
 
 | Problem | Fix |
 |---|---|
-| "Backend not ready" | `docker compose logs --tail=50 backend`; wait for bench start |
+| "Backend not ready" | Wait for startup, then run `make demo-check`; use `make dev-logs` for the development stack |
 | Configurator name conflict | `make upgrade-check` (handles it automatically) |
 | Demo users don't exist | `make seed-lokado` (idempotent, safe to re-run) |
 | Wrong password | `make seed-lokado` restores `Ugavi@2024` |
-| OTP not in Mailpit | Go to `http://localhost:8026`; emails take ~2 seconds; refresh |
+| OTP not in Mailpit | Check the default outgoing account is `mailpit:1025`, the officer recipient and Email Queue; then refresh Mailpit |
 | SSL / HTTPS error | Use `http://` not `https://` (local development) |
 | Browser shows old data | Hard refresh (Cmd+Shift+R) or clear cache |
-| Full reset needed | Take `make backup`, then `make reset-demo` (reinstalls the site database; destructive, does not delete Docker volumes) |
+| Fresh disposable site needed | Preserve required data/backups outside the workspace; `make clean && make setup && make seed-lokado` is destructive |
 ---
 
 ## 6. Validation Checklist (Presenter)
 
 - [ ] All 16 staff users login with `Ugavi@2024`
 - [ ] All 5 supplier portal users login with `Ugavi@2024`
-- [ ] PR created with auto-determined procurement method (Restricted for KES 250K)
-- [ ] 2-level approval chain completes
-- [ ] 5 tenders visible (2 Open, 2 Restricted, 1 RFQ)
-- [ ] 15 bids seeded (3 on IOM Warehouse)
+- [ ] PR created with auto-determined procurement method (Restricted for KES 450K)
+- [ ] Actual required approval chain completes
+- [ ] Solar tender has four submitted sealed bids before opening
 - [ ] Bid Opening Record: 3-of-3 officers, OTPs, decryption, hash chain
-- [ ] Award creates Purchase Order + Contract in one transaction
-- [ ] Contract shows 4 milestones, 10% retention, performance bond
+- [ ] Livestock recommendation and real standstill shown; award remains gated
+- [ ] Separate prepared PO and contract checked for their saved milestone,
+      agreement and applicable retention/bond fields
 - [ ] Supplier portal: journey readiness + next-best-action
-- [ ] Supplier portal: all sections functional
+- [ ] Portal invoice permission limitation disclosed
 - [ ] Standstill period active for Field Motorcycles tender
 - [ ] Complaint intake working (supplier submits, procurement reviews)
 - [ ] 6 donor books, 6 stock reports, and approved/pending/rejected transfer examples
-- [ ] Fleet: 4 vehicles, 4 allocations, and 8 submitted fuel, spare, and trip records
-- [ ] Assets: 8 assets, 8 verifications, 2 completed movements, and 1 authorized disposal
-- [ ] Governance: DoA, SoD, Waiver, Audit Log with hash chain
-- [ ] Three-way match: PO matches GRN and Invoice within tolerance
+- [ ] Fleet: purchase-backed IOM fuel, spares and trips plus prepared date-range report
+- [ ] Assets: prepared custody, verification, movement and authorized disposal
+- [ ] Governance: applicable DoA, SoD, waiver and actual audit events
+- [ ] Three-way match: inspect actual PO, receipt and invoice comparison
 - [ ] `make demo-check` passes with `"ready": true`
 - [ ] `make fleet-check` passes with `"ready": true`
 - [ ] Playwright prerequisites are installed and `make e2e` passes, or the
       browser gate is explicitly recorded as not executed
-- [ ] Mailpit shows OTP emails, notifications, report dispatches
-- [ ] `curl http://localhost:8080/api/method/frappe.ping` -> `{"message":"pong"}`
+- [ ] Mailpit shows opening OTP emails after the local relay is verified;
+      other notifications or report emails are claimed only when observed
+- [ ] `make demo-check` includes a successful `{"message":"pong"}` health response
 
 ---
 
 ## 7. What's Seeded (LOKADO Dataset)
 
-| Category | Count | Detail |
+The following is the expanded seed baseline, not a promise that records still
+have the same state after a rehearsal. Run `make demo-index` and the gates.
+
+| Category | Baseline | Detail |
 |---|---|---|
-| Users | 14 staff + 5 portal | All use password `Ugavi@2024` |
-| Donors | 6 | IOM, USAID, Concern, Japan, EU, Own Funds |
-| Suppliers | 18 LOKADO scenarios | 15 prequalified, 2 expired, 1 suspended |
-| Items | 17 | Stock, fleet spare and service items |
-| Warehouses | 13 total | Includes ERPNext defaults/groups; 8 donor-warehouse links |
-| Purchase Requisitions | 10 | Direct, restricted, and open methods across Draft, Pending Approval, Approved, and Rejected |
-| Tenders | 8 | Open, Restricted and RFQ methods; value ladder 150K-800K |
-| Bids | 26 | Distributed across tenders; 3 sealed on IOM Warehouse |
-| Bid Opening Record | 0 seeded | Created live only by the verified 3-officer OTP ceremony |
-| Evaluation Committee | 1 | Chairperson, Secretary, 3 members, COI declarations |
-| Bid Evaluation Summary | 1 | Turkana Construction Ltd recommended |
-| Purchase Orders / Contracts | 15 / 15 | 10 POs submitted, 5 draft; every submitted PO has its automatically linked Ugavi Contract |
-| Purchase Receipts | 10 | 6 PO-backed donor-warehouse receipts + 4 fleet procurement receipts, all submitted |
-| Supplier Evaluations | 12 | All Completed (0–10 scale), receipt- or invoice-linked |
-| Standstill Period | 1 | Active 14-day window on Field Motorcycles tender |
-| Donor Warehouse links | 8 | Each donor mapped to its physical warehouses |
-| Stock Reports | 6 | Current-month, real-ledger quantities and posted values; every donor book (including Own Funds at Oropoi) has rows, gate-reconciled to the Stock Ledger |
-| Inter Donor Transfers | 6 | 2 Completed (with linked Stock Entry), 2 Approved, 1 Pending, 1 Rejected |
-| Stock Entries | 22 | Submitted receipts, issues and transfer-generated movements in all six donor books; 36 tracked batches |
-| Quality Inspections | 8 | Submitted incoming inspections |
-| Material Requests | 5 | 3 submitted, 2 draft; reorder levels on 14 item/warehouse rows |
-| Purchase Invoices | 8 | 6 receipt-linked (→ 6 Three-Way Match) + 2 direct service invoices |
-| Payment Entries | 5 | Full and partial payments; one invoice left unpaid |
-| Landed Cost Vouchers | 3 | Submitted against logistics receipts |
-| Budgets | 6 | Submitted donor budgets against Donor Profile |
-| Vehicles | 4 | ERPNext Vehicles with 4 active donor allocations |
-| Fleet reconciliations | 8 | Fully allocated fuel/spare receipt rows |
-| Fuel / spare / trip records | 8 each | Submitted evidence linked to purchase and stock sources |
-| Fleet reports | 4 | Donor-isolated USAID, IOM, Concern, and EU snapshots |
-| Assets | 8 | 8 verifications, 2 completed movements, and 1 independently authorized disposal |
-| DoA Rules | 5 | Amount x Department x Donor matrix |
-| SoD Rules | 3 | Requester!=Approver, Opener!=Evaluator, Receiver!=Payer |
-| Waivers | 1 | Threshold bypass with approval chain |
-| Audit Logs | Multiple | Hash chain on critical documents |
+| Users / donors / suppliers | 16 staff + 5 portal / 6 / 30 | Additional supplier masters do not imply additional logins |
+| Purchase Requisitions / tenders / submitted bids | 25 / 20 / 46 | Status and eligibility differ; solar is reserved for live opening |
+| Opening / evaluation evidence | 2 seeded BORs, 2 approved recommendations | Livestock can start standstill; Motorcycles has a time-limited complaint window |
+| Submitted purchase histories | 24 logistics + 8 fleet receipts | Separate from the not-yet-awarded live tender scenarios |
+| Invoices / payments / completed evaluations | 22 receipt-linked + 4 service / 19 / 36 | Includes full, partial and unpaid examples |
+| Stock / donor books | 53 Stock Entries, 6 reports, 6 completed transfers | Reports are ledger-derived snapshots |
+| Vehicles / fuel / spares / trips | 8 / 16 / 16 / 16 | Six prepared donor reports span about 60 days |
+| Assets | 16 registers and verifications, 4 completed movements, 1 disposal | Ugavi custody evidence, not proof of ERPNext depreciation |
+| Finance setup | 8 landed-cost vouchers, 10 budgets | Budgets warn; the inspected seed has no encumbrance rows |
 ---
 
 ## 8. Under the Hood — What Makes Ugavi Different
@@ -596,14 +598,14 @@ still requires compatibility review, migration tests and a backup/restore rehear
 |---|---|---|
 | Procurement thresholds | Configurable rules engine; effective dates, history, donor/category specificity | PR/PO creation |
 | Sealed bids | RSA-4096 + AES-256-GCM envelope, Shamir's 3-of-3 key splitting, 6-digit OTP with rate limiting | — |
-| Bid opening | 3 distinct officers, COI check, immutable audit log, signed BOR PDF with hash chain | — |
+| Bid opening | 3 distinct officers, codes in one authorized session, generated BOR and private PDF | — |
 | Donor segregation | Donor-warehouse links, inter-donor transfer approval, donor-specific stock ledgers | Stock ledger, warehouse |
 | Evaluation | Committee with chairperson/secretary/members, weighted scoring, COI declarations | — |
 | Standstill | 14-day challenge window, supplier complaint intake, procurement review | — |
 | Governance | DoA matrix, SoD server-enforced, hash chain audit, waiver logging | Approvals, user permissions |
-| Supplier portal | Identity-bound dashboard, private file uploads, encrypted bid submission, PO acknowledgement | Supplier, PO, PR, Notification |
+| Supplier portal | Identity-bound dashboard, private files, encrypted bids and PO acknowledgement; invoice action currently blocked | Supplier, Purchase Order, Purchase Receipt, Notification Log |
 | Fleet | Vehicle allocation, trip/fuel/spares tracking, service schedule, utilization reports | Vehicle master |
-| Assets | QR-tagged register, movement/verification/disposal tracking, donor flagging | Asset master |
+| Assets | App-owned register, movement/verification/disposal tracking, donor flagging | Native ERPNext Asset is a separate lifecycle |
 | Upgrade safety | Zero ERPNext core patches, hooks-only customization, upgrade dry-run CI | Full ERPNext v16 |
 
 ---
@@ -618,4 +620,4 @@ still requires compatibility review, migration tests and a backup/restore rehear
 
 ---
 
-**Last updated:** 2026-10-23 | **Ugavi v0.1.0** | **For LOKADO demo only**
+**Ugavi v0.1.0** | **For LOKADO demo only**

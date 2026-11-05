@@ -2,11 +2,15 @@
 
 > **Client:** Lotus Kenya Action for Development Organization (LOKADO)  
 > **Tour revised:** 2026-11-05 against the expanded [LOKADO seed](../../ugavi/scripts/seed_lokado.py).
-> **Full workshop:** 90-120 minutes including live handoffs. **Executive tour:** 30 minutes using prepared evidence.
+> **Full workshop:** allow 120-150 minutes for the complete discussion and handoffs.
+> **Executive tour:** 30 minutes using prepared evidence.
 
 This is a presenter runbook, not just a feature list. Each scene names the
 business need, actor, exact seed record or input, action, expected evidence,
 and stopping point. Keep this document open beside the application.
+Sections 1-4 are preparation, identities, handoffs and coverage; the business
+scenes retain their existing numbers **5-19**. The shorter guide has its own
+independent scene numbering.
 
 **Evidence boundary:** on 2026-11-05 the demo site `ugavi.localhost` was
 rebuilt from scratch with `make clean && make setup && make seed-lokado`. The
@@ -57,6 +61,8 @@ make backup-demo              # writes backups/lokado-demo/
 
 | Situation | Command |
 |-----------|---------|
+| List available Make targets | `make help` |
+| Build the image without setting up the site | `make build` |
 | Code changed, keep data | `make setup && make seed-lokado` |
 | Re-run seed only (idempotent) | `make seed-lokado` |
 | Undo a rehearsal (opened tenders, receipts, etc.) | `make restore-demo` |
@@ -67,9 +73,11 @@ make backup-demo              # writes backups/lokado-demo/
 
 `make setup` always rebuilds the image, so it is how new code reaches port 8080.
 `make seed-lokado`, `make demo-check` and `make fleet-check` run the **baked**
-image code. A failure such as `expected at least 40`, unreconciled Monthly Stock
-Reports or invalid tender lineage means an old image or data from an older seed.
-Fix it with `make clean && make setup && make seed-lokado`.
+image code. If a count, ledger reconciliation or lineage check fails, capture
+the output and investigate the image and data. A fresh seed may be appropriate
+on a disposable demo site, but `make clean && make setup && make seed-lokado`
+destroys data **and backups**: copy anything needed elsewhere first and do not
+use a reset to hide a reproducible defect.
 
 **Development stack (mounted source, port 8000)**
 
@@ -112,9 +120,10 @@ See the [complete Make reference](../../README.md#makefile-reference) and
 
 - [ ] Open `http://ugavi.localhost:8000` (development) or
       `http://ugavi.localhost:8080` (image rehearsal), then `/login`.
-- [ ] Open Mailpit at `http://localhost:8026` (dev-only mail catcher; the seed
-      configures the **LOKADO Demo Mailpit** outgoing account). Opening codes
-      arrive there as `Bid Opening OTP - <tender>`.
+- [ ] Follow the [mail preflight](#14-communication-and-message-evidence).
+      Verify that the site's actual default outgoing Email Account points to
+      local `mailpit:1025`, then open `http://localhost:8026`. The seed
+      respects an existing default account; it does not force Mailpit.
 - [ ] Run `make demo-index` and paste the IDs into the
       [record worksheet](#33-record-finding-worksheet).
 - [ ] Confirm the demo and fleet gates report `ready: true` and empty issues.
@@ -128,10 +137,12 @@ See the [complete Make reference](../../README.md#makefile-reference) and
 - [ ] Reserve the solar-pump tender for the live opening; do not consume it
       in a rehearsal on the same site.
 - [ ] Confirm a still-open tender with no existing bid for the chosen supplier.
+      Check the tender creation and prequalification UI limitations in
+      Scenes 8-9 before committing to a live handoff.
 - [ ] For complaints, confirm the Motorcycles Standstill Period is **Active**
-      and its end date is still in the future (`make demo-index`). The window
-      was opened by the real `start_standstill` action at seed time; reseed with
-      `make clean && make setup && make seed-lokado` if it has expired.
+      and its end date is still in the future (`make demo-index`). If expired,
+      show prepared evidence or arrange a fresh disposable site; never change
+      dates or reset the current site without an appropriate backup.
 - [ ] Confirm the actual approval chain and each actor's required role.
 - [ ] Rehearse action availability. Some app controllers expose server
       methods without a dedicated Desk button; use prepared evidence if the
@@ -143,7 +154,10 @@ See the [complete Make reference](../../README.md#makefile-reference) and
 `make reset-lokado` destroy the current site data. Run `make backup-demo` first;
 `make restore-demo` returns to that snapshot.
 Re-seeding restores demo passwords and adds fixtures, but does not undo
-completed opening ceremonies or business transactions.
+completed opening ceremonies or business transactions. `make backup-demo`
+replaces the previous `backups/lokado-demo/` snapshot; copy any older snapshot
+you need to a safe location first. `make clean` also deletes the local
+`backups/` contents, so preserve required backups elsewhere before cleaning.
 
 ### 1.3 Verified expanded dataset and intentional live boundaries
 
@@ -165,6 +179,45 @@ Do not create manual BORs, force award statuses, or call historical logistics
 POs tender awards. Solar stays sealed for Scene 11. The final **Award Tender**
 button only appears after the standstill has ended and been confirmed, so a
 same-day demo shows the award gate rather than a fabricated award.
+
+### 1.4 Communication and message evidence
+
+Before any live email, sign in with an administrator's configuration access and
+open **Email Account** in Desk. Inspect the **default outgoing** account,
+including its SMTP host and port. Continue with live messages only when it is
+the intended local Mailpit relay (`mailpit`, port `1025`); if an existing
+default points elsewhere, stop and obtain the operator's approval before
+changing it. The seed creates a demo account only when it does not need to
+preserve an existing default. Open Mailpit at `http://localhost:8026`.
+
+| Scene / event | Expected channel and evidence | Do not infer |
+|---|---|---|
+| 5-7: organisation, settings, PR and approval | Document status/history; configured notification rules may create messages | A rule exists or an approval occurred therefore email was delivered |
+| 8: profile/prequalification | Supplier-scoped portal **Notifications** when an event creates a Notification Log | The portal login address automatically populates the Supplier's email |
+| 9: tender publication | Eligible opportunity appears in the portal after refresh | Publishing automatically sends invitation emails |
+| 10: bid and clarification | Bid receipt, submitted question and, where generated, portal notifications | Portal notifications are necessarily emails, or the current answer UI records a responder and time correctly |
+| 11: opening codes | Three `Bid Opening OTP - <tender ID>` emails, one to each assigned officer; development SMS stubs may create separate emails | The stub is real SMS, or the shared Mailpit inbox is a production-private channel |
+| 12: start standstill | Portal notices for linked supplier users; email only for bidders with a populated `Supplier.email_id` | Every bidder receives an email. In the inspected fresh seed those Supplier email fields are blank |
+| 13, 16, 19: acknowledgement, scorecard, complaint | Inspect the relevant document and the supplier's portal notification feed after the event | An award has happened or an external message was sent merely because a journey panel exists |
+| 14-15, 17-18: stock, finance, assets and fleet | Prepared documents, reports and history; scheduled messages require configured recipients and running workers | Snapshots or seeded notification rules prove a scheduled email/PDF/Excel was sent |
+
+For the optional standstill email, use the reserved `.invalid` address in
+[Scene 12](#scene-12-evaluation-and-award-decision), **after** verifying the
+local relay. Check the recipient, subject and state in **Email Queue** with an
+authorized account, and the captured message in Mailpit. A queue marked Sent
+means the configured relay accepted it; neither that status nor a Mailpit
+capture proves external delivery. If no message arrives, record the missing
+recipient, queue error or worker/relay problem rather than claiming success.
+The previously hand-composed procurement sample, if still in Mailpit, is not
+a tender-generated notice.
+
+Upstream guidance: [Email Account](https://docs.frappe.io/erpnext/email-account),
+[Notifications](https://docs.frappe.io/erpnext/notifications),
+[background jobs](https://docs.frappe.io/framework/user/en/api/background_jobs)
+and [scheduler diagnosis](https://docs.frappe.io/framework/user/en/bench/guides/diagnosing-the-scheduler).
+The upstream documentation links in this guide are general guidance and may
+change independently of the installed versions; verify behavior against the
+site's pinned Frappe/ERPNext release and upgrade rehearsal.
 
 ## 2. Demo credentials and identities
 
@@ -287,12 +340,12 @@ award-generated POs: the logistics PO title starts `LOKADO-GRN-`.
 | 1a. Prequalification and restricted/open thresholds | 6, 8, 9 | Current category record; expiry; eligibility and value bands |
 | 1b. Send/receive bids; three system codes | 10, 11 | Supplier receipt; sealed bids; three-code ceremony; generated BOR |
 | 1c. Programme PR, approval, system code | 7 | Alice-owned PR ID; action history; approved before tender |
-| 1d. Selected-supplier PO and system code | 12, 13 | Award evidence; submitted native PO ID and source links |
+| 1d. Selected-supplier PO and system code | 12, 13 | Award gate plus a separate prepared submitted native PO ID and source links |
 | 1e. Supplier performance after purchase | 16 | Receipt/direct-invoice-linked Completed scorecard |
 | 1f. Contract management | 13 | Issued PO link; activation evidence; milestones; completion checks |
 | 2a. Stock receipt/dispatch, monthly ledger, donor books | 14 | Submitted stock postings; filtered native ledger; donor report |
-| 2b. Asset register, movement and condition | 17 | Asset tag, current custody/condition, controlled movement/verification |
-| 2c. Fleet allocation, purchase-linked fuel/spares, monthly report | 18 | Vehicle allocation; exact purchase source; fuel/spare/trip report |
+| 2b. Asset register, movement and condition | 17 | Asset tag and prepared custody/condition, movement and verification |
+| 2c. Fleet allocation, purchase-linked fuel/spares, monthly report | 18 | Vehicle allocation, exact purchase sources and prepared date-range report; calendar-month generation not shown |
 | Crucial extension: finance and landed cost | 15 | PO/GRN/invoice match; partial/full/unpaid examples; valuation adjustments |
 | Crucial extension: governance and supplier redress | 6, 12, 19 | Actual approvals, COI, standstill, complaint panel, event evidence |
 | Crucial extension: isolation and maintainability | 8, 14, 18, closing | Identity/donor boundaries; native ERPNext records; upgrade gate |
@@ -300,6 +353,35 @@ award-generated POs: the logistics PO title starts `LOKADO-GRN-`.
 Client-supplied PR/PO/prequalification/evaluation/ledger templates remain a
 sign-off dependency. Functional fields and available print formats do not
 constitute approved client layouts.
+
+### 4.1 Functional-plus coverage and acceptance boundaries
+
+The identifiers below refer to the [requirements inventory](../requirements/REQUIREMENTS.md);
+the [RTM](../traceability/RTM.md) records implementation evidence. **Live**
+means the scene offers an action subject to its prerequisites; **prepared**
+means inspect saved evidence; **not demonstrated** means this tour is not
+acceptance proof. A successful `make demo-check` is not a substitute for
+testing every requirement or production configuration.
+
+| Requirement area | Scene and evidence | Boundaries / follow-up |
+|---|---|---|
+| PR1-PR6: thresholds, donor/category rules, waivers, DoA | 6-7: prepared rules and live approval | Inspect the applicable rule and waiver; one example does not exercise every donor/category combination. |
+| PR7-PR10: budget check, PO dimensions, match, commitment | 7, 13, 15: actual budget response, linked PO and match | The seed budgets warn; do not infer available funds. An encumbrance requires `ugavi_budget` on the submitted PO; the inspected seed has none. |
+| TN1-TN6: tender lifecycle, eligibility, deadline and submission | 8-11: opportunity, receipt, deadline and opening | Addenda/deadline extension (TN4) is not rehearsed; clarification answer metadata has a UI gap, and a live award/closure waits for genuine standstill completion. |
+| TN7-TN14: sealing, three officers, codes and opening record | 11: live code ceremony and generated BOR | Codes are entered in one authorized session; inspect the record rather than claiming that every admin/DB exposure path, cryptographic property or hash chain has been independently audited. |
+| EV1-EV7: committee, scoring, COI, recommendation, standstill, PO | 12-13: prepared committee evidence and live standstill | Award-generated PO/contract is conditional on a genuinely ended, confirmed standstill; the prepared PO belongs to a separate branch. |
+| SP1-SP6: supplier eligibility, documents, performance, portal | 8, 10, 13, 16, 19 | Show actual category, private file and completed scorecard. A disabled supplier was able to submit an open-tender bid in a rollback-only probe; suspension is not an effective demonstrated bid block. Renewal is not exercised. Portal invoice submission fails the native mapper's permission check for the seeded supplier. |
+| CT1-CT4: milestones/variations, retention/bond, expiry, repository | 13: prepared contract and agreement | Variation approval and an actual expiry-alert delivery are not demonstrated; inspect populated bond/retention fields instead of asserting them for every contract. |
+| LO1-LO8: donor warehouses, batches, reorder, transfer and books | 14: prepared receipts, ledger, books, transfer; optional issue | The inspected seed has no submitted Stock Reconciliation. Monthly reports are snapshots; live generation and scheduled PDF/Excel email are not demonstrated. |
+| AS1-AS7: depreciation, QR, custody, maintenance, donor, disposal, verification | 17: prepared register, movement, verification and disposal | Ugavi's register is not proof of native ERPNext asset capitalization/depreciation. QR scanning and maintenance schedules are not rehearsed. |
+| FL1-FL6: vehicle/driver, allocation, purchase-backed consumption, alerts and reports | 18: prepared IOM vehicle, sources and approximately 60-day snapshot | Insurance/license alerts and cost-per-km analytics are not demonstrated; a calendar-month fleet report has not been generated through the current Desk UI. |
+| GV1-GV12: separation, access, permissions, audit, signatures and authentication | 6-8, 11-12, 19: selected roles, identity scope and event evidence | A walkthrough does not certify complete field-level/donor isolation, every audit transition, e-signatures, 2FA, password policy or SSO. |
+| FI1-FI7: accounting, dimensions, taxes, KRA, eTIMS and SMS | 5, 13-15 and the communication preflight: KES documents, donor link, payment and local SMS stub | Inspect actual accounting/tax fields; multi-currency, KRA validation, eTIMS, external payment and real SMS are not live demonstrations. |
+| NT1-NT7: notifications and dashboards | 1.4, 11-12, 14, 17-19: specific messages and prepared reports | Recipient configuration and actual delivery must be checked; cycle-time, turnover, risk and utilization dashboards are not certified by opening a workspace. |
+| OP1-OP5: backups, workers, health, idempotency, migration | 1 and Closing: Make gates and optional backup/restore or upgrade rehearsal | Record commands actually run. A local demo restore does not prove scheduled retention/RPO/RTO; an idempotent seed does not prove every background job is idempotent. |
+| UG1-UG5: extension points, dependency scanning and upgrades | Closing: hooks/app assets and the pinned upgrade rehearsal | Inspect the relevant scan artifacts and test future major versions separately; the demo is not proof of a passed major upgrade. |
+| NF1-NF20: performance, security, availability, maintainability and audit | Relevant scene observations and the linked evidence registry | The tour does not establish load/latency thresholds, OWASP/TLS compliance, complete secret/chain coverage, 90-day backups, RPO/RTO or scan/CI results. Those require dedicated evidence. |
+| NFD1-NFD4: idempotent/guarded seed, coverage and realistic personas | 1-4 and the completion checklist | Historical seed rerun is evidence for that site/version; verify the production guard independently. This map identifies gaps rather than certifying all requirements. |
 
 ## Scene 5: Organization and funding context
 
@@ -320,6 +402,11 @@ constitute approved client layouts.
 **Pass:** donor codes and saved document links are visible.
 **Stop/fallback:** if a project is absent or not linked, show the donor
 directly and describe project linkage as a separate configuration step.
+**Scope:** FI1-FI3; this is funding context, not a demonstration of every
+accounting dimension or foreign-currency transaction.
+**Upstream:** [Company](https://docs.frappe.io/erpnext/company-setup),
+[Project](https://docs.frappe.io/erpnext/project) and
+[Accounting Dimensions](https://docs.frappe.io/erpnext/accounting-dimensions).
 
 ## Scene 6: Procurement thresholds and governance
 
@@ -350,6 +437,10 @@ directly and describe project linkage as a separate configuration step.
 identifies the actor.
 **Stop:** below-500K “Open” fixtures need an applicable documented rule or
 approved waiver; a source comment is not authority to override the bands.
+**Scope:** PR1-PR6 and selected GV1/GV2 controls. Show the applicable records;
+the example does not prove that every possible exception is configured.
+**Upstream:** [Workflows](https://docs.frappe.io/erpnext/workflows) and
+[User Permissions](https://docs.frappe.io/erpnext/user-permissions).
 
 ## Scene 7: Purchase requisition and approval
 
@@ -401,6 +492,12 @@ Approved. **Hand-off:** give Peter its ID.
 **Fallback:** if permissions or DoA configuration block the transition,
 record the exact error; show prepared examples labelled as such. Never
 change the status field to simulate approval.
+**Scope:** PR1-PR7 and original requirement 1c. A budget warning or missing
+budget configuration is not an authorization to exceed funding.
+**Upstream:** [Material Request](https://docs.frappe.io/erpnext/material-request)
+and [Budget](https://docs.frappe.io/erpnext/budget). Ugavi's Purchase
+Requisition and approval chain are app-owned; they are not the native
+ERPNext Material Request.
 
 ## Scene 8: Supplier profile and prequalification
 
@@ -414,52 +511,71 @@ change the status field to simulate approval.
    and verify persistence.
 3. Open `#prequalification`. Inspect current applications before submitting:
    an existing active category can make another application inappropriate.
-4. Choose a legitimate missing category, for example WASH Supplies **if it
+4. Choose a legitimate missing category, for example Shelter & NFI **if it
    has no current record**, request expiry one year ahead, choose
    `Tax Compliance`, and attach the fictional PDF.
 5. Click **Apply**. Record the new application ID and actual initial status;
    applying does not itself approve eligibility.
 6. As Peter, open **Supplier Prequalification**, filter by that supplier and
    category, inspect its private attachment and dates.
-7. Review using the installed form's supported fields/actions. The eligible
-   status used by the controller is **Prequalified**, not `Active`.
-   Confirm valid expiry before describing the supplier as eligible.
-8. Compare masters: `Samburu Agencies` / `Eliye Springs Boat Services`
+7. Inspect its actual status and expiry. The eligible state used by the
+   controller is **Prequalified**, not `Active`. The current Desk client
+   script refers to older status names, imposes an additional-category
+   condition and calls an unavailable renewal method; its review/renew
+   buttons are not a reliable live path. Use a seeded **Prequalified**
+   example rather than overriding status to make this application pass.
+8. Lodwar General already has a seeded **Prequalified WASH Supplies** record;
+   this is the category used for the restricted live tender in Scene 9. A new
+   Shelter application is a separate, still-unapproved application.
+9. Compare masters: `Samburu Agencies` / `Eliye Springs Boat Services`
    (expired examples), `Turkana Fuel Distributors` / `Oropoi Community Supplies`
    (suspended). Inspect the disabled flag and any actual prequalification
    record; the seed may express an example through the master rather than
    creating every expired-category record.
-9. Switch to another existing portal account and show its own supplier
+10. Switch to another existing portal account and show its own supplier
    heading, awards and invoices. Do not attach a file owned by the first user.
 
 **Pass:** supplier-specific identity, private evidence and actual category/
-expiry determine eligibility. Open tenders do not require prequalification,
-but disabled suppliers are not automatically allowed to bid.
+expiry determine restricted-tender eligibility. Open tenders do not require
+prequalification. **Control gap:** in a rollback-only probe, a Supplier marked
+disabled still submitted an open-tender bid; do not claim suspension prevents
+bidding or perform that test on shared business records.
 **Fallback:** show an existing valid application if the category is already
 active or the review UI is unavailable; do not duplicate it.
+**Scope:** SP1-SP3 and SP6. This scene does not demonstrate automatic
+expiry suspension or a completed renewal. The current expired-record banner
+claims automatic suspension; an expired category failing eligibility does not
+by itself prove that the Supplier master was suspended.
+**Channel:** the portal notification is in-app; check it before claiming one
+was created. **Upstream:** [Supplier](https://docs.frappe.io/erpnext/supplier)
+and [Contact](https://docs.frappe.io/erpnext/contact).
 
 ## Scene 9: Tender publication and opportunities
 
 **Story:** Peter turns the approved need into a controlled opportunity.
 **Actor:** Peter -> Lodwar General supplier. **Mode:** LIVE, 7 min.
 
-1. Open the **live PR** from Scene 7. Use **Create Tender** if exposed by the
-   installed form. Record the returned tender ID; inspect the PR status
-   (`Converted to Tender` after successful conversion).
-2. If that shortcut is absent, create a Draft **Tender** through the normal
-   form and select the approved PR explicitly. Verify its saved references;
-   do not claim the conversion action occurred.
-3. Open the Draft tender and complete title, approved PR, donor IOM,
+1. Open the **live PR** from Scene 7 and confirm it is Approved. The current
+   **Create Tender** client button calls an unavailable module-level method;
+   do not rely on it for this rehearsal.
+2. Instead select **New Tender** through the normal form and select the
+   approved PR explicitly. Complete the required fields and officers below
+   before saving. This manual path does not invoke conversion or change the
+   PR to `Converted to Tender`.
+3. On the new Draft tender form complete title, approved PR, donor IOM,
    estimated value 450,000, Restricted method, category WASH Supplies and a
    deadline seven days ahead.
 4. Assign `opening1@lokado.org`, `opening2@lokado.org`,
    `opening3@lokado.org`. Attach fictional specifications through supported
    document fields. Check any bid-security requirement before publishing.
-5. Save and click **Publish Tender**; confirm the prompt.
+5. Save, verify the saved PR/donor/method references, then click **Publish
+   Tender** and confirm the prompt.
 6. Verify Published, publication/deadline dates and generated public-key
    metadata. Do not display private key material.
 7. Switch to the eligible supplier; open `#opportunities` and find the new
-   title. Show the method, value, category and deadline.
+   title. Show the method, value, category and deadline. The portal first
+   selects the next ten open tenders before applying supplier eligibility, so
+   a later-deadline tender may not appear in a busier site.
 8. Contrast an available Open opportunity such as
    `Emergency Shelter Tarpaulins Concern` (550,000) **if present and still open**.
    A matching category is required for Restricted, not for Open.
@@ -468,6 +584,11 @@ active or the review UI is unavailable; do not duplicate it.
 supplier sees the opportunity.
 **Fallback:** use another still-open eligible tender. Do not use the closed
 solar fixture for submission or silently reopen an awarded tender.
+**Scope:** TN1-TN4 and original requirements 1a-1b; addenda/extension are not
+rehearsed. **Channel:** publication makes an eligible opportunity visible
+in the portal; it does not itself send an invitation email.
+**Upstream:** [Request for Quotation](https://docs.frappe.io/erpnext/request-for-quotation).
+Ugavi's Tender is a separate sealed-tender workflow, not an ERPNext RFQ.
 
 ## Scene 10: Supplier bid and clarification
 
@@ -482,16 +603,26 @@ solar fixture for submission or silently reopen an awarded tender.
 5. In `#clarifications`, select the same tender, enter
    `Does delivery include installation at all 12 village sites?`, click
    **Send question**.
-6. As Peter, open **Clarification**, filter by tender/supplier, enter a
-   demonstrative answer and save using the supported response fields.
-7. Return to the supplier, reload, and show the answer and any generated
-   notification. Check the notification actually exists before claiming delivery.
+6. As Peter, open **Clarification**, filter by tender/supplier and show the
+   submitted **Open** question. In the current Desk form the Answer field is
+   hidden until Status is set to **Answered**; saving via that UI path leaves
+   `answered_by` and `answered_date` blank. Do not present it as a fully
+   audited answer. The inspected fresh seed has no prepared answer to use as
+   a fallback.
+7. Return to the supplier, reload, and show the submitted question and any
+   generated portal notification. Check that the notification exists before
+   claiming it was created.
 
-**Pass:** the same supplier/tender has a sealed bid receipt and answered
-question. **Hand-off:** this newly published tender waits until its deadline;
-Scene 11 uses a different, already-closed seed fixture.
+**Pass:** the same supplier/tender has a sealed bid receipt and submitted
+question; a correctly audited answer is **not demonstrated** until the UI
+gap is fixed. **Hand-off:** this newly published tender waits until its
+deadline; Scene 11 uses a different, already-closed seed fixture.
 **Fallback:** if a supplier already bid, inspect the existing receipt or use
 the new tender; do not submit duplicates or withdraw a winning seed bid.
+**Scope:** TN5-TN7 and SP6. **Channel:** show the portal receipt and
+notification if present; they are not proof of an email. **Upstream:**
+[Supplier Quotation](https://docs.frappe.io/erpnext/supplier-quotation);
+Ugavi's encrypted Bid is an app-owned record, not a native Supplier Quotation.
 
 ## Scene 11: Three-person sealed-bid opening
 
@@ -516,8 +647,9 @@ the new tender; do not submit duplicates or withdraw a winning seed bid.
 4. Click **Open Sealed Bids**. This requests new system codes and opens the
    **Enter Opening Codes** dialog.
 5. In local Mailpit, identify the newest message for this tender and each
-   exact recipient. Each officer supplies their own code. Keep codes and
-   private attachments out of screenshots or recordings.
+   exact recipient; its subject is `Bid Opening OTP - <tender ID>`. Ignore
+   separate `SMS Stub` emails. Each officer supplies their own code. Keep
+   codes and private attachments out of screenshots or recordings.
 6. Enter Officer 1/2/3 codes in the matching fields and click **Open Bids**.
    All three are collected in Mary's authorized session; the current UI is
    not three independently signed approval sessions.
@@ -533,6 +665,8 @@ the new tender; do not submit duplicates or withdraw a winning seed bid.
 **Stop:** already opened, no codes delivered, expired codes, missing key
 shares or wrong officers. If opened already, show the existing BOR as
 PREPARED EVIDENCE. Never fabricate a BOR or regenerate keys after submission.
+**Scope:** TN7-TN14 and NT1-NT2. The ceremony demonstrates this configured
+path, not an independent security audit or production SMS delivery.
 
 ## Scene 12: Evaluation and award decision
 
@@ -560,13 +694,27 @@ Kainuk 400,000.
 5. Open the **Bid Evaluation Summary** (*Livestock recommendation*): recommended
    Nadirkonyen at 365,000, approved by Grace. The approval is rejected if the
    recommendation is not the evidence-backed top-ranked opened bid.
-6. Optional live control: sign in as Dorothy and try **Approve Minutes** on a
-   draft; the server refuses because only the Tender Committee Chair can approve.
+6. Optional access control: on a suitable Draft minutes record, Dorothy does
+   not see the chair-only **Approve Minutes** button. The server also requires
+   the Chair or System Manager role. The inspected seed has only two Approved
+   minutes and no Draft, so do not claim this live check was performed unless
+   a valid Draft is available.
+   For an optional email demonstration, first complete the local-relay check
+   in [section 1.4](#14-communication-and-message-evidence). Sign in as
+   `nadirkonyen-women@outlook.com`, open **Profile**, and, if its Supplier
+   email is blank, set it to `nadirkonyen@example.invalid`; **Save profile**
+   and reload. This deliberately changes the demo profile. Do not overwrite
+   an existing contact without approval or use a real external address.
 7. **LIVE:** back on the Tender as Peter, the dashboard shows
    *Recommended: Nadirkonyen Women's Group (KES 365,000)*. Click
-   **Start Standstill** and confirm. Every bidder is notified of the intended
-   award; the tender moves to **Standstill Period** and a Standstill Period
-   record opens with the configured complaint window (default 14 days).
+   **Start Standstill** and confirm. The tender moves to **Standstill Period**
+   and a Standstill Period record opens with the configured complaint window
+   (default 14 days). Linked supplier users can receive portal notices;
+   email is sent only to bidders whose Supplier email is populated.
+   With the fresh-seed setup above, inspect the one intended-award email to
+   `nadirkonyen@example.invalid` in Email Queue and Mailpit. The other
+   Livestock bidders had no Supplier email in the inspected seed, so do not
+   promise email to them unless their actual recipient fields are configured.
 8. Show that the Tender now offers **no Award button**. **Confirm Standstill**
    appears only after the end date, and only when no complaint is open.
    **Award Tender** then issues the PO and contract for the exact recommended
@@ -579,11 +727,13 @@ used in a rehearsal; run `make restore-demo` or show the Motorcycles standstill.
 Never edit statuses or dates to reach the award button. Solar opened in Scene 11
 has no committee evidence yet, so it stops at *Awaiting approved Bid Evaluation
 Summary*.
+**Scope:** EV1-EV7 and GV1. **Channel:** portal notices and optional SMTP
+email are distinct; a queued/captured notice is not external delivery.
 
 ## Scene 13: Purchase order and contract
 
-**Actors:** Peter -> winning supplier. **Mode:** PREPARED EVIDENCE plus live
-acknowledgement where available, 7 min.
+**Actors:** Peter -> Turkana Construction supplier. **Mode:** PREPARED EVIDENCE
+plus live acknowledgement where available, 7 min.
 
 1. Follow the Purchase Receipt behind `LOK-INV-TCL-0412` to its logistics PO.
    A same-day demo cannot have an award-generated order, because Scene 12's
@@ -602,8 +752,10 @@ acknowledgement where available, 7 min.
    before completion. All linked receipt evaluations must be Completed.
    If the form has no lifecycle action, show existing evidence rather than
    changing status to simulate verification or completion.
-7. Sign in as the winning supplier with an existing portal account. Open
-   `#awards`, `#contracts`, then `#deliveries`; locate the **same PO ID**.
+7. Sign in as `turkana-construction@outlook.com`. Open `#contracts` and
+   `#deliveries`; locate the **same PO ID**. The `#awards` tab can be empty:
+   this prepared logistics branch is not evidence that the IOM warehouse
+   tender was awarded.
 8. If not yet acknowledged, click **Acknowledge**, reload and show its
    acknowledged indicator. If already acknowledged, show that state.
 
@@ -611,6 +763,10 @@ acknowledgement where available, 7 min.
 sees only its own order.
 **Fallback:** an expanded supplier without a portal login stays a Desk-only
 example. Do not impersonate it with Lodwar General's account.
+**Scope:** PR8, EV7, CT1-CT4 and SP6. **Channel:** acknowledgement can create
+an in-app notice, not necessarily email. **Upstream:**
+[Purchase Order](https://docs.frappe.io/erpnext/purchase-order).
+A PO is a commitment; it is not itself a physical stock receipt or payment.
 
 ## Scene 14: Receipt, dispatch, stock ledger, and donor books
 
@@ -666,9 +822,9 @@ dispatch after balance/date checks, 10 min.
     month. Compare opening, receipts, issues, transfer in/out, closing and
     value with the native ledger through month end.
 13. Reports are snapshots generated after seed stock/valuation postings.
-    After a live dispatch, regenerate through the installed supported action
-    before expecting the snapshot to change. If no action is exposed, keep
-    the old snapshot and explicitly show the newer ledger movement.
+    The current Desk form has no supported Generate action for this report.
+    After a live dispatch, keep the old snapshot and show the newer native
+    ledger movement separately; do not claim the snapshot updated.
 14. Open **Inter Donor Transfer**, find reason beginning
     `DEMO-COMPLETED: Emergency water tanks`, inspect IOM -> CONCERN and
     WATER-TANK-10K quantity 2. Locate the governed Material Transfer voucher.
@@ -680,6 +836,15 @@ dispatch after balance/date checks, 10 min.
 **Pass:** voucher -> ledger -> donor book links and balances are visible.
 Do not promise a numeric closing balance from scenario quantities alone:
 other receipts, fleet issues, transfers and landed cost also affect it.
+**Scope:** LO1-LO8. Inspect Item reorder settings and batch/expiry where
+relevant; the inspected seed has no submitted Stock Reconciliation. A
+prepared report does not prove a scheduled PDF/Excel email was delivered.
+**Upstream:** [Purchase Receipt](https://docs.frappe.io/erpnext/purchase-receipt),
+[Quality Inspection](https://docs.frappe.io/erpnext/quality-inspection),
+[Warehouse](https://docs.frappe.io/erpnext/warehouse),
+[Stock Entry](https://docs.frappe.io/erpnext/stock-entry),
+[Stock Ledger](https://docs.frappe.io/erpnext/stock-ledger) and
+[Batch](https://docs.frappe.io/erpnext/batch).
 
 ## Scene 15: Three-way match and finance handoff
 
@@ -716,11 +881,31 @@ other receipts, fleet issues, transfers and landed cost also affect it.
 8. Read applicable actions: these seed budgets use **Warn**, not Stop.
    Finance Officer has read-only Budget/LCV access; use the appropriate
    administrative role for configuration, not for the payment demonstration.
+9. A Budget Encumbrance is conditional on the submitted PO's `ugavi_budget`
+   link. The inspected seed contains no encumbrance rows; do not claim every
+   submitted order commits a budget.
 
 **Extensions only after receipt verification:** `LOK-INV-KRS-3101` targets a
 70% shelter payment; `LOK-INV-LWF-0220` targets a full classroom payment;
 `LOK-INV-LPH-1405` targets full medical payment. The expanded list alone
 does not create the missing submitted supplier/warehouse receipts.
+
+**Portal invoice limitation:** the seeded Lodwar supplier's attempt to submit
+an invoice against the unbilled IOM fleet receipt reached ERPNext's receipt
+mapper but failed its Purchase Invoice create-permission check. Do not grant
+the website user broad Desk permissions as a workaround; show a prepared
+invoice instead. Even once this path is fixed, the portal intends to create a
+**draft** for finance review; the Three Way Match hook runs on invoice
+**submission**, not draft creation.
+
+**Scope:** PR9-PR10 and FI1-FI7, within the boundaries above. **Upstream:**
+[Purchase Invoice](https://docs.frappe.io/erpnext/purchase-invoice),
+[Payment Entry](https://docs.frappe.io/erpnext/payment-entry),
+[Landed Cost Voucher](https://docs.frappe.io/erpnext/landed-cost-voucher)
+and [Budget](https://docs.frappe.io/erpnext/budget). A receipt records goods
+and may post stock-related accounting under perpetual inventory; an invoice
+creates a payable and can update stock when configured; a Payment Entry
+records settlement. None alone proves a live bank transfer.
 
 ## Scene 16: Supplier performance evaluation
 
@@ -740,17 +925,22 @@ LIVE completion only through an available supported action, 5 min.
    with each input scored **0-10**, not 0-5.
 5. If using a Pending scorecard from a new live receipt, enter 9/8/9/8
    (85.5%), today and acceptance remarks; Save. Completion requires the
-   controller's `complete_evaluation` action. The status is read-only; if no
-   completion action exists in the installed Desk UI, do not pretend Save
-   alone completed it. Show a prepared Completed example.
+   controller's `complete_evaluation` action. The current Desk form has no
+   dedicated completion button and the status is read-only; Save alone does
+   not complete it. Show a prepared Completed example.
 6. Return as that supplier to `#evaluations`; compare the source and visible
    score/remarks. Margaret then inspects the linked payment in Scene 15.
-7. Explain the separate payment gate: evaluations for relevant purchase
-   sources must be Completed. A low cumulative rating below 60% can disable
-   the supplier. Do not low-score a shared portal supplier for a stunt.
+7. Explain the separate payment gate: for a supplier **Pay** entry referencing
+   a Purchase Invoice, evaluations for its relevant receipt/direct-invoice
+   sources must be Completed. This does not establish a gate for unallocated
+   advances or other reference types. A low cumulative rating below 60% can
+   disable the supplier. Do not low-score a shared portal supplier for a stunt.
 
 **Pass:** a purchase-specific Completed evaluation, correct scale/total,
 and supplier-visible result. An unreferenced performance narrative fails.
+**Scope:** SP4-SP5 and original requirement 1e. **Upstream:**
+[Supplier Scorecard](https://docs.frappe.io/erpnext/supplier-scorecard);
+the Ugavi evaluation and its payment gate are app-owned.
 
 ## Scene 17: Asset management
 
@@ -765,13 +955,13 @@ Asset Disposal.
    **USAID Field Store - Oropoi**.
 3. Open its completed **Ugavi Asset Movement** and compare source/destination
    custodian/location/condition. Read the current register again.
-4. For a live movement, choose an Active asset and two different locations
-   mapped to **the same donor**. New movement -> select asset -> today ->
-   destination/custodian/condition -> reason -> Save as Draft.
-5. Use the supported **Confirm** action if exposed. It checks stale source
-   custody/location/condition and updates the register. Reopen the asset to
-   prove the resulting state. If the action is absent, keep this Draft and
-   use prepared completed movement evidence.
+4. For a possible new movement, choose an Active asset and two different
+   locations mapped to **the same donor**. New movement -> select asset ->
+   today -> destination/custodian/condition -> reason -> Save as Draft.
+5. Confirmation checks stale source custody/location/condition and updates
+   the register, but the current Desk form has no dedicated Confirm button.
+   Do not claim a saved Draft moved the asset; show the prepared completed
+   movement and resulting register state instead.
 6. Open **Asset Verification** for that asset. Inspect found Yes, date,
    verifier, condition and notes. A new “not found” report needs notes and
    cannot be marked successfully verified.
@@ -787,6 +977,9 @@ fixtures do not prove sixteen capitalized or depreciating native ERPNext
 Assets. The EU boat moves to **EU Field Store - Lake Turkana**, preserving
 EU ownership. An IOM destination would be rejected, not treated as a valid
 cross-donor asset movement.
+**Scope:** AS1-AS7. **Upstream:** [Asset](https://docs.frappe.io/erpnext/asset)
+and [Asset Movement](https://docs.frappe.io/erpnext/asset-movement). Ugavi's
+custody register and movement are distinct from those native documents.
 
 ## Scene 18: Fleet management
 
@@ -836,19 +1029,27 @@ vehicle, then compare the second USAID/Concern vehicles and Own Funds at Oropoi.
 9. When the report covers only this complete fixture, expect **2 trips,
    500 km, 120 L, KES 25,200 fuel cost and 4.17 km/L**. Check spare cost
    against source rates rather than inventing it.
-10. For the monthly requirement use the installed generation action with
-    From Date = first day and To Date = last day of the chosen month.
-    The `-35`/`-15` relative dates may span two months, so a monthly total can
-    legitimately differ from the 60-day snapshot.
+10. For the monthly requirement explain the intended first-to-last-day
+    date range. The current Desk form has no supported Generate action for
+    Fleet Utilization Report, so a calendar-month report is **not live
+    demonstrated**. The `-35`/`-15` relative dates may span two months; its
+    eventual monthly total can legitimately differ from the 60-day snapshot.
 11. Compare USAID and CONCERN reports: each has **two vehicles**. Re-seeding
     regenerates reused donor snapshots after the additional vehicle is posted.
 12. Run `make dev-check` on local source, or `make fleet-check` on the rebuilt
     image. Read the result and investigate donor/source mismatches.
 
 **Pass:** allocation -> PO/receipt -> reconciliation -> fuel/spare/trip ->
-date-filtered donor report. A generic Vehicle list alone does not meet fleet
-requirements. A cost-per-kilometre figure, if needed, must be explicitly
-calculated from stated included costs; do not claim a field the report lacks.
+prepared date-range donor report. This demonstrates purchase-linked fleet
+evidence, not a generated calendar-month report. A generic Vehicle list alone
+does not meet fleet requirements. A cost-per-kilometre figure, if needed,
+must be explicitly calculated from stated included costs; do not claim a
+field the report lacks.
+**Scope:** FL1-FL6. The native **Vehicle** is reused; allocations, fuel,
+spares, trips and the report shown here are Ugavi records. The
+[Vehicle](https://docs.frappe.io/hr/vehicle) and
+[Vehicle Log](https://docs.frappe.io/hr/vehicle-log) references are conceptual
+Frappe HR guidance, not a claim that Frappe HR is installed.
 
 ## Scene 19: Notifications, complaints, audit, and MVP2 readiness
 
@@ -868,14 +1069,17 @@ opening, scoring and chair approval. It was not inserted as a fixture.
    period, enter a fictional evidence-based challenge and attach a private PDF.
    Click **Submit complaint**. Record its ID.
 4. As Peter, open **Tender Complaint** by that ID. Set a review panel with
-   **three distinct non-conflicted users**, for example Jane, Paul and Robert
-   if eligible; the complainant cannot be a member. Assign a reviewer who
-   is in the panel.
-5. Move Submitted -> **Under Review** and save. The Standstill Period shows
-   **Challenged**, and **Confirm Standstill** is blocked while it is open.
-   Review the fictional facts; record an Outcome and move to **Rejected**,
-   **Upheld** or **Partially Upheld**. Upheld/Partially Upheld also requires a
-   remedial action, which returns the tender to evaluation for re-scoring.
+   **three distinct non-conflicted users** and a role for each: for example
+   Jane as Chairperson, Paul as Secretary and Robert as Member if eligible.
+   The complainant cannot be a member. Assign a reviewer who is in the panel,
+   for example Jane.
+5. Move Submitted -> **Under Review** and save. The Standstill Period was
+   marked **Challenged** on submission, and **Confirm Standstill** is blocked
+   while a complaint is open. Review the fictional facts; record an Outcome
+   and move to **Rejected**, **Upheld** or **Partially Upheld**. Upheld or
+   Partially Upheld requires a remedial action. **Re-evaluation** and
+   **Cancel Intended Award** return the tender to evaluation; **Corrective
+   Notice** does not automatically do so.
 6. Return as the supplier and show the outcome notification. Do not call a
    Submitted complaint resolved or assume a resolved complaint itself
    confirms an award.
@@ -886,6 +1090,11 @@ opening, scoring and chair approval. It was not inserted as a fixture.
 **Stop/fallback:** expired period, absent bid, unresolved duplicate complaint,
 missing/conflicted panel. Show prepared complaint evidence if present; never
 extend a historical standstill silently to make the demo pass.
+
+**Scope:** EV6, GV1/GV5/GV12 and NT1-NT3. **Channel:** complaint and outcome
+notifications are supplier-scoped portal entries; check Email Queue separately
+before asserting any email. A sample audit record is not a full verification
+of every document's hash chain.
 
 **Delivered readiness slice:** identity-bound supplier portal; private files;
 bid/clarification/PO acknowledgement; panel-based complaint review and
@@ -954,7 +1163,7 @@ evidence that a transition occurred.
 | Default thresholds and applicable approval roles | __________ | __________ |
 | Alice-owned coded PR, approval history and procurement handoff | __________ | __________ |
 | Supplier profile, private prequalification and category eligibility | __________ | __________ |
-| Published tender -> supplier sealed bid receipt -> clarification answer | __________ | __________ |
+| Published tender -> supplier sealed bid receipt -> clarification question; audited answer not shown | __________ | __________ |
 | Three-code opening -> immutable BOR and opened amounts | __________ | __________ |
 | COI -> individual scores -> chair-approved minutes and recommendation -> Start Standstill (award gated until expiry) | __________ | __________ |
 | Issued native PO -> linked contract and supplier acknowledgement | __________ | __________ |
@@ -962,7 +1171,7 @@ evidence that a transition occurred.
 | Purchase-linked Completed supplier evaluation | __________ | __________ |
 | PO/GRN/invoice matching + full/partial/unpaid payable | __________ | __________ |
 | Asset tag -> custody/condition -> movement/verification/disposal | __________ | __________ |
-| Vehicle allocation -> purchase sources -> fuel/spares/trips -> monthly report | __________ | __________ |
+| Vehicle allocation -> purchase sources -> fuel/spares/trips -> prepared date-range report; calendar-month generation not shown | __________ | __________ |
 | Complaint panel, outcome and supplier notification | __________ | __________ |
 | Upgrade/demo/fleet/browser checks actually executed | __________ | __________ |
 | Backup preserved; opened tenders/live postings recorded | __________ | __________ |
