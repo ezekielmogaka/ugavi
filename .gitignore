@@ -64,3 +64,20 @@ yarn-error.log*
 
 # OS
 Thumbs.db
+
+# Database backups
+backups/
+
+# Test artifacts
+tests/e2e/playwright-report/
+tests/e2e/test-results/
+
+# Benchmarks
+.benchmarks/
+
+# Validation artifacts (local audit/validation)
+validation/
+validation-2/
+
+# Utility scripts (with local paths)
+_*.py
