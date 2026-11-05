@@ -30,7 +30,8 @@ for (const [email, doctypes] of [
       expect(response.ok(), `${email}: read ${doctype}`).toBeTruthy();
       const { message } = await response.json();
       expect(Array.isArray(message), `${doctype}: list response`).toBeTruthy();
-      if (doctype !== 'Bid Opening Record') {
+      // These records only exist after the real opening/evaluation workflow.
+      if (!['Bid Opening Record', 'Bid Evaluation Summary'].includes(doctype)) {
         expect(message.length, `${email}: seeded ${doctype} evidence`).toBeGreaterThan(0);
       }
     }

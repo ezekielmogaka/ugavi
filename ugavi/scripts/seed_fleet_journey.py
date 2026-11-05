@@ -254,7 +254,7 @@ def _activate_contract(receipt, scenario):
         f"{scenario['marker']}-contract.txt",
         (
             f"DEMO CONTRACT\nPurchase Order: {purchase_order}\n"
-            f"Purpose: fleet fuel and spare-parts framework\n"
+            f"Purpose: {scenario.get('purpose', 'fleet fuel and spare-parts framework')}\n"
         ).encode(),
         "Ugavi Contract",
         contract.name,
@@ -263,7 +263,7 @@ def _activate_contract(receipt, scenario):
     contract.append(
         "documents",
         {
-            "document_name": "Signed Fleet Supply Framework (Demo)",
+            "document_name": "Signed Supply Agreement (Demo)",
             "attachment": file_doc.file_url,
             "expiry_date": contract.end_date,
         },
@@ -403,14 +403,9 @@ def _ensure_report(donor, scenario):
         "Fleet Utilization Report",
         {"donor": donor, "docstatus": ("!=", 2)},
     )
-    if existing:
-        return
-    report = frappe.get_doc(
-        {
-            "doctype": "Fleet Utilization Report",
-            "donor": donor,
-            "from_date": from_date,
-            "to_date": today(),
-        }
+    report = frappe.get_doc("Fleet Utilization Report", existing) if existing else frappe.get_doc(
+        {"doctype": "Fleet Utilization Report", "donor": donor}
     )
+    report.from_date = from_date
+    report.to_date = today()
     report.generate()

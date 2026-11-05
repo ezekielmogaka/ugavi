@@ -2,6 +2,7 @@
 
 import inspect
 import unittest
+from unittest.mock import patch
 
 from ugavi.fleet.doctype.fleet_utilization_report.fleet_utilization_report import (
     FleetUtilizationReport,
@@ -12,6 +13,19 @@ from ugavi.fleet.services import purchase_reconciliation
 
 
 class TestFleetControlBoundaries(unittest.TestCase):
+    def test_shared_donor_report_regenerates_after_another_vehicle_is_seeded(self):
+        from ugavi.scripts import seed_fleet_journey
+
+        with patch.object(seed_fleet_journey, "frappe") as frappe:
+            frappe.db.exists.return_value = "FLEET-REPORT-DEMO"
+            report = frappe.get_doc.return_value
+            seed_fleet_journey._ensure_report("USAID", {})
+            frappe.get_doc.assert_called_once_with(
+                "Fleet Utilization Report", "FLEET-REPORT-DEMO"
+            )
+            report.generate.assert_called_once()
+            self.assertLess(report.from_date, report.to_date)
+
     def test_fuel_does_not_mutate_totals_on_draft_insert(self):
         self.assertFalse(hasattr(FuelLog, "after_insert"))
         self.assertTrue(hasattr(FuelLog, "before_submit"))

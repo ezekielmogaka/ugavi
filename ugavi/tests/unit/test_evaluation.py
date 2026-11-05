@@ -1,5 +1,28 @@
 """Tests for Evaluation Score, Minutes, and Regret Notice workflows."""
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
+
+
+class TestSupplierEvaluationHistory(unittest.TestCase):
+    def test_pending_zero_scorecards_do_not_dilute_completed_rating(self):
+        from ugavi.procurement.doctype.ugavi_supplier_evaluation.ugavi_supplier_evaluation import (
+            UgaviSupplierEvaluation,
+        )
+
+        evaluation = SimpleNamespace(supplier="DEMO", name="EVAL-NEW", total_score=90)
+
+        def history(_doctype, filters, **_kwargs):
+            if filters.get("status") == "Completed":
+                return [SimpleNamespace(total_score=80)]
+            return [SimpleNamespace(total_score=80), SimpleNamespace(total_score=0)]
+
+        with patch(
+            "ugavi.procurement.doctype.ugavi_supplier_evaluation.ugavi_supplier_evaluation.frappe.get_all",
+            side_effect=history,
+        ):
+            UgaviSupplierEvaluation._compute_cumulative_rating(evaluation)
+        self.assertEqual(evaluation.cumulative_rating, 85)
 
 
 class TestEvaluationScore(unittest.TestCase):

@@ -14,15 +14,18 @@ Enterprise Supply Chain Management solution built on Frappe/ERPNext v16 for NGO-
 
 ## Quick Start
 
+Everything is driven by `make` from the repository root. No manual `docker` or
+`bench` commands are needed.
+
 ```bash
 git clone <repo-url> && cd ugavi
 
-# Docker (recommended)
-make setup          # starts MariaDB, Valkey, Mailpit, backend
-make seed           # canonical LOKADO demo dataset (Turkana NGO)
-make demo-check     # verify LOKADO seed integrity
-make fleet-check    # verify fleet reconciliation
-make e2e            # Playwright browser tests
+# First run, or a clean rebuild from scratch (DESTRUCTIVE: wipes DB + files)
+make clean && make setup && make seed-lokado
+
+make demo-check     # LOKADO acceptance gate: "ready": true, "issues": []
+make fleet-check    # fleet purchase-to-vehicle reconciliation
+make e2e            # Playwright browser tests (host prerequisites below)
 ```
 
 **URL:** http://ugavi.localhost:8080 | Login: `Administrator` / `admin`
@@ -31,16 +34,37 @@ make e2e            # Playwright browser tests
 
 **Supplier Journey:** `docs/demo/SUPPLIER-JOURNEY.md` — profile through evaluation and notifications
 
+### Common command recipes
+
+| Goal | Commands |
+|------|----------|
+| Brand-new environment / start over | `make clean && make setup && make seed-lokado` |
+| Pick up code changes in the demo stack (keeps data) | `make setup && make seed-lokado` |
+| Re-run the seed (idempotent, keeps data) | `make seed-lokado` |
+| Verify the demo is presentable | `make demo-check && make fleet-check` |
+| Wipe only the site data, keep containers | `make reset-lokado` |
+| Snapshot a known-good demo | `make backup-demo` |
+| Roll back to that snapshot | `make restore-demo` |
+| Rehearse an upstream upgrade | `make upgrade-check` |
+| Daily source-mounted development (port 8000) | `make dev-up`, then `make dev-config dev-seed dev-check dev-test` |
+| Reset the dev site from local source | `make dev-reset` |
+| Stop / start without losing data | `make stop` / `make start` |
+
+`make setup` always rebuilds the image first, so it is the safe way to load new
+code into the port-8080 stack. `make seed`/`seed-lokado`/`demo-check` run inside
+the image: if you edit code and skip `make setup` (or `make build` +
+`make upgrade-check`), they still run the **old** baked code.
+
 ---
 
 ## Makefile Reference
 
 | Target | Description |
 |--------|-------------|
-| `make setup` | Build image + start all Docker services (MariaDB, Valkey, Mailpit, backend) |
+| `make setup` | Build the image, start all services, create the site on first run, migrate, apply `setup_config` (safe to rerun; keeps data) |
 | `make build` | Build the immutable `ugavi:0.1.0` image (override `UGAVI_IMAGE`/`UGAVI_TAG`) |
 | `make start` | Start all services (fast, no health check) |
-| `make stop` | Stop all services |
+| `make stop` | Stop all services; retain data volumes |
 | `make dev-up` | Build image, start source-mounted `bench serve` on port 8000 (foreground) |
 | `make dev-down` | Stop the combined dev stack; retain data volumes |
 | `make dev-logs` / `make dev-shell` | Follow server logs / open development-container shell |
@@ -49,31 +73,47 @@ make e2e            # Playwright browser tests
 | `make dev-seed` | Run canonical LOKADO seed with mounted source |
 | `make dev-check` | Run LOKADO and fleet gates with mounted source |
 | `make dev-test` | Enable tests and run integration/unit suites with mounted source |
-| `make dev-reset` | **Destructive:** reinstall shared site, configure, seed and verify using local source |
-| `make seed` | Seed LOKADO customer demo data (**canonical**; alias for `seed-lokado`) |
+| `make dev-reset` | **Destructive:** reinstall the site, configure, seed and verify using local source |
+| `make seed` | Seed LOKADO customer demo data (**canonical**; alias for `seed-lokado`); ends with the acceptance gate |
 | `make seed-lokado` | Same as `make seed` |
 | `make seed-generic` | Seed generic Ugavi NGO demo data (legacy) |
 | `make seed-check` | Integrity report for the legacy generic seed (not the LOKADO gate) |
-| `make demo-check` | Verify LOKADO users, supplier links, data, and health |
+| `make demo-check` | Verify LOKADO users, supplier links, data lineage, ledger reconciliation and health |
 | `make fleet-check` | Verify fleet purchase-to-vehicle reconciliation |
 | `make tenant-manifest-check TENANT_MANIFEST=<file>` | Validate an MVP3 isolated-tenant manifest (default `deploy/tenants.example.json`) |
-| `make backup-demo` / `make restore-demo` | Legacy SQL-only helpers tied to the original database name; **prefer native `backup` / `restore`**, especially after reset |
-| `make reset-demo` | Reinstall site + re-seed LOKADO demo (alias for `reset-lokado`) |
-| `make reset-lokado` | Fresh site reinstall + setup_config + LOKADO seed + demo-check (destructive) |
-| `make test` | Run full test suite |
+| `make backup-demo` | Native Bench snapshot (database + public + private files) to `backups/lokado-demo/` |
+| `make restore-demo` | Restore `backups/lokado-demo/` into the site, then migrate and clear cache |
+| `make reset-lokado` | **Destructive:** reinstall the site + `setup_config` + LOKADO seed + `demo-check` |
+| `make reset-demo` | Alias for `reset-lokado` |
+| `make test` | Run full test suite in the image |
 | `make lint` | Run ruff + black format check |
-| `make e2e` | Run Playwright E2E tests (requires backend running) |
+| `make e2e` | Run Playwright E2E tests (requires a seeded, running site) |
 | `make security-scan` | Bandit (SAST) + Safety (deps) + detect-secrets |
 | `make sbom` | Generate SPDX SBOM with Syft |
 | `make container-scan` | Trivy scan of the built image (requires `trivy`) |
 | `make load-test` | k6 procurement load test (requires `k6`; run against a non-demo site) |
 | `make check-links` / `make spell-check` | Documentation link and spelling checks (`markdown-link-check`, `cspell`) |
 | `make all-checks` | `lint` + `security-scan` + `sbom` + `test` + `e2e` |
-| `make backup` | Database backup with files |
-| `make restore DB_FILE=<path>` | Restore from backup |
-| `make upgrade-check` | Rebuild + migrate + run full test suite |
-| `make clean` | Tear down containers + volumes |
+| `make backup` | Native Bench backup with files (kept inside the `sites_data` volume) |
+| `make restore DB_FILE=<path>` | Restore a database file already inside the container |
+| `make upgrade-check` | Rebuild, recreate services, compatibility check, migrate, config, full tests |
+| `make clean` | **Destructive:** stop release + dev stacks, delete DB/site volumes and `backups/` |
 | `make help` | Show available Make targets |
+
+All site-scoped targets accept `SITE=<site>` (default `ugavi.localhost`), e.g.
+`make dev-reset SITE=ugavi-test.localhost`.
+
+### Troubleshooting
+
+- **`LOKADO demo verification failed: ... expected at least 40 ...`, stock
+  reports that "do not reconcile", or "invalid requisition lineage"**: the site
+  holds data from an older seed, and/or the image holds old code. Rebuild from
+  scratch: `make clean && make setup && make seed-lokado` (or keep containers
+  and run `make setup && make reset-lokado`).
+- **Seed refuses to run:** `seed-lokado` sets `developer_mode` itself; if you
+  call scripts by hand, enable it first. Prefer the make targets.
+- **Changes not visible on port 8080:** run `make setup` (it rebuilds the
+  image). Port 8000 (`make dev-up`) uses mounted source directly.
 
 Run from this repository root. `make seed-generic` is a legacy alternative,
 not a prerequisite for LOKADO. Do not mix the datasets.
@@ -84,13 +124,13 @@ Use `UGAVI_BASE_URL=http://ugavi.localhost:8000 make e2e`.
 Backend/workers still use image-baked code: `make upgrade-check` rebuilds and
 recreates the rehearsal stack before validating it on port 8080.
 
-**Safety:** dev and image services share the same database/files. Back up before
-`dev-reset`/`reset-demo`/`reset-lokado`; never use them on production.
-`make clean` also deletes persistent volumes and host backup contents.
-`make backup` writes Bench database + file archives under
-`sites/<site>/private/backups` in the `sites_data` volume; copy them off the
-container with `docker compose cp` before removing volumes. Restoring the
-database alone does not restore attachments or prove disaster recovery.
+**Safety:** dev and image services share the same database/files. Run
+`make backup-demo` before `clean`/`dev-reset`/`reset-demo`/`reset-lokado`; never
+use them on production. `make clean` deletes persistent volumes **and** the host
+`backups/` folder, so copy `backups/lokado-demo/` elsewhere first if you need it.
+`make backup` writes Bench archives under `sites/<site>/private/backups` inside
+the `sites_data` volume. `make backup-demo` copies database + public + private
+files to the host and `make restore-demo` restores all three.
 
 Browser prerequisites (only needed once or when dependencies change):
 `cd tests/e2e && npm ci && npx playwright install chromium`, then return to the
@@ -139,12 +179,13 @@ Customer-specific demo for Lotus Kenya Action for Development Organization (LOKA
 - **18 suppliers**: including Nadirkonyen Women's Group (community-based)
 - **Stock and service items**: Galla goats, WASH tanks, hygiene kits, construction materials, fuel/spares and field works
 - **8 donor-warehouse links**: six donors, including Lodwar, Kakuma, Lokichoggio and Kitale
-- **Submitted evidence**: 10 POs/receipts, 8 invoices, 5 payments, 3 landed-cost vouchers, 6 budgets, 22 Stock Entries
-- **Full workflow**: PR → Tender → Sealed-Bid Opening → Award → Contract → Logistics
+- **Submitted evidence**: 32 POs/receipts, 26 invoices, 19 payments, 8 landed-cost vouchers, 10 budgets, 53 Stock Entries
+- **Full workflow**: PR → Tender → Sealed-Bid Opening → Evaluation → Contract → Logistics (live award steps are performed in the tour, not fabricated by the seed)
 
 ```bash
-make seed           # canonical LOKADO seed (idempotent)
-make demo-check     # verify: 19 users, 0 issues
+make clean && make setup && make seed-lokado   # from scratch (destructive)
+make seed-lokado    # canonical LOKADO seed (idempotent; ends with the acceptance gate)
+make demo-check     # verify: 19 users, "ready": true, 0 issues
 make fleet-check    # verify: fleet reconciliation, donor isolation
 ```
 

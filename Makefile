@@ -29,6 +29,7 @@ setup:
 		echo "Waiting... $$i"; sleep 10; \
 	done; \
 	test $$ready -eq 1
+	$(COMPOSE) exec -T backend bench --site $(SITE) migrate
 	$(COMPOSE) exec -T backend bench --site $(SITE) execute ugavi.scripts.setup_config.run
 	@echo "==> Setup complete! Visit http://localhost:$(NGINX_LISTEN_PORT)"
 
@@ -132,18 +133,19 @@ backup:
 restore:
 	docker compose exec -T backend bench --site $(SITE) restore $(DB_FILE)
 
-# LOKADO-specific backup/restore for demo data safety
+# LOKADO demo snapshot using native bench backup/restore. The database name
+# changes on every new-site/reinstall, so never address it directly.
 backup-demo:
 	@mkdir -p backups/
-	@docker compose exec -T backend bash -c "mysqldump -h mariadb -u root -padmin _bc703ae6065a25c3 > /tmp/lokado_demo_dump.sql"
-	@docker compose cp backend:/tmp/lokado_demo_dump.sql backups/lokado_demo_dump.sql
-	@echo "LOKADO demo backup saved to backups/lokado_demo_dump.sql"
+	$(COMPOSE) exec -T backend bash -c "rm -rf /tmp/ugavi-demo-backup && bench --site $(SITE) backup --with-files --backup-path /tmp/ugavi-demo-backup"
+	@rm -rf backups/lokado-demo
+	$(COMPOSE) cp backend:/tmp/ugavi-demo-backup backups/lokado-demo
+	@echo "LOKADO demo snapshot saved to backups/lokado-demo/"
 
 restore-demo:
-	@if [ ! -f backups/lokado_demo_dump.sql ]; then echo "ERROR: backups/lokado_demo_dump.sql not found. Run 'make backup-demo' first."; exit 1; fi
-	@docker compose cp backups/lokado_demo_dump.sql backend:/tmp/lokado_demo_dump.sql
-	@docker compose exec -T backend bash -c "mysql -h mariadb -u root -padmin _bc703ae6065a25c3 < /tmp/lokado_demo_dump.sql"
-	@echo "LOKADO demo data restored from backup"
+	@if ! ls backups/lokado-demo/*-database.sql.gz >/dev/null 2>&1; then echo "ERROR: backups/lokado-demo/ not found. Run 'make backup-demo' first."; exit 1; fi
+	tar -C backups/lokado-demo -cf - . | $(COMPOSE) exec -T backend bash -c 'set -e; d=$$(mktemp -d /tmp/ugavi-demo-restore.XXXXXX); trap "rm -rf $$d" EXIT; tar -xf - -C "$$d"; db=$$(ls $$d/*-database.sql.gz); priv=$$(ls $$d/*-private-files.tar); pub=$$(ls $$d/*-files.tar | grep -v -- -private-files.tar); cd /home/frappe/frappe-bench; bench --site $(SITE) restore "$$db" --with-public-files "$$pub" --with-private-files "$$priv" --db-root-password $(DB_ROOT_PASSWORD); bench --site $(SITE) migrate; bench --site $(SITE) clear-cache'
+	@echo "LOKADO demo restored from backups/lokado-demo/"
 
 upgrade-check: build
 	@echo "==> Recreating the local rehearsal stack from $(UGAVI_IMAGE):$(UGAVI_TAG)..."
@@ -177,8 +179,9 @@ reset-lokado:
 	@echo "==> LOKADO demo reset complete and verified."
 
 clean:
-	docker compose -f compose.yaml down -v
+	$(DEV_COMPOSE) down -v --remove-orphans
 	rm -rf backups/*
+
 e2e:
 	@echo "==> Running e2e Playwright tests..."
 	cd tests/e2e && npx playwright test
@@ -219,7 +222,8 @@ all-checks: lint security-scan sbom test e2e
 
 help:
 	@echo "Ugavi Makefile targets:"
-	@echo "  make setup          - Initialize bench via Docker, install app"
+	@echo "  Fresh demo:  make clean && make setup && make seed-lokado"
+	@echo "  make setup          - Build image, start stack, create site (first run), migrate, configure (keeps data)"
 	@echo "  make build          - Build the immutable Ugavi image ($(UGAVI_IMAGE):$(UGAVI_TAG))"
 	@echo "  make start          - Start Docker services"
 	@echo "  make dev-up        - Build image, mount source, and run native bench serve"
@@ -239,8 +243,8 @@ help:
 	@echo "  make seed-generic   - Seed generic Ugavi NGO demo data (legacy)"
 	@echo "  make demo-check     - Verify LOKADO users, supplier links, data, and health"
 	@echo "  make fleet-check    - Verify fleet purchase-to-vehicle reconciliation"
-	@echo "  make backup-demo    - Export LOKADO demo data to SQL dump (safety net)"
-	@echo "  make restore-demo   - Restore LOKADO demo data from SQL dump"
+	@echo "  make backup-demo    - Native bench snapshot (DB + files) to backups/lokado-demo/"
+	@echo "  make restore-demo   - Restore backups/lokado-demo/ snapshot, migrate, clear cache"
 	@echo "  make reset-demo     - Reinstall + re-seed LOKADO demo (alias for reset-lokado)"
 	@echo "  make reset-lokado   - DESTRUCTIVE reinstall + configuration + seed + demo-check"
 	@echo "  make tenant-manifest-check TENANT_MANIFEST=... - Validate isolated MVP3 tenant definitions"
@@ -257,5 +261,5 @@ help:
 	@echo "  make backup         - Backup DB with files"
 	@echo "  make restore        - Restore from backup"
 	@echo "  make upgrade-check  - Rehearse compatibility, migration, tests, and health checks"
-	@echo "  make clean          - Remove Docker volumes and backups"
+	@echo "  make clean          - DESTRUCTIVE: stop release+dev stacks, remove volumes and backups"
 	@echo "  make help           - Show this help"

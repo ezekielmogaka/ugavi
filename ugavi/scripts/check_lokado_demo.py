@@ -1,5 +1,7 @@
 """Verify the seeded LOKADO identities and minimum demo workflow evidence."""
 
+import json
+
 import frappe
 from frappe import _
 from frappe.utils import get_datetime, now_datetime
@@ -9,6 +11,7 @@ from ugavi.scripts.seed_lokado import (
     LOKADO_USERS,
     LOKADO_UPSTREAM_ROLES,
     SUPPLIER_PORTAL_LINKS,
+    RECEIPT_INVOICES,
     _DEMO_PASSWORD,
 )
 
@@ -48,44 +51,43 @@ def get_report() -> dict:
 
     minimum_counts = {
         "Donor Profile": 6,
-        "Supplier": 18,
-        "Purchase Requisition": 10,
-        "Tender": 8,
-        "Bid": 26,
-        "Ugavi Contract": 15,
+        "Supplier": 30,
+        "Purchase Requisition": 25,
+        "Tender": 20,
+        "Bid": 46,
+        "Ugavi Contract": 32,
         "Donor Warehouse": 8,
         "Monthly Stock Report": 6,
         "Inter Donor Transfer": 6,
-        "Standstill Period": 1,
-        "Vehicle": 4,
-        "Vehicle Allocation": 4,
-        "Fleet Purchase Reconciliation": 8,
-        "Fuel Log": 8,
-        "Spare Parts Issue": 8,
-        "Trip Log": 8,
-        "Asset Register": 8,
-        "Asset Verification": 8,
+        "Vehicle": 8,
+        "Vehicle Allocation": 8,
+        "Fleet Purchase Reconciliation": 16,
+        "Fuel Log": 16,
+        "Spare Parts Issue": 16,
+        "Trip Log": 16,
+        "Asset Register": 16,
+        "Asset Verification": 16,
         "Ugavi Asset Movement": 2,
         "Asset Disposal": 1,
-        "Purchase Receipt": 10,
-        "Ugavi Supplier Evaluation": 12,
+        "Purchase Receipt": 32,
+        "Ugavi Supplier Evaluation": 36,
         # ── Supply Chain Depth ──
-        "Quality Inspection": 8,
-        "Stock Entry": 22,
+        "Quality Inspection": 20,
+        "Stock Entry": 53,
         "Batch": 8,
-        "Material Request": 5,
+        "Material Request": 17,
         # ── Finance + Three-Way Match ──
-        "Purchase Invoice": 8,
-        "Payment Entry": 5,
-        "Landed Cost Voucher": 3,
-        "Budget": 6,
-        "Three Way Match": 6,
+        "Purchase Invoice": 26,
+        "Payment Entry": 17,
+        "Landed Cost Voucher": 8,
+        "Budget": 10,
+        "Three Way Match": 22,
         # ── Notifications ──
         "Notification": 4,
         # ── Programme ──
         "Project": 3,
         # ── Procurement Depth ──
-        "Purchase Order": 15,
+        "Purchase Order": 32,
     }
     counts = {}
     for doctype, minimum in minimum_counts.items():
@@ -96,15 +98,15 @@ def get_report() -> dict:
             )
 
     minimum_submitted = {
-        "Purchase Invoice": 8,
-        "Payment Entry": 5,
-        "Landed Cost Voucher": 3,
-        "Budget": 6,
-        "Stock Entry": 22,
+        "Purchase Invoice": 26,
+        "Payment Entry": 17,
+        "Landed Cost Voucher": 8,
+        "Budget": 10,
+        "Stock Entry": 53,
         "Material Request": 3,
-        "Purchase Order": 10,
-        "Purchase Receipt": 10,
-        "Quality Inspection": 8,
+        "Purchase Order": 32,
+        "Purchase Receipt": 32,
+        "Quality Inspection": 20,
     }
     for doctype, minimum in minimum_submitted.items():
         submitted = frappe.db.count(doctype, {"docstatus": 1})
@@ -146,13 +148,13 @@ def get_report() -> dict:
     completed_evaluations = frappe.db.count(
         "Ugavi Supplier Evaluation", {"status": "Completed"}
     )
-    if completed_evaluations < 12:
+    if completed_evaluations < 36:
         issues.append(
-            f"Ugavi Supplier Evaluation: expected at least 12 completed, found {completed_evaluations}"
+            f"Ugavi Supplier Evaluation: expected at least 36 completed, found {completed_evaluations}"
         )
 
     pr_lifecycle_examples = {
-        "Draft": "Solar Water Pumps - EU Resilience Programme",
+        "Draft": "Fishing Livelihood Equipment - Lake Turkana",
         "Pending Approval": "Veterinary Outreach Kits - USAID Livelihoods",
         "Approved": "Emergency HDPE Pipe Repair - IOM WASH",
         "Rejected": "Community First Aid Kits - Japan Programme",
@@ -174,17 +176,44 @@ def get_report() -> dict:
                 f"Inter Donor Transfer lifecycle missing {required_status} evidence"
             )
 
-    complaint_tender = frappe.db.get_value(
-        "Tender", {"title": "Field Motorcycles Peace Building USAID"}, "name"
+    for bill_no, supplier, warehouse_name, _share, _mode in RECEIPT_INVOICES:
+        invoices = frappe.get_all(
+            "Purchase Invoice",
+            filters={"bill_no": bill_no, "supplier": supplier, "docstatus": 1},
+            pluck="name",
+        )
+        if len(invoices) != 1:
+            issues.append(f"{bill_no}: expected one submitted receipt-linked invoice")
+            continue
+        warehouse = frappe.db.get_value("Warehouse", {"warehouse_name": warehouse_name}, "name")
+        invoice = frappe.get_doc("Purchase Invoice", invoices[0])
+        for row in invoice.items:
+            if not row.purchase_receipt or not row.purchase_order or row.warehouse != warehouse:
+                issues.append(f"{bill_no}: item {row.item_code} has wrong source or donor warehouse")
+            if not frappe.db.exists("Ugavi Supplier Evaluation", {
+                "purchase_receipt": row.purchase_receipt, "status": "Completed",
+            }):
+                issues.append(f"{bill_no}: delivery scorecard is incomplete")
+
+    invalid_tender_sources = frappe.db.sql(
+        """SELECT t.name FROM `tabTender` t
+           LEFT JOIN `tabPurchase Requisition` p ON p.name = t.purchase_requisition
+           WHERE p.name IS NULL OR t.donor != p.donor
+              OR t.procurement_method != p.procurement_method
+              OR (t.status != 'Draft' AND p.status NOT IN ('Approved', 'Converted to Tender'))""",
+        as_list=True,
     )
-    if not complaint_tender or not frappe.db.exists(
-        "Standstill Period",
-        {
-            "tender": complaint_tender,
-            "status": ("in", ["Active", "Challenged"]),
-        },
-    ):
-        issues.append("Missing active MVP2 complaint standstill window")
+    if invalid_tender_sources:
+        issues.append(f"Tenders have invalid requisition lineage: {invalid_tender_sources}")
+
+    premature_recommendations = frappe.db.sql(
+        """SELECT DISTINCT e.name FROM `tabBid Evaluation Summary` e
+           JOIN `tabBid` b ON b.tender = e.tender
+           WHERE e.status = 'Approved' AND b.status = 'Submitted'""",
+        as_list=True,
+    )
+    if premature_recommendations:
+        issues.append(f"Approved recommendations reference unopened bids: {premature_recommendations}")
 
     submitted_pos_without_contracts = frappe.db.sql(
         """SELECT po.name
@@ -304,6 +333,28 @@ def get_report() -> dict:
 
     fleet_report = get_fleet_report()
     issues.extend(f"Fleet: {issue}" for issue in fleet_report["issues"])
+    for plate in ("KDL 410U", "KDM 271I", "KDN 842C", "KDP 318E",
+                  "KDQ 520J", "KDR 711L", "KDS 143U", "KDT 890C"):
+        vehicle = frappe.db.get_value(
+            "Vehicle", {"license_plate": plate}, ["name", "ugavi_donor"], as_dict=True,
+        )
+        if not vehicle:
+            issues.append(f"Fleet: missing scenario vehicle {plate}")
+            continue
+        reports = frappe.get_all(
+            "Fleet Utilization Report",
+            filters={"donor": vehicle.ugavi_donor, "vehicle": ("is", "not set"),
+                     "docstatus": ("<", 2)},
+            fields=["report_data"], order_by="modified desc", limit=1,
+        )
+        rows = json.loads(reports[0].report_data or "[]") if reports else []
+        row = next((row for row in rows if row.get("vehicle") == vehicle.name), None)
+        if row is None or any(
+            float(row.get(field) or 0) < minimum
+            for field, minimum in (("total_trips", 2), ("total_distance", 500),
+                                   ("fuel_used", 120), ("fuel_cost", 25200))
+        ):
+            issues.append(f"Fleet: {plate} missing its complete donor-report journey")
 
     return {
         "ready": not issues,

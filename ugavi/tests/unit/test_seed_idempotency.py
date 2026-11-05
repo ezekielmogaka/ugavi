@@ -33,7 +33,7 @@ class TestSeedScenarioKeys(unittest.TestCase):
             seed_lokado._seed_stock_entries()
 
             lookups = self._stock_entry_lookups(frappe)
-            self.assertEqual(len(lookups), 12)
+            self.assertEqual(len(lookups), 31)
             for call in lookups:
                 filters = call.args[1]
                 self.assertIn("remarks", filters)
@@ -48,13 +48,13 @@ class TestSeedScenarioKeys(unittest.TestCase):
             frappe.get_doc.return_value = MagicMock()
             seed_lokado._seed_stock_entries()
 
-            self.assertEqual(frappe.get_doc.call_count, 12)
+            self.assertEqual(frappe.get_doc.call_count, 31)
             for call in frappe.get_doc.call_args_list:
                 data = call.args[0]
                 self.assertTrue(data["remarks"])
                 self.assertEqual(data["set_posting_time"], 1)
                 self.assertNotIn("purpose", data)
-            self.assertEqual(frappe.get_doc.return_value.submit.call_count, 12)
+            self.assertEqual(frappe.get_doc.return_value.submit.call_count, 31)
             receipt_rows = [
                 call.args[1]
                 for call in frappe.get_doc.return_value.append.call_args_list
@@ -101,3 +101,34 @@ class TestSeedScenarioKeys(unittest.TestCase):
             self.assertEqual(invoice.payment_schedule, [])
             self.assertEqual(invoice.submit.call_count, len(seed_lokado.RECEIPT_INVOICES))
             frappe.db.rollback.assert_not_called()
+
+    def test_expanded_stock_keeps_programme_donors_separate(self):
+        def get_value(doctype, filters=None, fieldname=None, *args, **kwargs):
+            if doctype == "Warehouse":
+                return filters["warehouse_name"]
+            return _completed_transfers(doctype, filters, fieldname)
+
+        with patch.object(seed_lokado, "frappe") as frappe:
+            frappe.db.get_value.side_effect = get_value
+            seed_lokado._seed_stock_entries()
+            receipts = {
+                call.args[0]["remarks"]: call.args[0]["to_warehouse"]
+                for call in frappe.get_doc.call_args_list
+                if call.args[0]["stock_entry_type"] == "Material Receipt"
+            }
+            self.assertEqual(
+                receipts["Receive livestock from Nadirkonyen Women's Group"],
+                "LOKADO Main Warehouse - Lodwar",
+            )
+            self.assertEqual(
+                receipts["Receive shelter materials from Kalobeyei Refugee Supplies"],
+                "LOKADO Field Store - Lokichoggio",
+            )
+            self.assertEqual(
+                receipts["Receive food security items from Kainuk Agro-Vet"],
+                "LOKADO Transit Store - Kitale",
+            )
+            self.assertEqual(
+                receipts["Receive Japan classroom solar lantern opening stock"],
+                "Cold Chain Storage - Lodwar",
+            )

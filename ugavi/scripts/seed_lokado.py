@@ -1,6 +1,6 @@
 """Schema-driven, idempotent demo seed for LOKADO (Lotus Kenya Action for Development Organization).
 
-Validates every field key against DocType meta at runtime.
+Validates schema-driven master defaults against DocType meta at runtime.
 Refuses to run on production sites (developer_mode=0).
 Run twice -- no duplicates, no errors.
 
@@ -9,6 +9,9 @@ Usage:
     bench execute ugavi.scripts.seed_lokado.run
 """
 
+from contextlib import contextmanager
+import json
+
 import frappe
 from frappe import _
 from frappe.utils import add_days, getdate, today
@@ -16,6 +19,42 @@ from frappe.utils.password import update_password
 
 _STRICT_FIELDS = True  # set False in tests to skip meta queries
 _DEMO_PASSWORD = "Ugavi@2024"
+
+
+@contextmanager
+def _demo_actor(user):
+    previous = frappe.session.user
+    frappe.set_user(user)
+    try:
+        yield
+    finally:
+        frappe.set_user(previous)
+
+
+def _progress_demo_requisition(pr, target_status):
+    if target_status == "Draft" or pr.status in ("Approved", "Rejected", "Converted to Tender"):
+        return
+    with _demo_actor(pr.requester):
+        if pr.status == "Draft":
+            pr.submit_for_approval()
+    if target_status == "Pending Approval":
+        return
+    actors = {
+        "Approver Level 1": "approver1@lokado.org",
+        "Approver Level 2": "approver2@lokado.org",
+        "Procurement Officer": "procurement@lokado.org",
+        "Finance Officer": "finance@lokado.org",
+    }
+    while pr.status == "Pending Approval":
+        history = json.loads(pr.approval_history or "[]")
+        done = {row["role"] for row in history if row["action"] == "Approved"}
+        step = next(row for row in pr._approval_steps() if row["role"] not in done)
+        actor = step.get("user") or actors[step["role"]]
+        with _demo_actor(actor):
+            if target_status == "Rejected":
+                pr.reject("DEMO: request requires revised beneficiary or budget evidence.")
+            else:
+                pr.approve("DEMO: programme need, donor and quantities verified.")
 
 
 def _check_production():
@@ -34,14 +73,11 @@ def _validate_doc(dt, data):
     """Check keys in data exist on DocType dt. Returns unrecognized keys."""
     if not _STRICT_FIELDS:
         return []
-    try:
-        meta = frappe.get_meta(dt)
-    except Exception:
-        return []
-    valid = {f.fieldname for f in meta.fields} | {"doctype"}
+    meta = frappe.get_meta(dt)
+    valid = {f.fieldname for f in meta.fields} | {"doctype", "name"}
     bad = [k for k in data if k not in valid and not k.startswith("__")]
     if bad:
-        print(f"  W {dt}: unrecognized field(s) {bad}")
+        frappe.throw(f"{dt}: unrecognized seed fields {bad}")
     return bad
 
 
@@ -71,15 +107,16 @@ def run():
     _seed_items_and_warehouses()   # creates Item Groups that suppliers need
     _seed_suppliers()
     _seed_supplier_portal_links()
+    _seed_additional_supplier_categories()
     _seed_procurement_settings()
+    _seed_finance()
     _seed_logistics()
     _seed_supplier_evaluations()   # post-receipt supplier scorecards
     _seed_fleet()
     _seed_assets()
     _seed_governance()            # DoA, waiver, SoD, audit log, delegation
-    _seed_finance()               # KRA PIN, tax templates, eTIMS hooks
-    _seed_procurement_workflow()  # PRs, tenders, bids, awards, contracts
-    _seed_bid_opening_and_sealed_keys(today())  # AP-19: Sealed Bid Keys + BOR
+    _seed_projects_and_grants()
+    _seed_procurement_workflow()  # governed requests, source-linked tenders, submitted bids
     _prepare_live_opening_demo()
 
     # ── Supply-Chain Depth ──
@@ -98,14 +135,13 @@ def run():
     # ── Notifications ──
     _seed_notification_rules()    # Expiry, approval, rejection alerts (NT3)
 
-    # ── Programme & Grants ──
-    _seed_projects_and_grants()   # Programmes, projects, grants
-
     # ── Procurement Depth ──
-    _seed_lokado_purchase_orders() # Co-signed LPOs from awards
     _seed_monthly_stock_reports()  # derive donor books after all stock/valuation postings
 
     frappe.db.commit()
+    from ugavi.scripts.check_lokado_demo import run as check_demo
+
+    check_demo()
     print("\n=== LOKADO demo seed complete ===")
 # ─────────────────────────────────────────────────
 # 1. FOUNDATION — LOKADO Company
@@ -257,16 +293,16 @@ DONORS = [
 
 def _seed_donors():
     for code, name, desc in DONORS:
-        compliance = "High" if code != "LOKADO-OWN" else "Low"
-        ftype = "Project" if code != "LOKADO-OWN" else "Internal"
-        created, _ = _ensure("Donor Profile", "donor_code", code, {
+        created, donor = _ensure("Donor Profile", "donor_code", code, {
             "donor_name": name,
             "donor_code": code,
-            "description": desc,
-            "compliance_level": compliance,
-            "funding_type": ftype,
+            "currency": "KES",
+            "require_segregated_stock": 1,
+            "require_segregated_assets": 1,
+            "reporting_frequency": "Monthly",
         })
         if created:
+            frappe.get_doc("Donor Profile", donor).add_comment("Comment", desc)
             print(f"  Donor: {code} — {name}")
     frappe.db.commit()
     print("  6 donors created")
@@ -313,6 +349,31 @@ LOKADO_SUPPLIERS = [
      "Heavy and last-mile transport services for ASAL programme locations."),
     ("Pastoralist Veterinary Network", "Livestock & Agriculture", "Expired",
      "Veterinary outreach supplier pending renewal of statutory documents."),
+# ── New LOKADO suppliers for expanded demo ──
+    ("Lodwar Pharmaceuticals Ltd", "Medical Supplies", "Prequalified",
+     "Pharmaceutical distributor serving Turkana County health facilities. Licensed PPB wholesaler."),
+    ("Turkana Women's Handicrafts Cooperative", "Shelter & NFI", "Prequalified",
+     "Women-led cooperative producing blankets, dignity kits and household essentials."),
+    ("Kakuma Stationers & Supplies", "Educational Supplies", "Prequalified",
+     "School supplies, stationery and educational materials distributor in Kakuma."),
+    ("Lake Turkana Fishermen's Cooperative", "Food Security", "Prequalified",
+     "Community fishing cooperative supplying Lake Turkana catch and fishing equipment."),
+    ("Lokitaung Hardware & Building", "Construction Materials", "Prequalified",
+     "Hardware and building supplies based in Lokitaung, serving northern Turkana."),
+    ("Nadapal Transport & Logistics", "Field Equipment", "Prequalified",
+     "Cross-border transport and last-mile delivery specialist. Fleet of 12 trucks."),
+    ("Kalobeyei Refugee Supplies Ltd", "Shelter & NFI", "Prequalified",
+     "NFI and shelter material supplier for Kalobeyei Settlement humanitarian operations."),
+    ("Kainuk Agro-Vet Supplies", "Livestock & Agriculture", "Prequalified",
+     "Veterinary pharmaceuticals and animal health products for pastoralist communities."),
+    ("Lokichar General Traders", "Office Supplies", "Prequalified",
+     "General trader based in Lokichar, serving oil-field and adjacent communities."),
+    ("Lorugum Welding & Fabrication", "Construction Materials", "Prequalified",
+     "Metal fabrication workshop specializing in school desks, tanks and structural steel."),
+    ("Oropoi Community Supplies", "WASH Supplies", "Suspended",
+     "Suspended pending resolution of quality concerns on water treatment chemicals."),
+    ("Eliye Springs Boat Services", "Food Security", "Expired",
+     "Previously supplied fishing boats and gear. Insurance certification expired."),
 ]
 
 
@@ -369,7 +430,7 @@ def _seed_suppliers():
                 }).insert(ignore_permissions=True)
 
     frappe.db.commit()
-    print("  18 LOKADO suppliers seeded (15 prequalified, 2 expired, 1 suspended) + 42 total in system")
+    print("  30 LOKADO suppliers seeded (24 prequalified, 3 expired, 3 suspended) + 54 total in system")
 
 
 def _seed_supplier_portal_links():
@@ -403,6 +464,7 @@ def _seed_items_and_warehouses():
         "Livestock & Agriculture", "WASH Supplies", "Construction Materials",
         "Medical Supplies", "Office Supplies", "Field Equipment",
         "Fuel & Consumables", "Solar Equipment",
+        "Educational Supplies", "Shelter & NFI", "Food Security",
     ]:
         _ensure("Item Group", "item_group_name", g, {})
 
@@ -422,6 +484,22 @@ def _seed_items_and_warehouses():
         ("LAPTOP-DELL", "Laptop - Dell Latitude 5540", "Office Supplies", "Nos"),
         ("FUEL-DIESEL", "Fuel - Diesel", "Fuel & Consumables", "Litres"),
         ("FIRST-AID-KIT", "First Aid Kit - Community", "Medical Supplies", "Nos"),
+        # ── New items for expanded demo ──
+        ("SURGICAL-GLOVES", "Surgical Gloves - Box 100", "Medical Supplies", "Nos"),
+        ("MOSQUITO-NET", "Mosquito Net - Long-Lasting", "Medical Supplies", "Nos"),
+        ("ORS-SACHET", "ORS Sachet - WHO Formula", "Medical Supplies", "Nos"),
+        ("DELIVERY-KIT", "Delivery Kit - Clean Birth", "Medical Supplies", "Nos"),
+        ("SCHOOL-DESK", "School Desk - 3-Seater", "Educational Supplies", "Nos"),
+        ("TEXTBOOKS-SET", "Textbooks Set - Primary (40)", "Educational Supplies", "Nos"),
+        ("STATIONERY-KIT", "Stationery Kit - Student", "Educational Supplies", "Nos"),
+        ("SOLAR-LANTERN", "Solar Lantern - Classroom", "Educational Supplies", "Nos"),
+        ("TARPAULIN-4X6", "Tarpaulin - 4m x 6m", "Shelter & NFI", "Nos"),
+        ("BLANKET-FLEECE", "Blanket - Fleece Double", "Shelter & NFI", "Nos"),
+        ("JERRY-CAN-20L", "Jerry Can - 20 Litre", "Shelter & NFI", "Nos"),
+        ("COOKING-POT-SET", "Cooking Pot Set - Family", "Shelter & NFI", "Nos"),
+        ("SORGHUM-SEEDS", "Sorghum Seeds - Certified (5kg)", "Food Security", "Bag"),
+        ("FISHING-NET", "Fishing Net - Gill (100m)", "Food Security", "Nos"),
+        ("TIMBER-POLE", "Timber Pole - Treated (4m)", "Construction Materials", "Nos"),
     ]
 
     for code, name, grp, uom in items:
@@ -450,7 +528,7 @@ def _seed_items_and_warehouses():
                 name=wh_name)
 
     frappe.db.commit()
-    print(f"  15 items, {len(warehouses)} warehouses created")
+    print(f"  30 items, {len(warehouses)} warehouses created")
 # ─────────────────────────────────────────────────
 # 6. PROCUREMENT SETTINGS — LOKADO thresholds
 # ─────────────────────────────────────────────────
@@ -516,9 +594,45 @@ def _seed_fleet():
                 "marker": "LOKADO-DEMO-FLEET-EU",
                 "destination": "Cross-border peace-building corridor",
             },
+{
+                "donor_code": "JAPAN",
+                "warehouse_name": "Cold Chain Storage - Lodwar",
+                "license_plate": "KDQ 520J",
+                "make": "Nissan",
+                "model": "Navara",
+                "marker": "LOKADO-DEMO-FLEET-JAPAN",
+                "destination": "Cold chain vaccine delivery route",
+            },
+            {
+                "donor_code": "LOKADO-OWN",
+                "warehouse_name": "LOKADO Field Store - Oropoi",
+                "license_plate": "KDR 711L",
+                "make": "Toyota",
+                "model": "Hiace Van",
+                "marker": "LOKADO-DEMO-FLEET-OWN",
+                "destination": "Programme staff shuttle Lodwar-Kakuma",
+            },
+            {
+                "donor_code": "USAID",
+                "warehouse_name": "LOKADO Main Warehouse - Lodwar",
+                "license_plate": "KDS 143U",
+                "make": "Toyota",
+                "model": "Land Cruiser 79 Pickup",
+                "marker": "LOKADO-DEMO-FLEET-USAID2",
+                "destination": "Livestock restocking logistics to Kalobeyei",
+            },
+            {
+                "donor_code": "CONCERN",
+                "warehouse_name": "LOKADO Field Store - Lokichoggio",
+                "license_plate": "KDT 890C",
+                "make": "Mitsubishi",
+                "model": "Canter 3T",
+                "marker": "LOKADO-DEMO-FLEET-CONCERN2",
+                "destination": "NFI distribution to Loima and Kerio wards",
+            },
         ],
     )
-    print("  Fleet: 4 donor vehicles with submitted fuel, spares, trips and reports")
+    print("  Fleet: 8 donor vehicles with submitted fuel, spares, trips and reports")
 
 
 def _seed_assets():
@@ -539,6 +653,7 @@ def _seed_assets():
     for wh_name, donor_code in (
         ("USAID Field Store - Oropoi", "USAID"),
         ("IOM Field Store - Kalobeyei", "IOM"),
+        ("EU Field Store - Lake Turkana", "EU"),
     ):
         wh = warehouse(wh_name)
         if not wh:
@@ -646,6 +761,88 @@ def _seed_assets():
             "location": "LOKADO Field Store - Oropoi",
             "condition": "Good",
         },
+{
+            "tag": "LOK-RADIO-001",
+            "name": "HF Radio Base Station",
+            "category": "IT Equipment",
+            "serial": "HF-CON-001",
+            "price": 325000,
+            "donor": "CONCERN",
+            "location": "LOKADO Field Store - Lokichoggio",
+            "condition": "Good",
+        },
+        {
+            "tag": "LOK-BOAT-001",
+            "name": "Fishing Research Boat - Fibreglass",
+            "category": "Equipment",
+            "serial": "BOAT-EU-001",
+            "price": 780000,
+            "donor": "EU",
+            "location": "LOKADO Transit Store - Kitale",
+            "destination": "EU Field Store - Lake Turkana",
+            "condition": "New",
+        },
+        {
+            "tag": "LOK-WELD-001",
+            "name": "Welding Machine - Portable ARC",
+            "category": "Equipment",
+            "serial": "WELD-USA-001",
+            "price": 55000,
+            "donor": "USAID",
+            "location": "LOKADO Main Warehouse - Lodwar",
+            "condition": "Fair",
+        },
+        {
+            "tag": "LOK-SCALE-001",
+            "name": "Livestock Weighing Scale - Electronic",
+            "category": "Equipment",
+            "serial": "SCALE-USA-001",
+            "price": 92000,
+            "donor": "USAID",
+            "location": "LOKADO Main Warehouse - Lodwar",
+            "destination": "USAID Field Store - Oropoi",
+            "condition": "Good",
+        },
+        {
+            "tag": "LOK-TABLET-001",
+            "name": "Field Data Collection Tablet",
+            "category": "IT Equipment",
+            "serial": "TAB-IOM-001",
+            "price": 62000,
+            "donor": "IOM",
+            "location": "IOM Supported Warehouse - Kakuma",
+            "condition": "Good",
+        },
+        {
+            "tag": "LOK-WTR-001",
+            "name": "Water Purification Unit - Portable",
+            "category": "Equipment",
+            "serial": "WTR-JPN-001",
+            "price": 290000,
+            "donor": "JAPAN",
+            "location": "Cold Chain Storage - Lodwar",
+            "condition": "New",
+        },
+        {
+            "tag": "LOK-DRONE-001",
+            "name": "Survey Drone - DJI Mavic 3",
+            "category": "IT Equipment",
+            "serial": "DRONE-EU-001",
+            "price": 485000,
+            "donor": "EU",
+            "location": "LOKADO Transit Store - Kitale",
+            "condition": "Good",
+        },
+        {
+            "tag": "LOK-MEDFRIDGE-001",
+            "name": "Medical Refrigerator - Solar",
+            "category": "Equipment",
+            "serial": "FRIDGE-JPN-002",
+            "price": 370000,
+            "donor": "JAPAN",
+            "location": "Cold Chain Storage - Lodwar",
+            "condition": "New",
+        },
     ]
     for fixture in fixtures:
         asset_name = frappe.db.get_value(
@@ -728,7 +925,7 @@ def _seed_assets():
         disposal.insert(ignore_permissions=True)
         disposal.approve()
         disposal.complete_disposal()
-    print("  Assets: 8 registers, 8 verifications, 2 controlled movements, 1 disposal")
+    print("  Assets: 16 registers, 16 verifications, 5 controlled movements, 1 disposal")
 
 
 # ─────────────────────────────────────────────────
@@ -833,6 +1030,30 @@ def _seed_governance():
 # 8. PROCUREMENT WORKFLOW — LOKADO's realistic scenarios
 # ─────────────────────────────────────────────────
 
+def _seed_additional_supplier_categories():
+    for supplier, category in (
+        ("Lodwar General Supplies", "WASH Supplies"),
+        ("Rift Valley Hardware", "WASH Supplies"),
+        ("Lorugum Welding & Fabrication", "Educational Supplies"),
+        ("Kainuk Agro-Vet Supplies", "Food Security"),
+        ("Northern Kenya Solar Ltd", "Educational Supplies"),
+        ("Turkwel Renewable Energy", "Educational Supplies"),
+        ("Lake Turkana Water Services", "Educational Supplies"),
+        ("Eldoret Office Technologies", "Educational Supplies"),
+        ("Kenya Red Cross Supplies", "Medical Supplies"),
+        ("Lodwar General Supplies", "Livestock & Agriculture"),
+        ("Kenya Red Cross Supplies", "Livestock & Agriculture"),
+        ("Lodwar General Supplies", "Food Security"),
+        ("Lokichoggio Traders Ltd", "Food Security"),
+    ):
+        _ensure(
+            "Supplier Prequalification", {"supplier": supplier, "category": category}, None,
+            {"supplier": supplier, "category": category, "status": "Prequalified",
+             "prequalification_date": add_days(today(), -30),
+             "expiry_date": add_days(today(), 365)},
+        )
+
+
 def _seed_procurement_workflow():
     td = today()
     dm = {d[0]: frappe.db.get_value("Donor Profile", {"donor_code": d[0]}, "name")
@@ -877,7 +1098,7 @@ def _seed_procurement_workflow():
          "(80,000 KES) below threshold. Refer to petty cash system."),
         # PR07: Draft open tender for renewable-energy infrastructure
         ("Solar Water Pumps - EU Resilience Programme", "EU", 780000,
-         "Open Tender", "Draft",
+         "Open Tender", "Approved",
          "Emergency WASH - LOKADO", "WATER-PUMP-SOLAR",
          "Draft requirement for six solar pumping systems serving drought-prone "
          "settlements along the cross-border resilience corridor."),
@@ -898,6 +1119,96 @@ def _seed_procurement_workflow():
          "Peace Building & Conflict Resolution - LOKADO", "FIRST-AID-KIT",
          "Rejected pending confirmation of beneficiary numbers and budget-line "
          "availability; retained as approval-history evidence."),
+# PR11: Medical supplies — Japan funded, Direct RFQ, Approved
+        ("Cold Chain Medical Supplies - Japan Health", "JAPAN", 160000,
+         "Request for Quotation (Direct)", "Approved",
+         "Peace Building & Conflict Resolution - LOKADO", "SURGICAL-GLOVES",
+         "Procurement of surgical gloves and first aid supplies for mobile clinics "
+         "serving Kakuma and Kalobeyei refugee populations."),
+        # PR12: NFI tent procurement — Concern, Open Tender, Approved
+        ("Emergency Shelter Tarpaulins - Concern DRC", "CONCERN", 550000,
+         "Open Tender", "Approved",
+         "Gender & Protection - LOKADO", "TARPAULIN-4X6",
+         "Procurement of 800 heavy-duty tarpaulins for emergency shelter response "
+         "in Loima and Lokichoggio flood-affected areas."),
+        # PR13: Education materials — USAID, Restricted, Approved
+        ("Classroom Furniture & Stationery - USAID Education", "USAID", 420000,
+         "Restricted Tender", "Approved",
+         "Institutional Development - LOKADO", "SCHOOL-DESK",
+         "Provision of 3-seater desks, textbooks and stationery kits for 15 primary "
+         "schools in Turkana West under USAID Tusome programme."),
+        # PR14: Fishing equipment — EU, Restricted, Draft
+        ("Fishing Livelihood Equipment - Lake Turkana", "EU", 380000,
+         "Restricted Tender", "Draft",
+         "Livelihoods & Food Security - LOKADO", "FISHING-NET",
+         "Draft requirement for gill nets, boats and safety equipment for 12 fishing "
+         "cooperatives along Lake Turkana shoreline."),
+        # PR15: Construction timber — IOM, Direct, Pending
+        ("Timber Poles - IOM School Construction", "IOM", 180000,
+         "Request for Quotation (Direct)", "Pending Approval",
+         "Institutional Development - LOKADO", "TIMBER-POLE",
+         "Treated timber poles for 3 classroom blocks in Kakuma host community. "
+         "Pending final school-site verification."),
+        # PR16: Blankets — LOKADO-OWN, Direct, Approved
+        ("Blankets & Bedding - Internal Programme Support", "LOKADO-OWN", 95000,
+         "Request for Quotation (Direct)", "Approved",
+         "Administration & Finance - LOKADO", "BLANKET-FLEECE",
+         "Fleece blankets for staff guest house and field overnight stays in "
+         "remote programme locations."),
+        # PR17: Solar lanterns — JAPAN, Open, Approved
+        ("Solar Lanterns - Japan Education Programme", "JAPAN", 320000,
+         "Restricted Tender", "Approved",
+         "Institutional Development - LOKADO", "SOLAR-LANTERN",
+         "Solar lanterns for 40 primary schools enabling evening study for "
+         "learners in off-grid Turkana communities."),
+        # PR18: Jerry cans — IOM, Direct, Approved
+        ("Emergency Jerry Cans - IOM WASH Response", "IOM", 175000,
+         "Request for Quotation (Direct)", "Approved",
+         "Emergency WASH - LOKADO", "JERRY-CAN-20L",
+         "20-litre jerry cans for 2,000 households in Kakuma host community "
+         "under emergency WASH response for cholera prevention."),
+        # PR19: Sorghum seeds — EU, Restricted, Pending
+        ("Certified Sorghum Seeds - EU Food Security", "EU", 260000,
+         "Restricted Tender", "Pending Approval",
+         "Livelihoods & Food Security - LOKADO", "SORGHUM-SEEDS",
+         "Certified sorghum seeds for 500 smallholder farmers in Turkana South. "
+         "Part of EU Resilience drought-recovery programme."),
+        # PR20: Cooking pots — USAID, Direct, Approved
+        ("Family Cooking Pot Sets - USAID NFI", "USAID", 150000,
+         "Request for Quotation (Direct)", "Approved",
+         "Gender & Protection - LOKADO", "COOKING-POT-SET",
+         "Cooking pot sets for 300 displaced households in Oropoi and Lokiriama "
+         "as part of NFI dignity kit distribution."),
+        # PR21: Mosquito nets — CONCERN, Direct, Approved
+        ("LLIN Mosquito Nets - Concern Health", "CONCERN", 140000,
+         "Request for Quotation (Direct)", "Approved",
+         "Peace Building & Conflict Resolution - LOKADO", "MOSQUITO-NET",
+         "Long-lasting insecticidal nets for malaria prevention in Loima and "
+         "Lokichoggio health catchment areas."),
+        # PR22: Delivery kits — JAPAN, Open, Approved
+        ("Clean Birth Delivery Kits - Japan MNCH", "JAPAN", 280000,
+         "Restricted Tender", "Approved",
+         "Peace Building & Conflict Resolution - LOKADO", "DELIVERY-KIT",
+         "Clean delivery kits for 50 health facilities supporting maternal and "
+         "newborn child health across Turkana County."),
+        # PR23: Chicken restocking — USAID, Restricted, Rejected
+        ("Indigenous Chicken Restocking - USAID Phase 2", "USAID", 310000,
+         "Restricted Tender", "Rejected",
+         "Livelihoods & Food Security - LOKADO", "CHICKEN-INDIG",
+         "Rejected: beneficiary selection criteria requires revision. "
+         "Procurement committee directed programme to revalidate HH list."),
+        # PR24: ORS supplies — IOM, Direct, Approved
+        ("ORS and Diarrhoea Kits - IOM Health", "IOM", 130000,
+         "Request for Quotation (Direct)", "Approved",
+         "Emergency WASH - LOKADO", "ORS-SACHET",
+         "Oral rehydration salts for cholera prevention and treatment in "
+         "Kakuma camp and host community health posts."),
+        # PR25: Steel reinforcement — LOKADO-OWN, Open, Draft
+        ("Steel Bars - LOKADO Office Extension", "LOKADO-OWN", 600000,
+         "Open Tender", "Draft",
+         "Institutional Development - LOKADO", "STEEL-Y12",
+         "Draft: steel reinforcement bars for proposed 2-storey office extension "
+         "at Lodwar HQ. Board approval pending."),
     ]
 
     pr_map = {}
@@ -905,7 +1216,9 @@ def _seed_procurement_workflow():
         pk = title[:40].replace(" ", "-").replace(",", "").replace("—", "-")
         exists = frappe.db.exists("Purchase Requisition", {"title": title})
         if exists:
+            _progress_demo_requisition(frappe.get_doc("Purchase Requisition", exists), status)
             pr_map[pk] = exists
+            pr_map[title] = exists
             continue
 
         qty_map = {
@@ -929,49 +1242,75 @@ def _seed_procurement_workflow():
         pr = frappe.get_doc({
             "doctype": "Purchase Requisition",
             "title": title,
-            "requester": "procurement@lokado.org",
+            "requester": "programme@lokado.org",
             "department": dept,
             "donor": dm.get(donor_code, donor_code),
             "justification": justification,
-            "status": status,
+            "status": "Draft",
             "procurement_method": method,
             "estimated_value": value,
             "items": [{
                 "item_code": item_code,
                 "quantity": qty,
                 "estimated_unit_price": value / qty,
-                "uom": "Nos",
+                "uom": frappe.db.get_value("Item", item_code, "stock_uom"),
                 "estimated_total": value,
             }],
         })
-        pr.flags.allow_status_transition = True
-        pr.insert(ignore_permissions=True)
+        with _demo_actor("programme@lokado.org"):
+            pr.insert(ignore_permissions=True)
+        _progress_demo_requisition(pr, status)
         pr_map[pk] = pr.name
+        pr_map[title] = pr.name
         print(f"  PR: {title[:50]} [{donor_code}] {value:,} KES [{status}]")
 
     _seed_lokado_tenders_and_bids(td, dm, pr_map)
     frappe.db.commit()
-    print("  Procurement: 10 PRs across Draft/Pending/Approved/Rejected, 8 tenders, 26 bids and 3 awards")
+    print("  Procurement: 25 PR lifecycle scenarios and 20 source-linked tender scenarios")
 def _seed_lokado_tenders_and_bids(td, dm, pr_map):
     """Tenders matching LOKADO procurement scenarios."""
 
     tender_data = [
         ("Water Tanks WASH IOM", "IOM", 450000,
-         "Restricted Tender", "Water-Tanks---WASH-Programme-(IOM)"),
+         "Restricted Tender", "Water Tanks - WASH Programme (IOM)"),
         ("Livestock Galla Goats USAID", "USAID", 380000,
-         "Restricted Tender", "Livestock-Restocking---Galla-Goats-(USAID"),
+         "Restricted Tender", "Livestock Restocking - Galla Goats (USAID)"),
         ("IOM Warehouse Construction Kakuma", "JAPAN", 1200000,
-         "Open Tender", "Construction-of-IOM-Supported-Warehouse--"),
+         "Open Tender", "Construction of IOM-Supported Warehouse - Kakuma"),
         ("Hygiene Kits Gender Concern", "CONCERN", 180000,
-         "Request for Quotation (Direct)", "Hygiene-Kits---Gender-Programme-(Concer"),
+         "Request for Quotation (Direct)", "Hygiene Kits - Gender Programme (Concern)"),
         ("Field Motorcycles Peace Building USAID", "USAID", 520000,
-         "Open Tender", "Field-Motorcycles---Programme-Officers-(USAI"),
+         "Open Tender", "Field Motorcycles - Programme Officers (USAID)"),
         ("Solar Water Pumps EU Resilience", "EU", 780000,
-         "Open Tender", "Solar-Water-Pumps---EU-Resilience-"),
+         "Open Tender", "Solar Water Pumps - EU Resilience Programme"),
         ("Veterinary Outreach Kits USAID", "USAID", 240000,
-         "Restricted Tender", "Veterinary-Outreach-Kits---USAID-Li"),
+         "Restricted Tender", "Veterinary Outreach Kits - USAID Livelihoods"),
         ("Emergency HDPE Pipe Repair IOM", "IOM", 195000,
-         "Request for Quotation (Direct)", "Emergency-HDPE-Pipe-Repair---IOM-WAS"),
+         "Request for Quotation (Direct)", "Emergency HDPE Pipe Repair - IOM WASH"),
+("Cold Chain Medical Supplies Japan", "JAPAN", 160000,
+         "Request for Quotation (Direct)", "Cold Chain Medical Supplies - Japan Health"),
+        ("Emergency Shelter Tarpaulins Concern", "CONCERN", 550000,
+         "Open Tender", "Emergency Shelter Tarpaulins - Concern DRC"),
+        ("Classroom Furniture USAID Education", "USAID", 420000,
+         "Restricted Tender", "Classroom Furniture & Stationery - USAID Education"),
+        ("Fishing Equipment Lake Turkana EU", "EU", 380000,
+         "Restricted Tender", "Fishing Livelihood Equipment - Lake Turkana"),
+        ("Timber Poles IOM School Construction", "IOM", 180000,
+         "Request for Quotation (Direct)", "Timber Poles - IOM School Construction"),
+        ("Blankets Internal Programme Support", "LOKADO-OWN", 95000,
+         "Request for Quotation (Direct)", "Blankets & Bedding - Internal Programme Support"),
+        ("Solar Lanterns Japan Education", "JAPAN", 320000,
+         "Restricted Tender", "Solar Lanterns - Japan Education Programme"),
+        ("Emergency Jerry Cans IOM WASH", "IOM", 175000,
+         "Request for Quotation (Direct)", "Emergency Jerry Cans - IOM WASH Response"),
+        ("Sorghum Seeds EU Food Security", "EU", 260000,
+         "Restricted Tender", "Certified Sorghum Seeds - EU Food Security"),
+        ("Family Cooking Pots USAID NFI", "USAID", 150000,
+         "Request for Quotation (Direct)", "Family Cooking Pot Sets - USAID NFI"),
+        ("LLIN Mosquito Nets Concern Health", "CONCERN", 140000,
+         "Request for Quotation (Direct)", "LLIN Mosquito Nets - Concern Health"),
+        ("Clean Birth Delivery Kits Japan MNCH", "JAPAN", 280000,
+         "Restricted Tender", "Clean Birth Delivery Kits - Japan MNCH"),
     ]
 
     for t_title, donor_code, value, method, pr_key in tender_data:
@@ -979,13 +1318,17 @@ def _seed_lokado_tenders_and_bids(td, dm, pr_map):
             continue
 
         pr_name = pr_map.get(pr_key)
+        if not pr_name:
+            frappe.throw(f"Tender {t_title} has no source requisition: {pr_key}")
+        requisition = frappe.get_doc("Purchase Requisition", pr_name)
         tender = frappe.get_doc({
             "doctype": "Tender",
             "title": t_title,
             "purchase_requisition": pr_name,
-            "donor": dm.get(donor_code, donor_code),
-            "procurement_method": method,
+            "donor": requisition.donor,
+            "procurement_method": requisition.procurement_method,
             "estimated_value": value,
+            "item_category": frappe.db.get_value("Item", requisition.items[0].item_code, "item_group"),
             "submission_deadline": str(add_days(td, 21)),
             "status": "Draft",
             "opening_officer_1": "opening1@lokado.org",
@@ -997,51 +1340,37 @@ def _seed_lokado_tenders_and_bids(td, dm, pr_map):
             ),
         })
         tender.insert(ignore_permissions=True)
+        if requisition.status != "Approved":
+            print(f"  Tender: {t_title} remains Draft until its requisition is approved")
+            continue
         tender.publish()
         print(f"  Tender: {t_title[:45]} [{donor_code}] {value:,} KES [{method}]")
 
-        # Add documents — skip if attachment is a mandatory child field
+        # Fictional attachments use Frappe's private file storage.
         try:
             for dtype, doc_label in [("Bill of Quantities", "Bill of Quantities"),
                                        ("Specifications", "Technical Specifications"),
                                        ("Terms of Reference", "Terms of Reference")]:
                 if hasattr(tender, "tender_documents"):
+                    from frappe.utils.file_manager import save_file
+
+                    attachment = save_file(
+                        f"{tender.name}-{dtype.replace(' ', '-')}.txt",
+                        f"FICTIONAL DEMO DOCUMENT\n{t_title}\n{doc_label}\n",
+                        "Tender", tender.name, is_private=1,
+                    )
                     tender.append("tender_documents", {
                         "document_type": dtype,
                         "document_name": f"{doc_label} - {t_title[:30]}",
+                        "attachment": attachment.file_url,
                     })
             tender.save(ignore_permissions=True)
         except Exception:
-            # Some tender doctypes require attachment on documents; skip gracefully
-            pass
+            frappe.db.rollback()
+            raise
 
     _seed_lokado_bids(td)
-    _seed_lokado_award(td, dm)
-    _seed_lokado_bid_securities(td)
     _seed_lokado_addendum(td)
-    _seed_lokado_contract(td, dm)
-    _seed_mvp2_readiness(td)
-
-
-def _seed_mvp2_readiness(td):
-    """Seed one active standstill window for the supplier complaint demo."""
-    tender = frappe.db.get_value(
-        "Tender",
-        {"title": "Field Motorcycles Peace Building USAID"},
-        "name",
-    )
-    if not tender or frappe.db.exists("Standstill Period", {"tender": tender}):
-        return
-    frappe.get_doc({
-        "doctype": "Standstill Period",
-        "tender": tender,
-        "start_date": td,
-        "end_date": add_days(td, 7),
-        "status": "Active",
-        "challenges_count": 0,
-    }).insert(ignore_permissions=True)
-    frappe.db.set_value("Tender", tender, "status", "Standstill Period")
-    print("  MVP2 readiness: active standstill window for supplier complaints")
 
 
 def _seed_lokado_bids(td):
@@ -1055,7 +1384,7 @@ def _seed_lokado_bids(td):
         "Livestock Galla Goats USAID": [
             ("Nadirkonyen Women's Group", 365000),
             ("Moi's Bridge Livestock", 378000),
-            ("Turkana Construction Ltd", 400000),
+            ("Kainuk Agro-Vet Supplies", 400000),
         ],
         "IOM Warehouse Construction Kakuma": [
             ("Turkana Construction Ltd", 1150000),
@@ -1082,7 +1411,57 @@ def _seed_lokado_bids(td):
             ("Kenya Red Cross Supplies", 228000),
             ("Nadirkonyen Women's Group", 235000),
             ("Lodwar General Supplies", 242000),
-            ("Jopeji Enterprises", 250000),
+            ("Moi's Bridge Livestock", 250000),
+        ],
+        "Cold Chain Medical Supplies Japan": [
+            ("Lodwar Pharmaceuticals Ltd", 154000),
+            ("Kenya Red Cross Supplies", 169000),
+            ("Kakuma Cold Chain Solutions", 173000),
+        ],
+        "Emergency Shelter Tarpaulins Concern": [
+            ("Kalobeyei Refugee Supplies Ltd", 610000),
+            ("Lokichoggio Traders Ltd", 620000),
+            ("Rift Valley Hardware", 638000),
+        ],
+        "Classroom Furniture USAID Education": [
+            ("Lorugum Welding & Fabrication", 405000),
+            ("Kakuma Stationers & Supplies", 418000),
+            ("Eldoret Office Technologies", 425000),
+        ],
+        "Timber Poles IOM School Construction": [
+            ("Lokitaung Hardware & Building", 175000),
+            ("Rift Valley Hardware", 180000),
+            ("Ekaale Building Works", 184000),
+        ],
+        "Solar Lanterns Japan Education": [
+            ("Northern Kenya Solar Ltd", 299000),
+            ("Turkwel Renewable Energy", 309000),
+            ("Lake Turkana Water Services", 318000),
+        ],
+        "Emergency Jerry Cans IOM WASH": [
+            ("Lokitaung Hardware & Building", 91000),
+            ("Lodwar General Supplies", 94000),
+            ("Lokichoggio Traders Ltd", 96000),
+        ],
+        "Sorghum Seeds EU Food Security": [
+            ("Kainuk Agro-Vet Supplies", 280000),
+            ("Lodwar General Supplies", 288000),
+            ("Lokichoggio Traders Ltd", 295000),
+        ],
+        "Family Cooking Pots USAID NFI": [
+            ("Lokichar General Traders", 144000),
+            ("Lokichoggio Traders Ltd", 150000),
+            ("Lodwar General Supplies", 155000),
+        ],
+        "LLIN Mosquito Nets Concern Health": [
+            ("Lodwar Pharmaceuticals Ltd", 121000),
+            ("Kenya Red Cross Supplies", 125000),
+            ("Kalobeyei Refugee Supplies Ltd", 129000),
+        ],
+        "Clean Birth Delivery Kits Japan MNCH": [
+            ("Lodwar Pharmaceuticals Ltd", 263000),
+            ("Kenya Red Cross Supplies", 270000),
+            ("Kakuma Cold Chain Solutions", 278000),
         ],
         "Emergency HDPE Pipe Repair IOM": [
             ("Rift Valley Hardware", 188000),
@@ -1094,11 +1473,13 @@ def _seed_lokado_bids(td):
     for t_title, bids in tender_map.items():
         tname = frappe.db.get_value("Tender", {"title": t_title}, "name")
         if not tname:
+            frappe.throw(f"Missing tender for bid scenario: {t_title}")
+        if frappe.db.get_value("Tender", tname, "status") == "Draft":
             continue
         for supplier_name, amount in bids:
             supplier = frappe.db.get_value("Supplier", {"supplier_name": supplier_name}, "name")
             if not supplier:
-                continue
+                frappe.throw(f"Missing supplier for bid scenario: {supplier_name}")
             if frappe.db.exists("Bid", {"tender": tname, "supplier": supplier}):
                 continue
             bid = frappe.get_doc({
@@ -1115,67 +1496,7 @@ def _seed_lokado_bids(td):
             print(f"  Bid: {supplier_name[:25]} → {amount:,} KES [{t_title[:30]}]")
 
     frappe.db.commit()
-    print("  Procurement Workflow: 10 PRs, 8 tenders, 26 bids, 3 awards")
-
-
-def _seed_bid_opening_and_sealed_keys(td):
-    """AP-19: Seed Bid Opening Records and Sealed Bid Keys for live crypto demo."""
-    from ugavi.procurement.services.sealed_bid import generate_and_distribute_keys
-    # --- Sealed Bid Keys for Open Tenders ---
-    open_tenders = [
-        # T3: IOM Warehouse (awarded, grand finale)
-        {"title": "IOM Warehouse Construction Kakuma", "officers": [
-            "approver1@lokado.org",
-            "approver2@lokado.org",
-            "auditor@lokado.org",
-        ]},
-        # T5: Field Motorcycles Peace Building
-        {"title": "Field Motorcycles Peace Building USAID", "officers": [
-            "approver1@lokado.org",
-            "procurement@lokado.org",
-            "officer1@lokado.org",
-        ]},
-    ]
-
-    for info in open_tenders:
-        tname = frappe.db.get_value("Tender", {"title": info["title"]}, "name")
-        if not tname:
-            print(f"  SKIP SBK: tender '{info['title']}' not found")
-            continue
-        # Place public key on the tender
-        tender = frappe.get_doc("Tender", tname)
-        if tender.public_key and len(tender.public_key) > 80:
-            print(f"  SBK: Key already exists for {info['title'][:40]} — skipping")
-            continue
-        try:
-            result = generate_and_distribute_keys(tname, info["officers"])
-            tender.public_key = result["public_key_pem"]
-            tender.key_generated_at = frappe.utils.now_datetime()
-            # Set opening officers on the tender for the ceremony
-            tender.opening_officer_1 = info["officers"][0]
-            tender.opening_officer_2 = info["officers"][1]
-            tender.opening_officer_3 = info["officers"][2]
-            tender.save(ignore_permissions=True)
-            print(f"  SBK: Generated 3-of-3 key for {info['title'][:40]}")
-        except ImportError:
-            print(f"  SBK: cryptography not available — placeholder key stored")
-            import base64 as _b64
-            tender.public_key = "DEMO-PLACEHOLDER-KEY-" + _b64.b64encode(
-                tender.title.encode()).decode()[:40]
-            tender.opening_officer_1 = info["officers"][0]
-            tender.opening_officer_2 = info["officers"][1]
-            tender.opening_officer_3 = info["officers"][2]
-            tender.save(ignore_permissions=True)
-            print(f"  SBK: Placeholder key for {info['title'][:40]}")
-        except Exception as e:
-            print(f"  SBK ERROR for {info['title'][:40]}: {e}")
-
-    # Opening records are intentionally not fabricated by the seed. Presenters
-    # run the real three-officer ceremony, which creates the immutable record.
-    tname = frappe.db.get_value("Tender",
-        {"title": "IOM Warehouse Construction Kakuma"}, "name")
-    if tname and not frappe.db.exists("Bid Opening Record", {"tender": tname}):
-        print("  BOR: pending live three-officer opening ceremony (not fabricated)")
+    print("  Procurement Workflow: source-linked PRs, eligible sealed bids; opening and award remain live")
 
 
 def _prepare_live_opening_demo():
@@ -1193,98 +1514,6 @@ def _prepare_live_opening_demo():
         tender.submission_deadline = str(add_days(today(), -1)) + " 17:00:00"
         tender.save(ignore_permissions=True)
     print("  Live opening ready: Solar Water Pumps EU Resilience (closed, four sealed bids)")
-
-
-def _seed_lokado_award(td, dm):
-    """Award 3 tenders with full evaluation summaries."""
-
-    award_scenarios = [
-        {
-            "tender_title": "IOM Warehouse Construction Kakuma",
-            "supplier_name": "Turkana Construction Ltd",
-            "award_amount": 1150000,
-            "justification": (
-                "Turkana Construction Ltd: lowest evaluated bid at KES 1,150,000. "
-                "Technical score: 82/100. Valid prequalification, 3 similar ASAL "
-                "warehouse projects completed. Employs local Turkana community members."
-            ),
-        },
-        {
-            "tender_title": "Livestock Galla Goats USAID",
-            "supplier_name": "Nadirkonyen Women's Group",
-            "award_amount": 365000,
-            "justification": (
-                "Nadirkonyen Women's Group: community-based supplier offering best animal "
-                "health guarantee at KES 365,000. Technical score: 88/100. Pastoralist-owned "
-                "social enterprise with proven delivery to ASAL counties."
-            ),
-        },
-        {
-            "tender_title": "Water Tanks WASH IOM",
-            "supplier_name": "Lodwar General Supplies",
-            "award_amount": 425000,
-            "justification": (
-                "Lodwar General Supplies: lowest evaluated bid at KES 425,000. "
-                "Technical score: 85/100. Established local supplier with 5-year WASH "
-                "programme track record. Shorter transport distance to remote sites."
-            ),
-        },
-    ]
-
-    for scenario in award_scenarios:
-        tname = frappe.db.get_value("Tender", {"title": scenario["tender_title"]}, "name")
-        if not tname:
-            continue
-
-        supplier = frappe.db.get_value("Supplier", {"supplier_name": scenario["supplier_name"]}, "name")
-        if not supplier:
-            continue
-
-        if frappe.db.exists("Bid Evaluation Summary", {"tender": tname}):
-            continue
-
-        try:
-            bes = frappe.get_doc({
-                "doctype": "Bid Evaluation Summary",
-                "tender": tname,
-                "evaluation_date": str(add_days(td, -2)),
-                "recommended_bidder": supplier,
-                "recommended_amount": scenario["award_amount"],
-                "justification": scenario["justification"],
-                "status": "Approved",
-            })
-            bes.insert(ignore_permissions=True)
-
-            if hasattr(bes, 'award_tender'):
-                bes.award_tender()
-                print(f"  Award: {scenario['tender_title'][:40]} → {scenario['supplier_name'][:25]} {scenario['award_amount']:,} KES [+ PO]")
-            else:
-                print(f"  Award: {scenario['tender_title'][:40]} → {scenario['supplier_name'][:25]} {scenario['award_amount']:,} KES")
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            print(f"  Award: Could not create for {scenario['tender_title'][:40]} — {type(e).__name__}: {e}")
-
-    frappe.db.commit()
-    print("  Awards: 3 tenders awarded with evaluation summaries")
-
-
-def _seed_lokado_bid_securities(td):
-    """Bid securities for open tender construction."""
-    tname = frappe.db.get_value("Tender", {"title": "IOM Warehouse Construction Kakuma"}, "name")
-    if not tname:
-        return
-    try:
-        tender = frappe.get_doc("Tender", tname)
-        for bid in frappe.get_all("Bid", {"tender": tname}, ["name"]):
-            if hasattr(tender, 'verify_bid_security'):
-                try:
-                    tender.verify_bid_security(bid.name)
-                except Exception:
-                    pass
-        print("  Bid Security: Verified for construction tender")
-    except Exception:
-        pass
 
 
 def _seed_lokado_addendum(td):
@@ -1381,6 +1610,134 @@ def _seed_lokado_contract(td, dm):
                 ("Pipe replacement works", 40, 14),
             ],
         },
+{
+            "tender_title": "Emergency Shelter Tarpaulins Concern",
+            "supplier_name": "Kalobeyei Refugee Supplies Ltd",
+            "amount": 520000,
+            "duration_days": 45,
+            "retention_pct": 0,
+            "bond_amount": 0,
+            "milestones": [
+                ("Stock mobilisation from Kakuma", 30, 7),
+                ("First distribution Loima (400 units)", 35, 21),
+                ("Second distribution Lokichoggio (400 units)", 35, 45),
+            ],
+        },
+        {
+            "tender_title": "Classroom Furniture USAID Education",
+            "supplier_name": "Lorugum Welding & Fabrication",
+            "amount": 400000,
+            "duration_days": 90,
+            "retention_pct": 5,
+            "bond_amount": 0,
+            "milestones": [
+                ("Raw material procurement", 15, 10),
+                ("Fabrication batch 1 - 100 desks", 35, 35),
+                ("Fabrication batch 2 - 100 desks", 25, 60),
+                ("Delivery & installation to 15 schools", 25, 90),
+            ],
+        },
+        {
+            "tender_title": "Field Motorcycles Peace Building USAID",
+            "supplier_name": "Jopeji Enterprises",
+            "amount": 510000,
+            "duration_days": 30,
+            "retention_pct": 0,
+            "bond_amount": 0,
+            "milestones": [
+                ("Pre-delivery inspection & registration", 30, 7),
+                ("Delivery to 4 field offices", 50, 20),
+                ("After-sales training & toolkit handover", 20, 30),
+            ],
+        },
+        {
+            "tender_title": "Fishing Equipment Lake Turkana EU",
+            "supplier_name": "Lake Turkana Fishermen's Cooperative",
+            "amount": 365000,
+            "duration_days": 60,
+            "retention_pct": 5,
+            "bond_amount": 0,
+            "milestones": [
+                ("Net procurement & QA", 30, 15),
+                ("Distribution to 12 cooperatives", 45, 40),
+                ("Training on sustainable fishing", 25, 60),
+            ],
+        },
+        {
+            "tender_title": "Solar Lanterns Japan Education",
+            "supplier_name": "Northern Kenya Solar Ltd",
+            "amount": 305000,
+            "duration_days": 45,
+            "retention_pct": 0,
+            "bond_amount": 0,
+            "milestones": [
+                ("Procurement & import clearance", 40, 14),
+                ("Distribution to 20 schools (phase 1)", 30, 28),
+                ("Distribution to 20 schools (phase 2)", 30, 45),
+            ],
+        },
+        {
+            "tender_title": "Sorghum Seeds EU Food Security",
+            "supplier_name": "Kainuk Agro-Vet Supplies",
+            "amount": 248000,
+            "duration_days": 35,
+            "retention_pct": 0,
+            "bond_amount": 0,
+            "milestones": [
+                ("Seed certification & packaging", 30, 10),
+                ("Distribution to 250 farmer groups (phase 1)", 40, 22),
+                ("Distribution to 250 farmer groups (phase 2)", 30, 35),
+            ],
+        },
+        {
+            "tender_title": "Clean Birth Delivery Kits Japan MNCH",
+            "supplier_name": "Lodwar Pharmaceuticals Ltd",
+            "amount": 265000,
+            "duration_days": 40,
+            "retention_pct": 0,
+            "bond_amount": 0,
+            "milestones": [
+                ("Procurement from Nairobi", 35, 10),
+                ("Cold-chain delivery to 25 facilities (phase 1)", 40, 25),
+                ("Cold-chain delivery to 25 facilities (phase 2)", 25, 40),
+            ],
+        },
+        {
+            "tender_title": "Cold Chain Medical Supplies Japan",
+            "supplier_name": "Lodwar Pharmaceuticals Ltd",
+            "amount": 155000,
+            "duration_days": 21,
+            "retention_pct": 0,
+            "bond_amount": 0,
+            "milestones": [
+                ("Procurement & QA clearance", 50, 7),
+                ("Delivery to 5 mobile clinic hubs", 50, 21),
+            ],
+        },
+        {
+            "tender_title": "Emergency Jerry Cans IOM WASH",
+            "supplier_name": "Lokichoggio Traders Ltd",
+            "amount": 170000,
+            "duration_days": 14,
+            "retention_pct": 0,
+            "bond_amount": 0,
+            "milestones": [
+                ("Stock mobilisation", 40, 3),
+                ("Distribution to 2,000 households", 60, 14),
+            ],
+        },
+        {
+            "tender_title": "Timber Poles IOM School Construction",
+            "supplier_name": "Lokitaung Hardware & Building",
+            "amount": 175000,
+            "duration_days": 30,
+            "retention_pct": 0,
+            "bond_amount": 0,
+            "milestones": [
+                ("Timber procurement & treatment", 40, 10),
+                ("Delivery to 3 school sites", 60, 30),
+            ],
+        },
     ]
 
     for scenario in contract_scenarios:
@@ -1421,7 +1778,7 @@ def _seed_lokado_contract(td, dm):
             print(f"  Contract: Could not create for {scenario['tender_title'][:40]} — {type(e).__name__}: {e}")
 
     frappe.db.commit()
-    print("  Contracts: 5 Ugavi Contracts with milestones, retention and bonds")
+    print("  Contracts: 15 Ugavi Contracts with milestones, retention and bonds")
 
 
 # ─────────────────────────────────────────────────
@@ -1577,18 +1934,85 @@ def _seed_logistics():
         ("Jopeji Enterprises", "LOKADO Transit Store - Kitale", [
             ("MOTORCYCLE-FIELD", 4, 130000, "BAT-2025-USAID-MOTO", "2028-12-31"),
         ]),
+        ("Kalobeyei Refugee Supplies Ltd", "LOKADO Field Store - Lokichoggio", [
+            ("TARPAULIN-4X6", 800, 650, None, None),
+            ("BLANKET-FLEECE", 500, 480, None, None),
+        ]),
+        ("Lorugum Welding & Fabrication", "LOKADO Main Warehouse - Lodwar", [
+            ("SCHOOL-DESK", 200, 2000, None, None),
+            ("STATIONERY-KIT", 300, 350, None, None),
+        ]),
+        ("Lodwar Pharmaceuticals Ltd", "Cold Chain Storage - Lodwar", [
+            ("SURGICAL-GLOVES", 200, 800, None, None),
+            ("DELIVERY-KIT", 250, 1060, None, None),
+        ]),
+        ("Lokitaung Hardware & Building", "IOM Supported Warehouse - Kakuma", [
+            ("TIMBER-POLE", 300, 583, None, None),
+            ("JERRY-CAN-20L", 2000, 85, None, None),
+        ]),
+        ("Northern Kenya Solar Ltd", "Cold Chain Storage - Lodwar", [
+            ("SOLAR-LANTERN", 200, 1525, None, None),
+        ]),
+        ("Lake Turkana Fishermen's Cooperative", "LOKADO Transit Store - Kitale", [
+            ("FISHING-NET", 120, 3042, None, None),
+        ]),
+        ("Kainuk Agro-Vet Supplies", "LOKADO Transit Store - Kitale", [
+            ("SORGHUM-SEEDS", 500, 496, None, None),
+        ]),
+        ("Lodwar Pharmaceuticals Ltd", "LOKADO Field Store - Lokichoggio", [
+            ("MOSQUITO-NET", 600, 233, None, None),
+            ("ORS-SACHET", 400, 325, None, None),
+        ]),
+        ("Lokichar General Traders", "LOKADO Field Store - Oropoi", [
+            ("LAPTOP-DELL", 5, 97500, None, None),
+        ]),
+        ("Kakuma Stationers & Supplies", "LOKADO Main Warehouse - Lodwar", [
+            ("TEXTBOOKS-SET", 100, 2800, None, None),
+        ]),
+        ("Turkwel Renewable Energy", "Cold Chain Storage - Lodwar", [
+            ("WATER-PUMP-SOLAR", 5, 185000, None, None),
+        ]),
+        ("Turkana Women's Handicrafts Cooperative", "LOKADO Field Store - Oropoi", [
+            ("BLANKET-FLEECE", 100, 480, None, None),
+        ]),
+        ("Lokitaung Hardware & Building", "LOKADO Main Warehouse - Lodwar", [
+            ("IRON-SHEET-G32", 100, 850, None, None),
+        ]),
+        ("Lake Turkana Water Services", "IOM Supported Warehouse - Kakuma", [
+            ("WATER-TANK-10K", 4, 48000, None, None),
+        ]),
+        ("Lokichoggio Traders Ltd", "LOKADO Field Store - Lokichoggio", [
+            ("JERRY-CAN-20L", 1000, 85, None, None),
+        ]),
+        ("Eldoret Office Technologies", "LOKADO Field Store - Oropoi", [
+            ("LAPTOP-DELL", 5, 97500, None, None),
+        ]),
+        ("Lokichar General Traders", "LOKADO Main Warehouse - Lodwar", [
+            ("COOKING-POT-SET", 300, 500, None, None),
+        ]),
+        ("Kalobeyei Refugee Supplies Ltd", "LOKADO Transit Store - Kitale", [
+            ("TARPAULIN-4X6", 200, 650, None, None),
+        ]),
     ]
 
     for supplier_name, wh_name, items in receipt_scenarios:
+        from ugavi.scripts.seed_fleet_journey import _activate_contract
+
         supplier = frappe.db.get_value("Supplier", {"supplier_name": supplier_name}, "name")
         wh_full = _wh(wh_name)
         if not supplier or not wh_full:
-            continue
+            frappe.throw(f"Missing supplier or warehouse for {supplier_name}: {wh_name}")
         # Check if a receipt for this supplier+warehouse combo already exists
-        if frappe.db.exists("Purchase Receipt", {
+        existing_receipt = frappe.db.exists("Purchase Receipt", {
             "supplier": supplier,
-            "set_warehouse": wh_full,
-        }):
+            "set_warehouse": wh_full, "docstatus": 1,
+        })
+        contract_scenario = {
+            "marker": f"LOKADO-DEMO-GRN-{supplier_name}-{wh_name}"[:140],
+            "purpose": f"Programme supplies delivered to {wh_name}",
+        }
+        if existing_receipt:
+            _activate_contract(frappe.get_doc("Purchase Receipt", existing_receipt), contract_scenario)
             continue
         try:
             order = _ensure_logistics_purchase_order(supplier, supplier_name, wh_full, items, td)
@@ -1597,6 +2021,7 @@ def _seed_logistics():
             )
 
             pr = make_purchase_receipt(order.name)
+            pr.supplier_delivery_note = f"LOKADO-DEMO-GRN-{supplier_name}-{wh_name}"[:140]
             pr.set_warehouse = wh_full
             pr.set_posting_time = 1
             pr.posting_date = str(add_days(td, -10))
@@ -1609,20 +2034,51 @@ def _seed_logistics():
                 if batch_no and frappe.db.exists("Batch", batch_no):
                     child.batch_no = batch_no
             pr.insert(ignore_permissions=True)
+            _inspect_demo_receipt(pr)
+            pr.reload()
             pr.submit()
+            _activate_contract(pr, contract_scenario)
             frappe.db.commit()
             print(f"  PurchaseReceipt: {supplier_name[:25]} → {wh_name[:35]} (from {order.name})")
-        except Exception as e:
+        except Exception:
             frappe.db.rollback()
-            print(f"  PurchaseReceipt: {supplier_name[:25]} FAILED — {type(e).__name__}: {e}")
+            raise
 
     frappe.db.commit()
-    print("  Logistics: 6 donor books, 6 stock reports, 4 transfer outcomes, 6 purchase receipts with batch tracking")
+    print(f"  Logistics: {len(receipt_scenarios)} submitted supplier/warehouse receipts")
     print(
         f"  {len(LOKADO_USERS)} users available "
         f"({len(LOKADO_USERS) - len(SUPPLIER_PORTAL_LINKS)} staff + "
         f"{len(SUPPLIER_PORTAL_LINKS)} supplier portal users)"
     )
+
+
+def _inspect_demo_receipt(receipt):
+    """Use incoming inspections before submission, including on partial reruns."""
+    for row in receipt.items:
+        if not frappe.db.get_value("Item", row.item_code, "inspection_required_before_purchase"):
+            continue
+        existing = frappe.db.get_value(
+            "Quality Inspection",
+            {"reference_type": "Purchase Receipt", "reference_name": receipt.name,
+             "item_code": row.item_code, "docstatus": 1}, "name",
+        )
+        if existing:
+            continue
+        inspection = frappe.get_doc({
+            "doctype": "Quality Inspection",
+            "inspection_type": "Incoming",
+            "reference_type": "Purchase Receipt",
+            "reference_name": receipt.name,
+            "item_code": row.item_code,
+            "report_date": receipt.posting_date,
+            "sample_size": min(row.qty, max(1, row.qty // 10)),
+            "inspected_by": "Administrator",
+            "status": "Accepted",
+            "remarks": "DEMO: specification, quantity and packaging accepted before GRN submission.",
+        })
+        inspection.insert(ignore_permissions=True)
+        inspection.submit()
 
 
 def _seed_monthly_stock_reports():
@@ -1659,7 +2115,7 @@ def _seed_monthly_stock_reports():
 
 def _ensure_logistics_purchase_order(supplier, supplier_name, warehouse, items, td):
     """Submitted, donor-tagged PO so receipts and invoices form a real three-way match."""
-    title = f"LOKADO-GRN-{supplier_name}"[:140]
+    title = f"LOKADO-GRN-{supplier_name}-{warehouse}"[:140]
     name = frappe.db.get_value(
         "Purchase Order", {"title": title, "docstatus": ("<", 2)}, "name"
     )
@@ -1750,6 +2206,66 @@ def _seed_supplier_evaluations():
             "overall": 3.7,
             "comments": "Acceptable but not outstanding. Higher transport costs. Limited Turkana-based staff. Adequate.",
         },
+{
+            "supplier_name": "Northern Kenya Solar Ltd",
+            "delivery_quality": 4.5, "timeliness": 4.3, "compliance": 4.5,
+            "overall": 4.4,
+            "comments": "Solar lantern delivery to specification. Installation training provided for 10 school technicians. Good warranty documentation.",
+        },
+        {
+            "supplier_name": "Lake Turkana Water Services",
+            "delivery_quality": 4.7, "timeliness": 4.5, "compliance": 4.8,
+            "overall": 4.7,
+            "comments": "Water treatment chemicals delivered on time with full MSDS documentation. Consistent quality across 4 quarterly deliveries.",
+        },
+        {
+            "supplier_name": "Lokichoggio Traders Ltd",
+            "delivery_quality": 4.2, "timeliness": 4.0, "compliance": 4.0,
+            "overall": 4.1,
+            "comments": "Jerry cans and WASH items. Minor packaging issue on initial batch. Prompt corrective action. Good logistics to remote sites.",
+        },
+        {
+            "supplier_name": "Kakuma Cold Chain Solutions",
+            "delivery_quality": 4.9, "timeliness": 4.5, "compliance": 4.8,
+            "overall": 4.7,
+            "comments": "Vaccine refrigerators delivered within cold-chain integrity. Full installation and maintenance training. Excellent technical support.",
+        },
+        {
+            "supplier_name": "Eldoret Office Technologies",
+            "delivery_quality": 4.3, "timeliness": 4.0, "compliance": 4.2,
+            "overall": 4.2,
+            "comments": "Laptops and IT equipment. Slight delay on Dell shipment. Good after-sales setup and configuration support provided.",
+        },
+        {
+            "supplier_name": "Turkwel Renewable Energy",
+            "delivery_quality": 4.4, "timeliness": 3.8, "compliance": 4.5,
+            "overall": 4.2,
+            "comments": "Solar pumping equipment delivered. 3-day delay on battery shipment resolved. Installation quality excellent.",
+        },
+        {
+            "supplier_name": "North Rift Transporters",
+            "delivery_quality": 3.9, "timeliness": 3.5, "compliance": 3.8,
+            "overall": 3.7,
+            "comments": "Transport services acceptable. One truck breakdown caused 2-day delay. Recovery was prompt. Recommend fleet maintenance schedule.",
+        },
+        {
+            "supplier_name": "Lodwar Pharmaceuticals Ltd",
+            "delivery_quality": 5.0, "timeliness": 4.7, "compliance": 5.0,
+            "overall": 4.9,
+            "comments": "Clean birth delivery kits and surgical gloves. PPB certification verified. Cold chain maintained throughout. Outstanding supplier.",
+        },
+        {
+            "supplier_name": "Lorugum Welding & Fabrication",
+            "delivery_quality": 4.0, "timeliness": 4.2, "compliance": 3.8,
+            "overall": 4.0,
+            "comments": "School desks fabricated to specification. Welding quality acceptable. Paint finish needs improvement. Price competitive for local supplier.",
+        },
+        {
+            "supplier_name": "Kainuk Agro-Vet Supplies",
+            "delivery_quality": 4.3, "timeliness": 4.0, "compliance": 4.5,
+            "overall": 4.3,
+            "comments": "Certified sorghum seeds with KEPHIS documentation. Germination rate 92%. Extension support for farmer groups appreciated.",
+        },
     ]
 
     # Suppliers without a stock delivery are evaluated against a direct service
@@ -1760,6 +2276,12 @@ def _seed_supplier_evaluations():
         ),
         "Moi's Bridge Livestock": (
             "LOK-SVC-MOIS-001", "Livestock transport Kitale to Lodwar", 98000,
+        ),
+        "Kakuma Cold Chain Solutions": (
+            "LOK-SVC-COLD-001", "Cold-chain installation and temperature validation", 125000,
+        ),
+        "North Rift Transporters": (
+            "LOK-SVC-TRANSPORT-001", "Last-mile programme transport and delivery", 112000,
         ),
     }
 
@@ -1776,8 +2298,7 @@ def _seed_supplier_evaluations():
             )
         evaluation_name = _pending_or_completed_evaluation(supplier, scenario["comments"])
         if not evaluation_name:
-            print(f"  SupplierEval: {scenario['supplier_name'][:25]} has no delivery to evaluate")
-            continue
+            frappe.throw(f"No purchase source for demo evaluation: {scenario['supplier_name']}")
         evaluation = frappe.get_doc("Ugavi Supplier Evaluation", evaluation_name)
         if evaluation.status == "Completed":
             completed += 1
@@ -1797,6 +2318,22 @@ def _seed_supplier_evaluations():
             f"{evaluation.total_score}% (cumulative {evaluation.cumulative_rating}%)"
         )
 
+    for bill_no, supplier_name, warehouse_name, _share, _mode in RECEIPT_INVOICES:
+        receipt = _logistics_receipt(supplier_name, warehouse_name)
+        if not receipt:
+            frappe.throw(f"Missing receipt for scorecard: {bill_no}")
+        evaluation_name = frappe.db.get_value(
+            "Ugavi Supplier Evaluation", {"purchase_receipt": receipt}, "name"
+        )
+        evaluation = frappe.get_doc("Ugavi Supplier Evaluation", evaluation_name)
+        if evaluation.status == "Pending":
+            evaluation.quality_score = 8
+            evaluation.delivery_score = 8
+            evaluation.compliance_score = 9
+            evaluation.price_competitiveness = 8
+            evaluation.remarks = f"DEMO: delivery inspected and accepted for {bill_no}"
+            evaluation.flags.ignore_permissions = True
+            evaluation.complete_evaluation()
     frappe.db.commit()
     print(f"  Supplier Evaluations: {completed}/{len(evaluation_scenarios)} scenario scorecards completed")
 
@@ -1930,18 +2467,25 @@ def _seed_finance():
                 pass
 
     # --- Accounting Dimensions: Donor + Grant + Project ---
+    from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
+        get_doctypes_with_dimensions,
+        make_dimension_in_accounting_doctypes,
+    )
     for doctype in ["Donor Profile"]:
         dims = frappe.get_all("Accounting Dimension", {"document_type": doctype}, pluck="name")
         if not dims:
-            try:
-                frappe.get_doc({
-                    "doctype": "Accounting Dimension",
-                    "document_type": doctype,
-                    "disabled": 0,
-                }).insert(ignore_permissions=True)
-                print(f"  AcctDimension: {doctype}")
-            except Exception:
-                pass
+            dimension = frappe.get_doc({
+                "doctype": "Accounting Dimension",
+                "document_type": doctype,
+                "disabled": 0,
+            }).insert(ignore_permissions=True)
+        else:
+            dimension = frappe.get_doc("Accounting Dimension", dims[0])
+        # Complete ERPNext's queued schema setup before posting demo transactions.
+        make_dimension_in_accounting_doctypes(
+            dimension, doclist=list(dict.fromkeys(get_doctypes_with_dimensions() + ["Budget"])),
+        )
+        print(f"  AcctDimension: {doctype} schema ready")
 
     # --- eTIMS Adapter (disabled in demo, adapter pattern) ---
     print("  eTIMS: Adapter pattern ready. No live integration in demo.")
@@ -2004,14 +2548,66 @@ def _seed_quality_inspections():
         ("LOKADO Transit Store - Kitale", "MOTORCYCLE-FIELD", "Incoming",
          4, "BAT-2025-EU-MOTO", add_days(td, -5),
          "PDI: engine start, brake test, lights, toolkit check"),
+        ("LOKADO Field Store - Lokichoggio", "TARPAULIN-4X6", "Incoming",
+         800, "BAT-2025-CONC-TARP", add_days(td, -8),
+         "UV resistance test, tear strength, eyelet integrity"),
+        ("LOKADO Main Warehouse - Lodwar", "SCHOOL-DESK", "Incoming",
+         200, "BAT-2025-USA-DESK", add_days(td, -7),
+         "Weld integrity, dimensional accuracy, paint coat thickness"),
+        ("LOKADO Field Store - Lokichoggio", "BLANKET-FLEECE", "Incoming",
+         500, "BAT-2025-OWN-BLANK", add_days(td, -6),
+         "Fibre content verification, dimensional check, colour fastness"),
+        ("LOKADO Transit Store - Kitale", "FISHING-NET", "Incoming",
+         120, "BAT-2025-EU-NET", add_days(td, -5),
+         "Mesh size calibration, tensile strength test, float integrity"),
+        ("Cold Chain Storage - Lodwar", "SURGICAL-GLOVES", "Incoming",
+         200, "BAT-2025-JPN-GLOVES", add_days(td, -4),
+         "Sterility seal, box integrity, expiry date verification"),
+        ("IOM Supported Warehouse - Kakuma", "TIMBER-POLE", "Incoming",
+         300, "BAT-2025-IOM-POLE", add_days(td, -3),
+         "CCA treatment verification, straightness, diameter tolerance"),
+        ("IOM Supported Warehouse - Kakuma", "JERRY-CAN-20L", "Incoming",
+         2000, "BAT-2025-IOM-JERRY", add_days(td, -2),
+         "Drop test, cap seal integrity, food-grade plastic certification"),
+        ("Cold Chain Storage - Lodwar", "SOLAR-LANTERN", "Incoming",
+         200, "BAT-2025-JPN-LANTERN", add_days(td, -3),
+         "Charge-discharge cycle test, lumen output, waterproof rating"),
+        ("Cold Chain Storage - Lodwar", "DELIVERY-KIT", "Incoming",
+         250, "BAT-2025-JPN-DELIV", add_days(td, -2),
+         "Sterile seal on each kit, completeness check, expiry dates"),
+        ("LOKADO Main Warehouse - Lodwar", "COOKING-POT-SET", "Incoming",
+         300, "BAT-2025-USA-POT", add_days(td, -1),
+         "Aluminium gauge, handle rivet strength, lid fit"),
+        ("LOKADO Transit Store - Kitale", "SORGHUM-SEEDS", "Incoming",
+         500, "BAT-2025-EU-SORGHUM", add_days(td, -2),
+         "Germination rate test, purity analysis, KEPHIS certification check"),
+        ("LOKADO Field Store - Lokichoggio", "MOSQUITO-NET", "Incoming",
+         600, "BAT-2025-CONC-MOSQ", add_days(td, -1),
+         "WHOPES certification, mesh integrity, insecticide treatment verification"),
     ]
     for wh, item_code, insp_type, qty, batch, insp_date, remarks in qc_data:
         wh_name = _wh(wh)
-        if frappe.db.exists("Quality Inspection", {"item_code": item_code, "report_date": str(insp_date)}):
+        receipt_rows = frappe.db.sql(
+            """SELECT i.parent, i.qty, i.serial_and_batch_bundle, p.posting_date
+               FROM `tabPurchase Receipt Item` i
+               JOIN `tabPurchase Receipt` p ON p.name = i.parent
+               WHERE p.docstatus = 1 AND i.item_code = %s AND i.warehouse = %s
+               ORDER BY p.creation, i.idx LIMIT 1""",
+            (item_code, wh_name), as_dict=True,
+        )
+        if not receipt_rows:
+            frappe.throw(f"QC has no submitted receipt: {item_code} in {wh_name}")
+        source = receipt_rows[0]
+        pr_name = source.parent
+        if frappe.db.exists("Quality Inspection", {
+            "item_code": item_code, "reference_name": pr_name, "docstatus": 1,
+        }):
             continue
-        # Find a purchase receipt with this item
-        pr_name = frappe.db.get_value("Purchase Receipt Item",
-            {"item_code": item_code}, "parent")
+        batch = (
+            frappe.db.get_value("Serial and Batch Entry",
+                                {"parent": source.serial_and_batch_bundle}, "batch_no")
+            if source.serial_and_batch_bundle else None
+        )
         try:
             qc = frappe.get_doc({
                 "doctype": "Quality Inspection",
@@ -2019,23 +2615,22 @@ def _seed_quality_inspections():
                 "item_name": frappe.db.get_value("Item", item_code, "item_name") or item_code,
                 "inspection_type": insp_type,
                 "report_date": str(insp_date),
-                "sample_size": str(max(1, qty // 10)),
-                "reference_type": "Purchase Receipt" if pr_name else "",
-                "reference_name": pr_name or "",
+                "sample_size": min(source.qty, max(1, source.qty // 10)),
+                "reference_type": "Purchase Receipt",
+                "reference_name": pr_name,
                 "batch_no": batch,
                 "inspected_by": "Administrator",
                 "remarks": remarks,
+                "status": "Accepted",
             })
             qc.insert(ignore_permissions=True)
-            try:
-                qc.submit()
-            except Exception:
-                pass
+            qc.submit()
             print(f"  QC: {item_code} @ {wh[:25]} [{qty} units]")
-        except Exception as e:
-            print(f"  QC: {item_code} skipped — {type(e).__name__}: {e}")
+        except Exception:
+            frappe.db.rollback()
+            raise
     frappe.db.commit()
-    print("  Quality Inspections: 8 incoming QC records")
+    print("  Quality Inspections: 20 incoming QC records")
 
 
 # ─────────────────────────────────────────────────
@@ -2047,6 +2642,12 @@ STOCK_RECEIPT_RATES = {
     "ANIMAL-FEED": 520, "VET-KIT": 4500, "HYGIENE-KIT": 175,
     "FIRST-AID-KIT": 1500, "PIPE-HDPE-63MM": 290, "MOTORCYCLE-FIELD": 130000,
     "WATER-PUMP-SOLAR": 185000, "LAPTOP-DELL": 97500, "FUEL-DIESEL": 210,
+    "CHICKEN-INDIG": 380, "STEEL-Y12": 95000, "IRON-SHEET-G32": 850,
+    "TARPAULIN-4X6": 650, "BLANKET-FLEECE": 480, "JERRY-CAN-20L": 85,
+    "COOKING-POT-SET": 500, "SCHOOL-DESK": 2000, "STATIONERY-KIT": 350,
+    "TEXTBOOKS-SET": 2800, "SOLAR-LANTERN": 1525, "SORGHUM-SEEDS": 520,
+    "FISHING-NET": 3042, "TIMBER-POLE": 583, "SURGICAL-GLOVES": 800,
+    "DELIVERY-KIT": 1060, "MOSQUITO-NET": 233, "ORS-SACHET": 325,
 }
 
 
@@ -2093,6 +2694,63 @@ def _seed_stock_entries():
         ("Material Issue", _wh("LOKADO Field Store - Oropoi"), None,
          add_days(td, -4), [("LAPTOP-DELL", 3), ("FUEL-DIESEL", 360)],
          "Issue own-funds laptops and generator diesel to Oropoi field office"),
+        ("Material Receipt", None, _wh("LOKADO Field Store - Lokichoggio"),
+         add_days(td, -10), [("TARPAULIN-4X6", 800), ("BLANKET-FLEECE", 500)],
+         "Receive shelter materials from Kalobeyei Refugee Supplies"),
+        ("Material Receipt", None, _wh("LOKADO Main Warehouse - Lodwar"),
+         add_days(td, -9), [("SCHOOL-DESK", 200), ("STATIONERY-KIT", 300)],
+         "Receive classroom furniture from Lorugum Welding"),
+        ("Material Receipt", None, _wh("Cold Chain Storage - Lodwar"),
+         add_days(td, -8), [("SURGICAL-GLOVES", 200), ("DELIVERY-KIT", 250)],
+         "Receive medical supplies from Lodwar Pharmaceuticals"),
+        ("Material Receipt", None, _wh("IOM Supported Warehouse - Kakuma"),
+         add_days(td, -7), [("TIMBER-POLE", 300), ("JERRY-CAN-20L", 2000)],
+         "Receive construction and WASH from Lokitaung Hardware"),
+        ("Material Receipt", None, _wh("LOKADO Transit Store - Kitale"),
+         add_days(td, -6), [("FISHING-NET", 120)],
+         "Receive EU fishing gear from Lake Turkana Fishers Co-op"),
+        ("Material Receipt", None, _wh("Cold Chain Storage - Lodwar"),
+         add_days(td, -6), [("SOLAR-LANTERN", 200)],
+         "Receive Japan classroom solar lantern opening stock"),
+        ("Material Receipt", None, _wh("LOKADO Transit Store - Kitale"),
+         add_days(td, -5), [("SORGHUM-SEEDS", 500)],
+         "Receive food security items from Kainuk Agro-Vet"),
+        ("Material Receipt", None, _wh("LOKADO Main Warehouse - Lodwar"),
+         add_days(td, -5), [("COOKING-POT-SET", 300)],
+         "Receive USAID household cooking pot opening stock"),
+        ("Material Receipt", None, _wh("LOKADO Field Store - Lokichoggio"),
+         add_days(td, -4), [("MOSQUITO-NET", 600), ("ORS-SACHET", 400)],
+         "Receive health supplies from Lodwar Pharmaceuticals"),
+        ("Material Issue", _wh("LOKADO Field Store - Lokichoggio"), None,
+         add_days(td, -3), [("TARPAULIN-4X6", 400)],
+         "Issue shelter and NFI to Lokichoggio flood response"),
+        ("Material Issue", _wh("LOKADO Main Warehouse - Lodwar"), None,
+         add_days(td, -3), [("COOKING-POT-SET", 150)],
+         "Issue USAID household cooking pots to flood response"),
+        ("Material Issue", _wh("LOKADO Main Warehouse - Lodwar"), None,
+         add_days(td, -2), [("SCHOOL-DESK", 100)],
+         "Issue to 5 primary schools in Turkana West"),
+        ("Material Issue", _wh("Cold Chain Storage - Lodwar"), None,
+         add_days(td, -2), [("SOLAR-LANTERN", 100)],
+         "Issue Japan classroom solar lanterns to Turkana schools"),
+        ("Material Issue", _wh("IOM Supported Warehouse - Kakuma"), None,
+         add_days(td, -2), [("JERRY-CAN-20L", 1000), ("TIMBER-POLE", 150)],
+         "Issue to Kakuma host community WASH and school project"),
+        ("Material Issue", _wh("Cold Chain Storage - Lodwar"), None,
+         add_days(td, -1), [("DELIVERY-KIT", 125), ("SURGICAL-GLOVES", 100)],
+         "Issue to mobile clinic cold chain replenishment"),
+        ("Material Issue", _wh("LOKADO Transit Store - Kitale"), None,
+         add_days(td, -1), [("FISHING-NET", 60), ("SORGHUM-SEEDS", 250)],
+         "Issue to 6 fisheries cooperatives and 250 farmer groups"),
+        ("Material Receipt", None, _wh("LOKADO Field Store - Oropoi"),
+         add_days(td, -3), [("CHICKEN-INDIG", 200), ("ANIMAL-FEED", 40)],
+         "Receive poultry restocking from Nadirkonyen Women's Group"),
+        ("Material Receipt", None, _wh("Cold Chain Storage - Lodwar"),
+         add_days(td, -2), [("DELIVERY-KIT", 100), ("MOSQUITO-NET", 300)],
+         "Receive Japan MNCH and malaria supplies"),
+        ("Material Issue", _wh("LOKADO Field Store - Oropoi"), None,
+         add_days(td, -1), [("CHICKEN-INDIG", 100)],
+         "Issue to Kalobeyei poultry livelihoods project"),
     ]
     for etype, fwh, twh, pdate, items, purpose in entries:
         existing = frappe.db.get_value(
@@ -2122,9 +2780,9 @@ def _seed_stock_entries():
             se.submit()
             frappe.db.commit()
             print(f"  StockEntry [{etype}]: {', '.join(f'{i[0]}x{i[1]}' for i in items)}")
-        except Exception as e:
+        except Exception:
             frappe.db.rollback()
-            print(f"  StockEntry [{etype}] FAILED — {type(e).__name__}: {e}")
+            raise
     frappe.db.commit()
 
     # Cross-donor movements must go through an approved Inter Donor Transfer;
@@ -2136,6 +2794,18 @@ def _seed_stock_entries():
         (_wh("IOM Supported Warehouse - Kakuma"), _wh("LOKADO Field Store - Lokichoggio"),
          "IOM", "CONCERN", [("WATER-TANK-10K", 2)],
          "DEMO-COMPLETED: Emergency water tanks for Lokichoggio flood response."),
+(_wh("Cold Chain Storage - Lodwar"), _wh("LOKADO Field Store - Oropoi"),
+         "JAPAN", "LOKADO-OWN", [("FIRST-AID-KIT", 20), ("DELIVERY-KIT", 30)],
+         "DEMO-COMPLETED: Medical supplies for LOKADO staff clinic at Oropoi field office."),
+        (_wh("LOKADO Main Warehouse - Lodwar"), _wh("IOM Supported Warehouse - Kakuma"),
+         "USAID", "IOM", [("SCHOOL-DESK", 25), ("STATIONERY-KIT", 50)],
+         "DEMO-COMPLETED: School furniture loan to IOM Kakuma education project."),
+        (_wh("LOKADO Transit Store - Kitale"), _wh("LOKADO Field Store - Lokichoggio"),
+         "EU", "CONCERN", [("TARPAULIN-4X6", 100)],
+         "DEMO-COMPLETED: Tarpaulins reallocated from EU to Concern flood response."),
+        (_wh("LOKADO Field Store - Lokichoggio"), _wh("LOKADO Main Warehouse - Lodwar"),
+         "CONCERN", "USAID", [("MOSQUITO-NET", 100)],
+         "DEMO-COMPLETED: Malaria nets shared with USAID maternal health programme."),
     ]
     for fwh, twh, from_code, to_code, items, reason in completed_transfers:
         name = frappe.db.get_value("Inter Donor Transfer", {"reason": reason}, "name")
@@ -2149,9 +2819,11 @@ def _seed_stock_entries():
                     "doctype": "Inter Donor Transfer",
                     "from_warehouse": fwh, "to_warehouse": twh,
                     "status": "Pending Approval",
-                    "transfer_date": str(add_days(td, -7)),
+                    "transfer_date": str(add_days(td, -1)),
                     "reason": reason,
-                    "items": [{"item_code": ic, "qty": qty, "uom": "Nos"} for ic, qty in items],
+                    "items": [{"item_code": ic, "qty": qty,
+                               "uom": frappe.db.get_value("Item", ic, "stock_uom")}
+                              for ic, qty in items],
                 })
                 idt.insert(ignore_permissions=True)
             if idt.status == "Pending Approval":
@@ -2159,11 +2831,11 @@ def _seed_stock_entries():
             idt.complete()
             frappe.db.commit()
             print(f"  InterDonorTransfer: {from_code} -> {to_code} completed with linked Stock Entry")
-        except Exception as e:
+        except Exception:
             frappe.db.rollback()
-            print(f"  InterDonorTransfer: {from_code} -> {to_code} FAILED — {type(e).__name__}: {e}")
+            raise
     frappe.db.commit()
-    print(f"  Stock Entries: {len(entries)} direct receipts/issues + 2 governed inter-donor transfers")
+    print(f"  Stock Entries: {len(entries)} direct receipts/issues + {len(completed_transfers)} governed transfers")
 
 
 # ─────────────────────────────────────────────────
@@ -2208,6 +2880,26 @@ def _seed_batch_tracking():
          "Lodwar General Supplies"),
         ("MOTORCYCLE-FIELD", "BAT-2025-EU-MOTO", add_days(td, -2), add_days(td, 1825),
          "Jopeji Enterprises"),
+        ("TARPAULIN-4X6", "BAT-2025-CONC-TARP", add_days(td, -14), add_days(td, 540),
+         "Kalobeyei Refugee Supplies Ltd"),
+        ("SCHOOL-DESK", "BAT-2025-USA-DESK", add_days(td, -12), add_days(td, 1825),
+         "Lorugum Welding & Fabrication"),
+        ("SURGICAL-GLOVES", "BAT-2025-JPN-GLOVES", add_days(td, -10), add_days(td, 365),
+         "Lodwar Pharmaceuticals Ltd"),
+        ("BLANKET-FLEECE", "BAT-2025-OWN-BLANK", add_days(td, -9), add_days(td, 540),
+         "Turkana Women's Handicrafts Cooperative"),
+        ("FISHING-NET", "BAT-2025-EU-NET", add_days(td, -8), add_days(td, 540),
+         "Lake Turkana Fishermen's Cooperative"),
+        ("SOLAR-LANTERN", "BAT-2025-JPN-LANTERN", add_days(td, -7), add_days(td, 365),
+         "Northern Kenya Solar Ltd"),
+        ("SORGHUM-SEEDS", "BAT-2025-EU-SORGHUM", add_days(td, -6), add_days(td, 90),
+         "Kainuk Agro-Vet Supplies"),
+        ("MOSQUITO-NET", "BAT-2025-CONC-MOSQ", add_days(td, -5), add_days(td, 365),
+         "Lodwar Pharmaceuticals Ltd"),
+        ("JERRY-CAN-20L", "BAT-2025-IOM-JERRY", add_days(td, -4), add_days(td, 1825),
+         "Lokichoggio Traders Ltd"),
+        ("CHICKEN-INDIG", "BAT-2025-USAID-CHICK", add_days(td, -3), add_days(td, 540),
+         "Nadirkonyen Women's Group"),
     ]
     for item_code, batch_id, mfg, exp, sup_name in batches:
         if frappe.db.exists("Batch", batch_id):
@@ -2223,7 +2915,7 @@ def _seed_batch_tracking():
         except Exception as e:
             print(f"  Batch: {batch_id} skipped — {type(e).__name__}: {e}")
     frappe.db.commit()
-    print("  Batch Tracking: 10 batches across 8 items")
+    print("  Batch Tracking: 20 batches across 18 items")
 
 
 # ─────────────────────────────────────────────────
@@ -2250,6 +2942,22 @@ def _seed_reorder_levels():
         ("LOKADO Transit Store - Kitale", "PIPE-HDPE-63MM", 100, 600),
         ("LOKADO Field Store - Oropoi", "LAPTOP-DELL", 3, 20),
         ("LOKADO Field Store - Oropoi", "FUEL-DIESEL", 200, 1000),
+        ("LOKADO Field Store - Lokichoggio", "TARPAULIN-4X6", 100, 800),
+        ("LOKADO Main Warehouse - Lodwar", "SCHOOL-DESK", 50, 300),
+        ("LOKADO Field Store - Lokichoggio", "BLANKET-FLEECE", 50, 400),
+        ("Cold Chain Storage - Lodwar", "SURGICAL-GLOVES", 50, 300),
+        ("Cold Chain Storage - Lodwar", "DELIVERY-KIT", 30, 200),
+        ("IOM Supported Warehouse - Kakuma", "TIMBER-POLE", 50, 400),
+        ("IOM Supported Warehouse - Kakuma", "JERRY-CAN-20L", 500, 3000),
+        ("LOKADO Transit Store - Kitale", "FISHING-NET", 30, 200),
+        ("Cold Chain Storage - Lodwar", "SOLAR-LANTERN", 40, 300),
+        ("LOKADO Transit Store - Kitale", "SORGHUM-SEEDS", 100, 500),
+        ("LOKADO Field Store - Lokichoggio", "MOSQUITO-NET", 200, 800),
+        ("LOKADO Field Store - Oropoi", "CHICKEN-INDIG", 50, 300),
+        ("Cold Chain Storage - Lodwar", "MOSQUITO-NET", 50, 300),
+        ("Cold Chain Storage - Lodwar", "ORS-SACHET", 100, 500),
+        ("LOKADO Main Warehouse - Lodwar", "STATIONERY-KIT", 100, 500),
+        ("LOKADO Main Warehouse - Lodwar", "COOKING-POT-SET", 50, 400),
     ]
     for wh_name, item_code, min_stock, max_stock in reorder_data:
         wh_full = _wh(wh_name)
@@ -2273,7 +2981,7 @@ def _seed_reorder_levels():
         except Exception as e:
             print(f"  Reorder: {item_code} skipped — {type(e).__name__}: {e}")
     frappe.db.commit()
-    print("  Reorder Levels: 14 items across 6 warehouses")
+    print("  Reorder Levels: 30 items across 6 warehouses")
 
 
 # ─────────────────────────────────────────────────
@@ -2290,7 +2998,7 @@ def _seed_material_requests():
         (_wh("IOM Supported Warehouse - Kakuma"), "Draft", add_days(td, -3),
          [("CEMENT-BAG", 30), ("PIPE-HDPE-63MM", 150)],
          "Kakuma WASH: additional cement for latrine slab casting"),
-        (_wh("LOKADO Main Warehouse - Lodwar"), "Submitted", add_days(td, -2),
+                (_wh("LOKADO Field Store - Lokichoggio"), "Submitted", add_days(td, -2),
          [("ANIMAL-FEED", 20), ("VET-KIT", 5)],
          "Livelihoods: mobile vet unit supplies for Kalobeyei outreach"),
         (_wh("LOKADO Field Store - Lokichoggio"), "Approved", add_days(td, -1),
@@ -2302,6 +3010,40 @@ def _seed_material_requests():
         (_wh("LOKADO Transit Store - Kitale"), "Draft", add_days(td, 0),
          [("MOTORCYCLE-FIELD", 1)],
          "Peace building: replacement motorcycle for Lokiriama post"),
+(_wh("LOKADO Main Warehouse - Lodwar"), "Submitted", add_days(td, -2),
+         [("TARPAULIN-4X6", 100), ("BLANKET-FLEECE", 80)],
+         "Shelter: emergency NFI for Lokichoggio flood camp"),
+        (_wh("LOKADO Main Warehouse - Lodwar"), "Draft", add_days(td, -1),
+         [("SCHOOL-DESK", 50), ("STATIONERY-KIT", 40)],
+         "Education: classroom materials for Kakuma host schools"),
+        (_wh("Cold Chain Storage - Lodwar"), "Draft", add_days(td, -1),
+         [("SOLAR-LANTERN", 40)], "Japan education: classroom solar lanterns"),
+        (_wh("Cold Chain Storage - Lodwar"), "Submitted", add_days(td, 0),
+         [("DELIVERY-KIT", 30), ("SURGICAL-GLOVES", 50)],
+         "MNCH: delivery supplies for mobile clinic outreach"),
+        (_wh("IOM Supported Warehouse - Kakuma"), "Approved", add_days(td, -1),
+         [("JERRY-CAN-20L", 500)],
+         "WASH: cholera prevention supplies for Kakuma camp"),
+        (_wh("LOKADO Field Store - Lokichoggio"), "Draft", add_days(td, 0),
+         [("MOSQUITO-NET", 200), ("BLANKET-FLEECE", 50)],
+         "Health: malaria nets and NFI for Kerio ward"),
+        (_wh("LOKADO Transit Store - Kitale"), "Submitted", add_days(td, -1),
+         [("FISHING-NET", 30), ("SORGHUM-SEEDS", 100)],
+         "Livelihoods: fishing gear and seeds for 6 co-ops"),
+        (_wh("IOM Supported Warehouse - Kakuma"), "Draft", add_days(td, -1),
+         [("TIMBER-POLE", 80)],
+         "Construction: materials for 2 classroom block repair"),
+        (_wh("Cold Chain Storage - Lodwar"), "Submitted", add_days(td, 0),
+         [("MOSQUITO-NET", 100), ("FIRST-AID-KIT", 25)],
+         "Health: combined malaria and first aid supplies"),
+        (_wh("LOKADO Field Store - Oropoi"), "Draft", add_days(td, 0),
+         [("CHICKEN-INDIG", 80), ("ANIMAL-FEED", 15)],
+         "Livelihoods: poultry restocking Oropoi women groups"),
+        (_wh("LOKADO Main Warehouse - Lodwar"), "Submitted", add_days(td, -2),
+         [("STATIONERY-KIT", 100)],
+         "Admin: IT and stationery for programme field offices"),
+        (_wh("LOKADO Field Store - Oropoi"), "Draft", add_days(td, -2),
+         [("LAPTOP-DELL", 5)], "Own funds: IT equipment for programme field offices"),
     ]
     submitted = 0
     for wh_full, status, sched, items, purpose in mr_data:
@@ -2325,7 +3067,8 @@ def _seed_material_requests():
                     "title": title,
                 })
                 for ic, qty in items:
-                    mr.append("items", {"item_code": ic, "qty": qty, "uom": "Nos",
+                    mr.append("items", {"item_code": ic, "qty": qty,
+                        "uom": frappe.db.get_value("Item", ic, "stock_uom"),
                         "warehouse": wh_full, "schedule_date": str(sched)})
                 mr.insert(ignore_permissions=True)
             if status != "Draft":
@@ -2361,12 +3104,28 @@ def _logistics_receipt(supplier_name, warehouse_name):
 
 # Supplier invoice number, receipt (supplier, warehouse), payment share, payment mode
 RECEIPT_INVOICES = [
+    ("LOK-INV-LGT-POTS", "Lokichar General Traders", "LOKADO Main Warehouse - Lodwar", 0.5, "Bank Transfer"),
+    ("LOK-INV-KRS-EU", "Kalobeyei Refugee Supplies Ltd", "LOKADO Transit Store - Kitale", 1.0, "Bank Transfer"),
     ("LOK-INV-TCL-0412", "Turkana Construction Ltd", "IOM Supported Warehouse - Kakuma", 0.6, "Bank Transfer"),
     ("LOK-INV-NWG-0088", "Nadirkonyen Women's Group", "LOKADO Main Warehouse - Lodwar", 1.0, "Mobile Money"),
     ("LOK-INV-LGS-1190", "Lodwar General Supplies", "IOM Supported Warehouse - Kakuma", 0.0, None),
     ("LOK-INV-KRC-2207", "Kenya Red Cross Supplies", "LOKADO Field Store - Lokichoggio", 1.0, "Cheque"),
     ("LOK-INV-RVH-0731", "Rift Valley Hardware", "IOM Supported Warehouse - Kakuma", 1.0, "Bank Transfer"),
     ("LOK-INV-JOP-0056", "Jopeji Enterprises", "LOKADO Transit Store - Kitale", 0.5, "Bank Transfer"),
+    ("LOK-INV-KRS-3101", "Kalobeyei Refugee Supplies Ltd", "LOKADO Field Store - Lokichoggio", 0.7, "Bank Transfer"),
+    ("LOK-INV-LWF-0220", "Lorugum Welding & Fabrication", "LOKADO Main Warehouse - Lodwar", 1.0, "Mobile Money"),
+    ("LOK-INV-LPH-1405", "Lodwar Pharmaceuticals Ltd", "Cold Chain Storage - Lodwar", 1.0, "Bank Transfer"),
+    ("LOK-INV-LKH-0755", "Lokitaung Hardware & Building", "IOM Supported Warehouse - Kakuma", 0.5, "Cheque"),
+    ("LOK-INV-NKS-0922", "Northern Kenya Solar Ltd", "Cold Chain Storage - Lodwar", 1.0, "Bank Transfer"),
+    ("LOK-INV-LTF-0603", "Lake Turkana Fishermen's Cooperative", "LOKADO Transit Store - Kitale", 0.8, "Mobile Money"),
+    ("LOK-INV-KAV-0150", "Kainuk Agro-Vet Supplies", "LOKADO Transit Store - Kitale", 1.0, "Cheque"),
+    ("LOK-INV-LPH-1406", "Lodwar Pharmaceuticals Ltd", "LOKADO Field Store - Lokichoggio", 0.5, "Bank Transfer"),
+    ("LOK-INV-LGT-2301", "Lokichar General Traders", "LOKADO Field Store - Oropoi", 0.0, None),
+    ("LOK-INV-KST-1804", "Kakuma Stationers & Supplies", "LOKADO Main Warehouse - Lodwar", 0.6, "Bank Transfer"),
+    ("LOK-INV-TWL-1120", "Turkwel Renewable Energy", "Cold Chain Storage - Lodwar", 1.0, "Bank Transfer"),
+    ("LOK-INV-OPT-0330", "Turkana Women's Handicrafts Cooperative", "LOKADO Field Store - Oropoi", 0.0, None),
+    ("LOK-INV-LKH-0756", "Lokitaung Hardware & Building", "LOKADO Main Warehouse - Lodwar", 0.7, "Bank Transfer"),
+    ("LOK-INV-LTW-0425", "Lake Turkana Water Services", "IOM Supported Warehouse - Kakuma", 1.0, "Cheque"),
 ]
 
 
@@ -2430,7 +3189,7 @@ def _seed_payment_entries():
             continue
         invoice = frappe.db.get_value(
             "Purchase Invoice", {"bill_no": bill_no, "docstatus": 1},
-            ["name", "outstanding_amount"], as_dict=True,
+            ["name", "outstanding_amount", "posting_date"], as_dict=True,
         )
         if not invoice or not invoice.outstanding_amount:
             print(f"  Payment: {bill_no} has no outstanding submitted invoice")
@@ -2448,7 +3207,7 @@ def _seed_payment_entries():
                 )
                 payment.mode_of_payment = mode
                 payment.paid_from = "Cash - LOKADO"
-                payment.posting_date = str(add_days(td, -(len(RECEIPT_INVOICES) - index)))
+                payment.posting_date = str(add_days(invoice.posting_date, 1))
                 payment.reference_no = reference_no
                 payment.reference_date = payment.posting_date
                 payment.remarks = (
@@ -2460,9 +3219,9 @@ def _seed_payment_entries():
             frappe.db.commit()
             paid += 1
             print(f"  Payment: {bill_no} → {payment.paid_amount:,.0f} KES [{mode}]")
-        except Exception as e:
+        except Exception:
             frappe.db.rollback()
-            print(f"  Payment: {bill_no} FAILED — {type(e).__name__}: {e}")
+            raise
     print(f"  Payment Entries: {paid} submitted (full, partial; one invoice left outstanding)")
 
 
@@ -2481,6 +3240,19 @@ def _seed_landed_cost_vouchers():
         ("Jopeji Enterprises", "LOKADO Transit Store - Kitale",
          [("Motorcycles Nairobi to Kitale transit", 28000),
           ("Warehouse handling and assembly", 15000)]),
+        ("Rift Valley Hardware", "IOM Supported Warehouse - Kakuma",
+         [("Transport: pipes Eldoret to Kakuma", 42000)]),
+        ("Kalobeyei Refugee Supplies Ltd", "LOKADO Field Store - Lokichoggio",
+         [("Emergency shelter freight to Lokichoggio", 65000),
+          ("Warehouse handling and fumigation", 18000)]),
+        ("Lorugum Welding & Fabrication", "LOKADO Main Warehouse - Lodwar",
+         [("Transport: desks Lorugum to Lodwar", 22000)]),
+        ("Lodwar Pharmaceuticals Ltd", "Cold Chain Storage - Lodwar",
+         [("Cold-chain transport Nairobi to Lodwar", 48000),
+          ("Temperature monitoring and certification", 15000)]),
+        ("Lake Turkana Fishermen's Cooperative", "LOKADO Transit Store - Kitale",
+         [("Transport: nets from Kalokol to Kitale", 18000),
+          ("Marine equipment handling", 8000)]),
     ]
     vouchers = 0
     for supplier_name, warehouse_name, charges in costs:
@@ -2523,9 +3295,9 @@ def _seed_landed_cost_vouchers():
             frappe.db.commit()
             vouchers += 1
             print(f"  LandedCost: {receipt} + {sum(a for _, a in charges):,} KES freight/handling")
-        except Exception as e:
+        except Exception:
             frappe.db.rollback()
-            print(f"  LandedCost: {receipt} FAILED — {type(e).__name__}: {e}")
+            raise
     print(f"  Landed Cost Vouchers: {vouchers}/{len(costs)} submitted")
 
 
@@ -2550,6 +3322,10 @@ def _seed_budget_records():
         ("USAID", "Miscellaneous Expenses - LOKADO", 400000),
         ("EU", "Travel Expenses - LOKADO", 600000),
         ("CONCERN", "Administrative Expenses - LOKADO", 1200000),
+        ("JAPAN", "Miscellaneous Expenses - LOKADO", 500000),
+        ("LOKADO-OWN", "Administrative Expenses - LOKADO", 250000),
+        ("EU", "Freight and Forwarding Charges - LOKADO", 750000),
+        ("CONCERN", "Freight and Forwarding Charges - LOKADO", 1000000),
     ]
     created = 0
     for donor_code, account, amount in budgets:
@@ -2591,9 +3367,9 @@ def _seed_budget_records():
             frappe.db.commit()
             created += 1
             print(f"  Budget: {donor_code} / {account} → {amount:,} KES ({fiscal_year})")
-        except Exception as e:
+        except Exception:
             frappe.db.rollback()
-            print(f"  Budget: {donor_code} / {account} FAILED — {type(e).__name__}: {e}")
+            raise
     print(f"  Budget Records: {created}/{len(budgets)} donor budgets submitted")
 
 
@@ -2642,8 +3418,9 @@ def _seed_notification_rules():
     print("  Notification Rules: 6 rules (NT3)")
 
 
+
 # ─────────────────────────────────────────────────
-# 20. PROGRAMMES & GRANTS — Projects with donor funding
+# 20. PROGRAMMES & GRANTS — Donor-funded projects with grant allocations (NP3)
 # ─────────────────────────────────────────────────
 
 def _seed_projects_and_grants():
@@ -2705,6 +3482,36 @@ def _seed_lokado_purchase_orders():
         ("Rift Valley Hardware", add_days(td, -2), add_days(td, 12),
          [("PIPE-HDPE-63MM", 650, 290)],
          "LPO: emergency HDPE pipe repair"),
+        ("Jopeji Enterprises", add_days(td, -5), add_days(td, 25),
+         [("MOTORCYCLE-FIELD", 4, 127500)],
+         "LPO: field motorcycles - USAID peace building"),
+        ("Kalobeyei Refugee Supplies Ltd", add_days(td, -4), add_days(td, 45),
+         [("TARPAULIN-4X6", 800, 650)],
+         "LPO: emergency shelter tarpaulins - Concern"),
+        ("Lorugum Welding & Fabrication", add_days(td, -4), add_days(td, 90),
+         [("SCHOOL-DESK", 200, 2000)],
+         "LPO: classroom desks - USAID education"),
+        ("Lodwar Pharmaceuticals Ltd", add_days(td, -3), add_days(td, 40),
+         [("SURGICAL-GLOVES", 200, 800), ("DELIVERY-KIT", 250, 1060)],
+         "LPO: medical supplies - Japan MNCH"),
+        ("Lokitaung Hardware & Building", add_days(td, -3), add_days(td, 30),
+         [("TIMBER-POLE", 300, 583), ("JERRY-CAN-20L", 2000, 85)],
+         "LPO: construction + WASH - IOM"),
+        ("Northern Kenya Solar Ltd", add_days(td, -2), add_days(td, 45),
+         [("SOLAR-LANTERN", 200, 1525)],
+         "LPO: solar lanterns - Japan education"),
+        ("Lake Turkana Fishermen's Cooperative", add_days(td, -2), add_days(td, 60),
+         [("FISHING-NET", 120, 3042)],
+         "LPO: fishing equipment - EU livelihoods"),
+        ("Kainuk Agro-Vet Supplies", add_days(td, -1), add_days(td, 35),
+         [("SORGHUM-SEEDS", 500, 496)],
+         "LPO: certified seeds - EU food security"),
+        ("Lodwar Pharmaceuticals Ltd", add_days(td, -1), add_days(td, 21),
+         [("MOSQUITO-NET", 600, 233), ("ORS-SACHET", 400, 312)],
+         "LPO: health supplies - Concern/Japan"),
+        ("Eldoret Office Technologies", add_days(td, 0), add_days(td, 14),
+         [("LAPTOP-DELL", 5, 97500)],
+         "LPO: programme laptops - LOKADO admin"),
     ]
     for sup_name, pdate, sched, items, notes in po_data:
         supplier = frappe.db.get_value("Supplier", {"supplier_name": sup_name}, "name")
@@ -2725,7 +3532,7 @@ def _seed_lokado_purchase_orders():
         except Exception as e:
             print(f"  PurchaseOrder: {sup_name[:25]} skipped — {type(e).__name__}: {e}")
     frappe.db.commit()
-    print("  Purchase Orders: 5 co-signed LPOs (PR8)")
+    print("  Purchase Orders: 15 co-signed LPOs (PR8)")
 
 
 # ─────────────────────────────────────────────────

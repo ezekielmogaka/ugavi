@@ -30,7 +30,7 @@ class UgaviSupplierEvaluation(Document):
         """Average of last 12 months of scorecards for this supplier."""
         scores = frappe.get_all(
             "Ugavi Supplier Evaluation",
-            filters={"supplier": self.supplier, "name": ("!=", self.name)},
+            filters={"supplier": self.supplier, "status": "Completed", "name": ("!=", self.name)},
             fields=["total_score"],
             order_by="evaluation_date desc",
             limit=11,

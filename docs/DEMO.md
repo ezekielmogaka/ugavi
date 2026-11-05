@@ -6,8 +6,15 @@
 > **Business persona passwords:** `Ugavi@2024` (development-only; seed-script enforced)
 
 This runbook is for the **Ugavi team** to present the working MVP1 system. It is not the
-technical setup guide — for that see the inline commands, Make targets, and
-`docs/demo/LOKADO-DEMO-TOUR.md`.
+technical setup guide — for that see the inline commands and Make targets.
+For the expanded November seed, use the
+[step-by-step functional tour](demo/LOKADO-DEMO-TOUR.md) as the primary runbook:
+it includes exact record locators, inputs, role handoffs, expected outcomes,
+and intentional live-workflow boundaries. On 2026-11-05 `ugavi.localhost` was
+rebuilt from scratch with `make clean && make setup && make seed-lokado`; the
+acceptance and fleet gates reported `"ready": true` with no issues, and the
+`make backup-demo` → `make restore-demo` round-trip passed. Counts elsewhere in
+this shorter guide describe the October baseline.
 Use the [requirement-to-scene map](demo/LOKADO-DEMO-TOUR.md#4-requirement-to-scene-map)
 for the original client scope and the [evidence registry](traceability/evidence.md)
 for the distinction between automated checks and live presenter actions.
@@ -16,22 +23,36 @@ for the distinction between automated checks and live presenter actions.
 
 ## 0. Before you present (checklist — 5 minutes)
 
+Everything is a `make` target run from the repository root:
+
 ```bash
-make setup                    # Build image, bring up all services
-make upgrade-check            # Rebuild + migrate + backend tests
-make seed                     # Populate the LOKADO dataset (idempotent; alias: seed-lokado)
-make demo-check               # Verify users, passwords, record counts (19 users, 0 issues)
-make fleet-check              # Verify purchase-backed fleet reconciliation
-make e2e                      # Browser gate, after host prerequisites below
-make backup                   # Native Bench backup of database AND uploaded files
+# Fresh demo from scratch (DESTRUCTIVE: deletes DB, files and backups/)
+make clean && make setup && make seed-lokado
+
+# Or, keep the data and load new code / refresh the seed (idempotent)
+make setup && make seed-lokado
+
+make demo-check               # LOKADO gate: 19 users, "ready": true, no issues
+make fleet-check              # purchase-backed fleet reconciliation
+make e2e                      # browser gate, after host prerequisites below
+make backup-demo              # snapshot DB + files to backups/lokado-demo/
 ```
 
-Run these commands from the repository root. For daily source-mounted development,
-use `make dev-up` in one terminal, then `make dev-config`, `make dev-seed`,
-`make dev-check`, `make dev-test` in another. Use
-`UGAVI_BASE_URL=http://ugavi.localhost:8000 make e2e` to test that source.
-Image rehearsal commands above test baked code, not unbuilt local edits.
-`make help` and the [Make reference](../README.md#makefile-reference) list the targets.
+After a rehearsal that opened tenders or posted stock, `make restore-demo`
+returns to the snapshot. `make reset-lokado` reinstalls the site and reseeds
+without rebuilding containers. `make upgrade-check` rehearses an upstream
+upgrade (rebuild, migrate, configure, backend tests).
+
+`make seed-lokado`/`demo-check` run the code baked into the image; `make setup`
+rebuilds it. If the gate reports `expected at least 40`, unreconciled Monthly
+Stock Reports or invalid tender lineage, the site has old data or the image
+holds old code. Run `make clean && make setup && make seed-lokado`.
+
+For source-mounted development, run `make dev-up` in one terminal, then
+`make dev-config dev-seed dev-check dev-test` in another, and test it with
+`UGAVI_BASE_URL=http://ugavi.localhost:8000 make e2e`. `make dev-reset`
+reinstalls and reseeds from local source. `make help` and the
+[Make reference](../README.md#makefile-reference) list every target.
 Do not run `seed-generic` alongside the canonical LOKADO seed.
 
 Expected output:

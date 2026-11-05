@@ -97,8 +97,10 @@ make restore DB_FILE=/path/to/database.sql.gz
 The Make restore helper restores the database only. Restore public/private
 file archives with the native Bench restore options described in
 [backup/restore procedure](../tests/backup_restore_procedure.md).
-Legacy `backup-demo`/`restore-demo` hard-code the original database name and
-are not the supported recovery path after a reinstall.
+For the demo site, `make backup-demo` saves a native Bench backup (database +
+public + private files) to `backups/lokado-demo/`. `make restore-demo` restores
+all three, migrates and clears the cache. Both work after `make clean`/
+`make setup`/`make reset-lokado`, because they do not hard-code a database name.
 
 ### Verify LOKADO Data Integrity
 ```bash

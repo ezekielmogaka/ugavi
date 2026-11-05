@@ -177,7 +177,7 @@ counts, missing-schema reports and risk statuses are not the current state.
 - Compiles clean, production-guarded (refuses to run outside dev/demo environments)
 - **Canonical seed:** `make seed` → `make seed-lokado` (default; `make seed-generic` for legacy generic data)
 - **Validation:** `make demo-check` and `make fleet-check` both return `"ready": true, "issues": []`
-- **Safety:** `make backup-demo` / `make restore-demo` protect against data loss
+- **Safety:** `make backup-demo` / `make restore-demo` use native Bench backup/restore (DB + public + private files); round-trip verified 2026-11-05 on a fresh `make clean && make setup && make seed-lokado` site
 
 ### Crypto Verification [tested: 2026-10-21]
 - **SV-01 RESOLVED (FALSE POSITIVE):** `cryptography==50.0.2` IS installed in bench venv at `/home/frappe/frappe-bench/env/`
