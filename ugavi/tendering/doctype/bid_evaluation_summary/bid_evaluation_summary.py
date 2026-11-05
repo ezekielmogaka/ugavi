@@ -3,19 +3,81 @@
 Generates a bid comparison summary for evaluation committee review.
 Compares all submitted bids for a tender side-by-side with scoring.
 """
+
 import frappe
-from frappe.model.document import Document
 from frappe import _
-from frappe.utils import fmt_money
-from typing import List, Dict
+from frappe.model.document import Document
+from frappe.utils import fmt_money, now_datetime
+
+APPROVER_ROLES = {"Tender Committee Chair", "System Manager"}
 
 
 class BidEvaluationSummary(Document):
-    """Bid Evaluation Summary document controller."""
-    pass
+    """Committee recommendation that authorizes the standstill notice."""
+
+    def validate(self):
+        previous = self.get_doc_before_save()
+        if previous and previous.status in {"Approved", "Rejected"}:
+            frappe.throw(_("An approved or rejected evaluation summary cannot be changed."))
+        if self.recommended_bidder:
+            self.recommended_bid = frappe.db.get_value(
+                "Bid",
+                {
+                    "tender": self.tender,
+                    "supplier": self.recommended_bidder,
+                    "status": ("in", ["Opened", "Evaluated", "Accepted"]),
+                },
+                "name",
+            )
+            if not self.recommended_bid:
+                frappe.throw(
+                    _("{0} has no opened bid on tender {1}.").format(
+                        self.recommended_bidder, self.tender
+                    )
+                )
+        if self.evaluation_minutes and frappe.db.get_value(
+            "Evaluation Minutes", self.evaluation_minutes, "tender"
+        ) != self.tender:
+            frappe.throw(_("The evaluation minutes belong to a different tender."))
+
+    @frappe.whitelist()
+    def approve(self):
+        from ugavi.tendering.services.evaluation import (
+            approved_minutes,
+            assert_recommendation_supported,
+        )
+
+        if self.status not in {"Draft", "Submitted"}:
+            frappe.throw(_("Only a draft or submitted evaluation summary can be approved."))
+        if not APPROVER_ROLES.intersection(frappe.get_roles()):
+            frappe.throw(_("Only the Tender Committee Chair can approve the recommendation."))
+        if frappe.db.get_value("Tender", self.tender, "status") != "Under Evaluation":
+            frappe.throw(_("The tender must be Under Evaluation."))
+        if not self.recommended_bidder:
+            frappe.throw(_("Select the recommended bidder."))
+        assert_recommendation_supported(
+            self.tender, self.recommended_bidder, self.recommended_amount
+        )
+        self.evaluation_minutes = self.evaluation_minutes or approved_minutes(self.tender)
+        self.status = "Approved"
+        self.approved_by = frappe.session.user
+        self.approved_at = now_datetime()
+        self.save()
+
+    @frappe.whitelist()
+    def reject(self, reason: str):
+        if self.status not in {"Draft", "Submitted"}:
+            frappe.throw(_("Only a draft or submitted evaluation summary can be rejected."))
+        if not APPROVER_ROLES.intersection(frappe.get_roles()):
+            frappe.throw(_("Only the Tender Committee Chair can reject the recommendation."))
+        if not (reason or "").strip():
+            frappe.throw(_("A rejection reason is required."))
+        self.status = "Rejected"
+        self.rejection_reason = reason.strip()
+        self.save()
 
 
-def generate_bid_summary(tender: str) -> Dict:
+def generate_bid_summary(tender: str) -> dict:
     """Generate bid evaluation summary for a tender.
 
     Returns:
@@ -100,7 +162,7 @@ def generate_bid_summary(tender: str) -> Dict:
     }
 
 
-def flag_abnormally_low_bids(tender: str, threshold_percent: float = 40.0) -> List[str]:
+def flag_abnormally_low_bids(tender: str, threshold_percent: float = 40.0) -> list[str]:
     """Flag bids that are >threshold% below the average bid amount (potential dumping)."""
     bids = frappe.get_all("Bid",
         filters={"tender": tender, "status": ["in", ["Submitted", "Opened"]]},
@@ -128,7 +190,7 @@ def flag_abnormally_low_bids(tender: str, threshold_percent: float = 40.0) -> Li
     return flagged
 
 
-def bid_summary_to_html(bid_summary: Dict) -> str:
+def bid_summary_to_html(bid_summary: dict) -> str:
     """Render bid summary as HTML table for email or print."""
     rows = ""
     for bid in bid_summary["bids"]:

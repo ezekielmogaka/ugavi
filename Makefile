@@ -1,4 +1,4 @@
-.PHONY: setup build start stop dev-up dev-down dev-logs dev-shell dev-migrate dev-config dev-seed dev-check dev-test dev-reset seed seed-lokado seed-generic seed-check demo-check fleet-check tenant-manifest-check test lint backup restore backup-demo restore-demo reset-demo reset-lokado upgrade-check clean e2e help
+.PHONY: setup build start stop dev-up dev-down dev-logs dev-shell dev-migrate dev-config dev-seed dev-check dev-test dev-reset seed seed-lokado seed-generic seed-check demo-check demo-index fleet-check tenant-manifest-check test lint backup restore backup-demo restore-demo reset-demo reset-lokado upgrade-check clean e2e help
 
 BENCH_DIR ?= $(HOME)/frappe-bench
 SITE ?= ugavi.localhost
@@ -112,6 +112,9 @@ demo-check:
 	docker compose exec -T backend bench --site $(SITE) execute ugavi.scripts.check_lokado_demo.run
 	@curl -fsS http://localhost:$(NGINX_LISTEN_PORT)/api/method/frappe.ping
 
+demo-index:
+	@docker compose exec -T backend bench --site $(SITE) execute ugavi.scripts.demo_index.run --kwargs "{'base_url': 'http://localhost:$(NGINX_LISTEN_PORT)'}"
+
 fleet-check:
 	docker compose exec -T backend bench --site $(SITE) execute ugavi.scripts.check_fleet_demo.run
 
@@ -119,7 +122,8 @@ tenant-manifest-check:
 	python3 deploy/validate_tenant_manifest.py $(TENANT_MANIFEST)
 
 test:
-	docker compose exec -T backend bench --site $(SITE) run-tests --app ugavi
+	$(COMPOSE) exec -T backend bench --site $(SITE) set-config allow_tests true
+	$(COMPOSE) exec -T backend bench --site $(SITE) run-tests --app ugavi
 
 lint:
 	ruff check ugavi/
@@ -242,6 +246,7 @@ help:
 	@echo "  make seed-check     - Report generic seed integrity (legacy dataset)"
 	@echo "  make seed-generic   - Seed generic Ugavi NGO demo data (legacy)"
 	@echo "  make demo-check     - Verify LOKADO users, supplier links, data, and health"
+	@echo "  make demo-index     - Print tour evidence anchors with real record IDs and links"
 	@echo "  make fleet-check    - Verify fleet purchase-to-vehicle reconciliation"
 	@echo "  make backup-demo    - Native bench snapshot (DB + files) to backups/lokado-demo/"
 	@echo "  make restore-demo   - Restore backups/lokado-demo/ snapshot, migrate, clear cache"

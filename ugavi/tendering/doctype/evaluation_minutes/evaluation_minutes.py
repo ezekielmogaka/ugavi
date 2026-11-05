@@ -5,13 +5,13 @@ aggregated scores, and award recommendation.
 """
 
 import frappe
-from frappe.model.document import Document
 from frappe import _
+from frappe.model.document import Document
 from frappe.utils import now_datetime
 
 from ugavi.tendering.doctype.bid_evaluation_summary.bid_evaluation_summary import (
-    generate_bid_summary,
     bid_summary_to_html,
+    generate_bid_summary,
 )
 
 
@@ -19,8 +19,35 @@ class EvaluationMinutes(Document):
     """Formal evaluation committee session minutes."""
 
     def validate(self):
+        previous = self.get_doc_before_save()
+        if previous and previous.status == "Approved":
+            frappe.throw(_("Approved evaluation minutes cannot be changed."))
         self._validate_quorum()
+        self.quorum_met = 1
+        if not self.bids_reviewed:
+            self._load_bids_from_scores()
         self._generate_comparative_matrix()
+
+    def _load_bids_from_scores(self):
+        """Prefill reviewed bids with averages of submitted committee scores."""
+        from ugavi.tendering.services.evaluation import SCORED_STATUSES, score_ranking
+
+        for row in score_ranking(self.tender):
+            scores = frappe.get_all(
+                "Evaluation Score",
+                filters={"tender": self.tender, "bid": row["bid"], "status": ("in", SCORED_STATUSES)},
+                fields=["technical_score", "financial_score"],
+            )
+            count = len(scores) or 1
+            self.append("bids_reviewed", {
+                "bid": row["bid"],
+                "supplier": row["supplier"],
+                "bid_amount": row["bid_amount"],
+                "technical_avg": round(sum(s.technical_score or 0 for s in scores) / count, 2),
+                "financial_avg": round(sum(s.financial_score or 0 for s in scores) / count, 2),
+                "total_avg": row["average"],
+                "responsive": 1,
+            })
 
     def _validate_quorum(self):
         expected = {row.user for row in self.attendees if row.present}

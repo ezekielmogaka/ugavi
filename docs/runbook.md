@@ -78,6 +78,7 @@ bench restart
 make reset-demo         # reinstall site + re-seed LOKADO (alias for reset-lokado)
 make demo-check         # verify LOKADO identities and seeded workflow evidence
 make fleet-check        # verify purchase-to-vehicle reconciliation and donor isolation
+make demo-index         # print demo record IDs and Desk links for presenters
 ```
 
 **Destructive:** first take `make backup` and copy its files off the container.

@@ -32,8 +32,9 @@ make clean && make setup && make seed-lokado
 # Or, keep the data and load new code / refresh the seed (idempotent)
 make setup && make seed-lokado
 
-make demo-check               # LOKADO gate: 19 users, "ready": true, no issues
+make demo-check               # LOKADO gate: 21 users, "ready": true, no issues
 make fleet-check              # purchase-backed fleet reconciliation
+make demo-index               # real record IDs + links for the tour worksheet
 make e2e                      # browser gate, after host prerequisites below
 make backup-demo              # snapshot DB + files to backups/lokado-demo/
 ```
@@ -87,7 +88,7 @@ Open separate browser profiles/private sessions before the demo, not just tabs
 ---
 
 ## 1. Demo credentials — all-in-one
-### Desk users (14 staff personas)
+### Desk users (16 staff personas)
 
 | # | Who | Login email | Role | Workspace to open |
 |---|---|---|---|---|
@@ -104,7 +105,9 @@ Open separate browser profiles/private sessions before the demo, not just tabs
 | 11 | Margaret Nachuk | `finance@lokado.org` | Finance Officer | Finance |
 | 12 | Robert Lotukoi | `auditor@lokado.org` | Auditor | Governance |
 | 13 | Ruth Napeyok | `storekeeper@lokado.org` | Store Keeper | Purchase Receipt |
-| 14 | Dorothy Nekesa | `committee@lokado.org` | Evaluation Committee | Bid Evaluation |
+| 14 | Dorothy Nekesa | `committee@lokado.org` | Evaluation Committee (secretary) | Bid Evaluation |
+| 15 | Grace Lokwang | `chair@lokado.org` | Tender Committee Chair | Evaluation Minutes / Bid Evaluation Summary |
+| 16 | Samuel Lomuria | `evaluator@lokado.org` | Evaluation Committee (member) | Evaluation Score |
 
 **Password for all staff:** `Ugavi@2024`
 
@@ -520,7 +523,7 @@ still requires compatibility review, migration tests and a backup/restore rehear
 
 ## 6. Validation Checklist (Presenter)
 
-- [ ] All 14 staff users login with `Ugavi@2024`
+- [ ] All 16 staff users login with `Ugavi@2024`
 - [ ] All 5 supplier portal users login with `Ugavi@2024`
 - [ ] PR created with auto-determined procurement method (Restricted for KES 250K)
 - [ ] 2-level approval chain completes

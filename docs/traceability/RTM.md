@@ -202,5 +202,5 @@ Current automated evidence: [evidence registry](evidence.md). The
 maps every original client requirement to actors, scenes, positive evidence,
 negative controls and verification limits. The new runtime test exercises
 one/two/three-code opening with actual crypto, database writes and private PDF
-creation. Browser tests cover all 14 staff identities plus supplier
+creation. Browser tests cover all 16 staff identities plus supplier
 desktop/mobile access. Other business transitions remain explicit live steps.

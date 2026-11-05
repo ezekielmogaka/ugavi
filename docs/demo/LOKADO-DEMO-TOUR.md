@@ -11,12 +11,23 @@ and stopping point. Keep this document open beside the application.
 **Evidence boundary:** on 2026-11-05 the demo site `ugavi.localhost` was
 rebuilt from scratch with `make clean && make setup && make seed-lokado`. The
 seed ended with the acceptance gate `"ready": true` and empty issues. A second
-`make setup && make seed-lokado` run (idempotent), `make demo-check`,
-`make fleet-check` and a `make backup-demo` → `make restore-demo` round-trip
-also passed. Earlier, isolated sites passed 15 integration plus 65 unit tests
-and the 17 browser tests on the same seed code.
-Opening, committee evaluation, standstill and tender award remain real live
-actions, not fabricated completed fixtures. Confirm the gates before presenting.
+`make seed-lokado` run (idempotent), `make demo-check`, `make fleet-check`,
+`make demo-index`, `make test` (17 integration + 67 unit tests) and `make e2e`
+(19 browser tests, including the committee chair and evaluator) also passed.
+
+The seed drives two tenders through the **real** evaluation controllers. It
+uses the officer codes delivered to Mailpit, signed COI declarations,
+individual scores, chair-approved minutes and a chair-approved recommendation:
+
+- **Livestock Galla Goats USAID** stops at *Under Evaluation* with an approved
+  recommendation, so Peter can start the standstill live (Scene 12).
+- **Field Motorcycles Peace Building USAID** is in an active 14-day standstill,
+  so Lodwar General can lodge a real complaint (Scene 19).
+- **Solar Water Pumps EU Resilience** stays sealed for the live three-officer
+  opening (Scene 11).
+
+No standstill is backdated and no award is fabricated. Confirm the gates
+before presenting.
 
 ## 1. Prepare and validate
 
@@ -35,6 +46,10 @@ make clean && make setup && make seed-lokado
 make demo-check
 make fleet-check
 make e2e                      # optional browser gate
+make test                     # optional unit + integration tests
+
+# Print this site's real record IDs and links for the worksheet (section 3.3)
+make demo-index
 
 # Freeze the verified state before rehearsing live actions
 make backup-demo              # writes backups/lokado-demo/
@@ -97,7 +112,11 @@ See the [complete Make reference](../../README.md#makefile-reference) and
 
 - [ ] Open `http://ugavi.localhost:8000` (development) or
       `http://ugavi.localhost:8080` (image rehearsal), then `/login`.
-- [ ] Open Mailpit at `http://localhost:8026`; rehearse delivery of opening codes.
+- [ ] Open Mailpit at `http://localhost:8026` (dev-only mail catcher; the seed
+      configures the **LOKADO Demo Mailpit** outgoing account). Opening codes
+      arrive there as `Bid Opening OTP - <tender>`.
+- [ ] Run `make demo-index` and paste the IDs into the
+      [record worksheet](#33-record-finding-worksheet).
 - [ ] Confirm the demo and fleet gates report `ready: true` and empty issues.
 - [ ] Review seed failures even when the command exits successfully.
 - [ ] Use the [record worksheet](#33-record-finding-worksheet) to locate each
@@ -109,8 +128,10 @@ See the [complete Make reference](../../README.md#makefile-reference) and
 - [ ] Reserve the solar-pump tender for the live opening; do not consume it
       in a rehearsal on the same site.
 - [ ] Confirm a still-open tender with no existing bid for the chosen supplier.
-- [ ] For complaints, prepare a genuine evaluation/standstill first. A fresh
-      seed deliberately has no artificial complaint window.
+- [ ] For complaints, confirm the Motorcycles Standstill Period is **Active**
+      and its end date is still in the future (`make demo-index`). The window
+      was opened by the real `start_standstill` action at seed time; reseed with
+      `make clean && make setup && make seed-lokado` if it has expired.
 - [ ] Confirm the actual approval chain and each actor's required role.
 - [ ] Rehearse action availability. Some app controllers expose server
       methods without a dedicated Desk button; use prepared evidence if the
@@ -138,15 +159,16 @@ completed opening ceremonies or business transactions.
 | 16 asset registers/verifications; four completed movements; one disposal | The EU boat uses an EU destination; Own Funds fleet uses Oropoi |
 | Eight vehicles, 16 fuel logs, 16 spare issues, 16 trips, six donor fleet reports | USAID and Concern each have two vehicles; reused report snapshots regenerate |
 | Eight landed-cost vouchers and ten budgets across all six donors | Freight capitalization and donor budget examples extend beyond the original three vouchers |
+| Two Bid Opening Records, 9 scores per evaluated tender, 6 COI declarations, 2 approved minutes and recommendations, 1 active standstill | Livestock is ready for a live **Start Standstill**; Motorcycles is ready for a live complaint |
 
 Do not create manual BORs, force award statuses, or call historical logistics
-POs tender awards. A fresh seed reserves real three-officer opening for Scene 11;
-committee, standstill and complaint evidence must be prepared through their
-actual workflows before Scenes 12/19 are presented as completed.
+POs tender awards. Solar stays sealed for Scene 11. The final **Award Tender**
+button only appears after the standstill has ended and been confirmed, so a
+same-day demo shows the award gate rather than a fabricated award.
 
 ## 2. Demo credentials and identities
 
-**Demo only:** all 19 seeded staff/supplier users use `Ugavi@2024`. Administrator
+**Demo only:** all 21 seeded staff/supplier users use `Ugavi@2024`. Administrator
 uses the password configured at site creation/reset (local Make default:
 `admin`). Never use Administrator to demonstrate a business approval.
 
@@ -161,7 +183,9 @@ uses the password configured at site creation/reset (local Make default:
 | Mary Akuom | `opening1@lokado.org` | Opening officer 1 / supervising opening session |
 | James Ebei | `opening2@lokado.org` | Opening officer 2 / supplies own code |
 | Sarah Nabwel | `opening3@lokado.org` | Opening officer 3 / supplies own code |
-| Dorothy Nekesa | `committee@lokado.org` | Evaluation evidence and conflict declarations |
+| Dorothy Nekesa | `committee@lokado.org` | Evaluation committee secretary: COI, scores, minutes |
+| Grace Lokwang | `chair@lokado.org` | Tender Committee Chair: approves minutes and recommendation |
+| Samuel Lomuria | `evaluator@lokado.org` | Evaluation committee member: COI and individual scores |
 | John Ekiru | `logistics@lokado.org` | Donor books, requests and transfer evidence |
 | Ruth Napeyok | `storekeeper@lokado.org` | Purchase Receipt and stock dispatch |
 | David Ewoi | `fleet@lokado.org` | Allocation, fuel, spares, trips and reports |
@@ -225,6 +249,9 @@ entire new tender lifecycle into a short presentation by skipping approvals.
 
 ### 3.3 Record-finding worksheet
 
+Run `make demo-index` first: it prints each anchor's real ID and Desk link
+for this site. Use the table below to verify what those records must show.
+
 Desk navigation below uses `/app/<doctype-slug>`. If the installed Frappe
 version redirects to `/desk/`, use the Desk search bar to open the named
 DocType. Filter by Title, supplier, tag, vehicle plate, or invoice Bill No;
@@ -245,7 +272,8 @@ then record the real **Name** and use it as the next scene's Link value.
 | Disposal | Asset Tag = `LOK-OLD-001`, then linked Asset Disposal | Completed disposal; independent authorizer; asset Disposed | __________ |
 | Fleet source | Receipt Supplier Delivery Note = `LOKADO-DEMO-FLEET-IOM` | Submitted PO/receipt; fuel and spare reconciliation rows | __________ |
 | Vehicle | License Plate = `KDM 271I` | IOM; active allocation; donor-consistent purchase sources | __________ |
-| Complaint window | Tender = `Field Motorcycles Peace Building USAID`, then Standstill Period | Active/Challenged and unexpired; Lodwar General has a bid | __________ |
+| Live standstill start | Tender = `Livestock Galla Goats USAID` | Under Evaluation; approved minutes and Bid Evaluation Summary (Nadirkonyen, 365,000); **Start Standstill** button visible to Peter | __________ |
+| Complaint window | Tender = `Field Motorcycles Peace Building USAID`, then Standstill Period | Active and unexpired; Jopeji recommended at 505,000; Lodwar General has an opened bid | __________ |
 
 If a row is missing, record **not available**, not a guessed substitute.
 For logistics, find the receipt by supplier + destination warehouse and
@@ -496,10 +524,10 @@ the new tender; do not submit duplicates or withdraw a winning seed bid.
 7. Verify navigation to a generated **Bid Opening Record**, successful
    outcome, officers, private PDF, opened amounts and tender
    **Under Evaluation**. Record BOR and tender IDs.
-8. Explain the missing/wrong-code test separately. For deliberate negative
-   API trials use disposable fixtures and request fresh codes per trial:
-   successful individual verification consumes a code. Do not turn the
-   presentation fixture into a rate-limit experiment.
+8. Explain the controls: codes are stored only as salted hashes, expire after
+   the configured window (default 5 minutes), and are deleted once the bids
+   open. A typo by one officer can be corrected without reissuing the others'
+   codes. Do not turn the presentation fixture into a rate-limit experiment.
 
 **Pass:** system-generated BOR and opened amounts match the four bids.
 **Stop:** already opened, no codes delivered, expired codes, missing key
@@ -509,40 +537,57 @@ PREPARED EVIDENCE. Never fabricate a BOR or regenerate keys after submission.
 ## Scene 12: Evaluation and award decision
 
 **Story:** opening is disclosure, not authority to spend.
-**Actors:** Dorothy for evidence -> Peter for award. **Mode:** LIVE WORKFLOW
-only after prerequisites are satisfied; otherwise a gate explanation, 6 min.
+**Actors:** Samuel and Dorothy (evaluators) -> Grace (chair) -> Peter.
+**Mode:** PREPARED EVIDENCE for scoring and approvals, then LIVE
+**Start Standstill** on Livestock, 7 min.
 
-1. Open the Tender's **Evaluation Committee child table**, **COI Declaration**,
-   and **Bid Evaluation Summary** for the **same tender ID**.
-2. Show named committee members and completed, non-conflicted declarations.
-   Explain missing declarations are a stopping condition.
-3. Compare technical/financial scoring and justification against opened bids.
-   Do not describe a recommendation paragraph as completed individual scoring.
-4. Open the linked **Standstill Period**. An award requires
-   **Resolved** with resolution **Award Confirmed**, not merely an expired date.
-5. Optional candidate anchors, not seeded recommendations or awards:
-   - `IOM Warehouse Construction Kakuma`: Turkana Construction bid 1,150,000.
-   - `Livestock Galla Goats USAID`: Nadirkonyen bid 365,000.
-   Do not expose sealed values to a supplier; use the opened record for comparison.
-6. For a genuinely ready live tender, use **Award Tender**, select a supplier
-   whose bid is Opened/Evaluated/Accepted, enter that exact opened amount,
-   and inspect the resulting submitted PO and contract.
-7. Record the actual PO and contract IDs. If the server refuses the award,
-   show the reason and stop; proceed to a verified prepared PO in Scene 13.
+Tender: **Livestock Galla Goats USAID** (Under Evaluation). Bids opened by the
+real three-code ceremony: Nadirkonyen 365,000, Moi's Bridge 378,000,
+Kainuk 400,000.
 
-**Important:** solar-pump opening does not automatically produce committee
-evidence or resolved standstill. Do not promise immediate solar award in a
-single session. Jopeji's motorcycle bid is 505,000; an award of 510,000 would
-not match it. Exact-amount validation must not be bypassed.
+1. As Peter, open the Tender. Show its **Evaluation Committee** table: Grace
+   (Chairperson), Dorothy (Secretary), Samuel (Member). None of them are
+   opening officers. Segregation of duties is enforced on save.
+2. Open **COI Declaration** filtered by the tender. Three declarations, each
+   signed by the declarant's own session, all **No** conflict. A user cannot
+   score before declaring.
+3. Open **Evaluation Score** filtered by the tender. Nine Submitted scores
+   (three evaluators x three bids), each with criterion rows and an evaluator
+   who is the session user. Submitted scores cannot be edited or deleted.
+4. Open the **Evaluation Minutes** (`make demo-index`: *Livestock minutes*).
+   Show quorum met, chair and secretary present, bids loaded from the scores,
+   status **Approved** by Grace. Approved minutes are immutable.
+5. Open the **Bid Evaluation Summary** (*Livestock recommendation*): recommended
+   Nadirkonyen at 365,000, approved by Grace. The approval is rejected if the
+   recommendation is not the evidence-backed top-ranked opened bid.
+6. Optional live control: sign in as Dorothy and try **Approve Minutes** on a
+   draft; the server refuses because only the Tender Committee Chair can approve.
+7. **LIVE:** back on the Tender as Peter, the dashboard shows
+   *Recommended: Nadirkonyen Women's Group (KES 365,000)*. Click
+   **Start Standstill** and confirm. Every bidder is notified of the intended
+   award; the tender moves to **Standstill Period** and a Standstill Period
+   record opens with the configured complaint window (default 14 days).
+8. Show that the Tender now offers **no Award button**. **Confirm Standstill**
+   appears only after the end date, and only when no complaint is open.
+   **Award Tender** then issues the PO and contract for the exact recommended
+   supplier and amount.
+
+**Pass:** an evidence chain from COI to scores to minutes to recommendation to
+standstill, with each step done by the authorised person.
+**Stop:** if the tender already shows *Standstill Period*, the live step was
+used in a rehearsal; run `make restore-demo` or show the Motorcycles standstill.
+Never edit statuses or dates to reach the award button. Solar opened in Scene 11
+has no committee evidence yet, so it stops at *Awaiting approved Bid Evaluation
+Summary*.
 
 ## Scene 13: Purchase order and contract
 
 **Actors:** Peter -> winning supplier. **Mode:** PREPARED EVIDENCE plus live
 acknowledgement where available, 7 min.
 
-1. Open the submitted PO recorded in Scene 12, or follow the Purchase Receipt
-   behind `LOK-INV-TCL-0412` to its logistics PO. State which branch you use:
-   award-generated order versus logistics receipt-backed order.
+1. Follow the Purchase Receipt behind `LOK-INV-TCL-0412` to its logistics PO.
+   A same-day demo cannot have an award-generated order, because Scene 12's
+   standstill is still running. State that this is the receipt-backed branch.
 2. Show system PO ID, supplier, company, item quantities/rates, schedule,
    donor, and any populated PR/tender fields. Missing references are not
    automatically inferred from the supplier name.
@@ -808,16 +853,17 @@ calculated from stated included costs; do not claim a field the report lacks.
 ## Scene 19: Notifications, complaints, audit, and MVP2 readiness
 
 **Actors:** Lodwar General supplier -> Peter/panel -> supplier -> Robert.
-**Mode:** LIVE only inside a legitimately prepared complaint window, 8 min.
-Fresh seeding does not manufacture a standstill on still-sealed bids.
+**Mode:** LIVE inside the seeded Motorcycles complaint window, 8 min.
+The window was opened by the real `start_standstill` action after a real
+opening, scoring and chair approval. It was not inserted as a fixture.
 
 1. Open supplier `#notifications`; show actual profile/prequalification,
    bid, clarification, award or acknowledgement events generated by this
    session. The journey panel is guidance, not proof of every completed stage.
-2. As Peter, complete evaluation/standstill preparation for
-   **Field Motorcycles Peace Building USAID** using the real workflow.
-   Inspect its Standstill Period. Confirm Active/Challenged,
-   future end date, and that Lodwar General has a bid.
+2. As Peter, open **Field Motorcycles Peace Building USAID** and its
+   Standstill Period (`make demo-index`: *Motorcycles standstill*). Confirm
+   **Active**, a future end date, intended award Jopeji at 505,000, and that
+   Lodwar General's 530,000 bid was opened.
 3. As `lodwar-supplies@outlook.com`, open `#complaints`, select that tender/
    period, enter a fictional evidence-based challenge and attach a private PDF.
    Click **Submit complaint**. Record its ID.
@@ -825,9 +871,11 @@ Fresh seeding does not manufacture a standstill on still-sealed bids.
    **three distinct non-conflicted users**, for example Jane, Paul and Robert
    if eligible; the complainant cannot be a member. Assign a reviewer who
    is in the panel.
-5. Move Submitted -> **Under Review** and save. Review the fictional facts;
-   record an Outcome and move to **Rejected**, **Upheld** or **Partially Upheld**.
-   Upheld/Partially Upheld also requires a remedial action.
+5. Move Submitted -> **Under Review** and save. The Standstill Period shows
+   **Challenged**, and **Confirm Standstill** is blocked while it is open.
+   Review the fictional facts; record an Outcome and move to **Rejected**,
+   **Upheld** or **Partially Upheld**. Upheld/Partially Upheld also requires a
+   remedial action, which returns the tender to evaluation for re-scoring.
 6. Return as the supplier and show the outcome notification. Do not call a
    Submitted complaint resolved or assume a resolved complaint itself
    confirms an award.
@@ -865,7 +913,7 @@ posted lifecycle for every new supplier.
 
 | Source-defined set | Current size | What the presenter must not infer |
 |---|---|---|
-| Staff + supplier logins | 14 + 5 | Additional supplier masters have no new portal accounts |
+| Staff + supplier logins | 16 + 5 | Additional supplier masters have no new portal accounts |
 | Supplier master scenarios | 30 | All are eligible, enabled, delivered, or payable |
 | Programme PRs / tender scenarios | 25 / 20 | Draft/Pending PRs have Draft tenders, not a published opportunity |
 | Submitted bids | 46 | Every tender is opened or awarded |
@@ -908,7 +956,7 @@ evidence that a transition occurred.
 | Supplier profile, private prequalification and category eligibility | __________ | __________ |
 | Published tender -> supplier sealed bid receipt -> clarification answer | __________ | __________ |
 | Three-code opening -> immutable BOR and opened amounts | __________ | __________ |
-| COI/evaluation + resolved standstill -> legitimate award | __________ | __________ |
+| COI -> individual scores -> chair-approved minutes and recommendation -> Start Standstill (award gated until expiry) | __________ | __________ |
 | Issued native PO -> linked contract and supplier acknowledgement | __________ | __________ |
 | Receipt/dispatch -> native ledger -> donor month-end book | __________ | __________ |
 | Purchase-linked Completed supplier evaluation | __________ | __________ |

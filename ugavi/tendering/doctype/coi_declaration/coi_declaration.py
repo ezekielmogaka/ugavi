@@ -5,8 +5,8 @@ accessing bids. If conflicted, they are excluded from the evaluation
 committee.
 """
 import frappe
-from frappe.model.document import Document
 from frappe import _
+from frappe.model.document import Document
 from frappe.utils import now_datetime
 
 
@@ -14,6 +14,8 @@ class COIDeclaration(Document):
     def validate(self):
         if not self.tender:
             frappe.throw(_("Tender is required."))
+        if self.is_new() and self.declarant != frappe.session.user and "System Manager" not in frappe.get_roles():
+            frappe.throw(_("Committee members must submit their own declaration."))
         if self.has_conflict == "Yes" and not self.conflict_description:
             frappe.throw(_("Conflict details are required."))
         tender = frappe.get_doc("Tender", self.tender)

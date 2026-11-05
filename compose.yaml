@@ -34,7 +34,7 @@ services:
           memory: 512M
 
   valkey:
-    image: valkey/valkey:8.1-alpine
+    image: valkey/valkey:${VALKEY_TAG:-9.1.2-alpine}
     restart: unless-stopped
     expose:
       - "6379"
@@ -49,7 +49,7 @@ services:
           memory: 256M
 
   mailpit:
-    image: axllent/mailpit:latest
+    image: axllent/mailpit:${MAILPIT_TAG:-v1.33.0}
     restart: unless-stopped
     expose:
       - "8025"

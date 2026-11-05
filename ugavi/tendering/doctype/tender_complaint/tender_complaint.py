@@ -3,10 +3,9 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import add_days, get_datetime, now_datetime
+from frappe.utils import add_days, getdate, now_datetime, today
 
 from ugavi.procurement.portal.supplier_portal import notify_supplier_users
-
 
 RESOLVED_STATUSES = {"Upheld", "Partially Upheld", "Rejected"}
 OPEN_STATUSES = {"Submitted", "Under Review"}
@@ -90,7 +89,15 @@ class TenderComplaint(Document):
         if self.status not in {"Upheld", "Partially Upheld"}:
             return
         if self.remedial_action in {"Re-evaluation", "Cancel Intended Award"}:
-            frappe.db.set_value("Tender", self.tender, "status", "Under Evaluation")
+            from ugavi.tendering.doctype.standstill_period.standstill_period import (
+                get_open_standstill,
+                resolve_standstill,
+            )
+
+            if get_open_standstill(self.tender):
+                resolve_standstill(self.tender, "Re-evaluation Required")
+            else:
+                frappe.get_doc("Tender", self.tender).db_set("status", "Under Evaluation")
 
     def _validate_submission_window(self):
         standstill = frappe.db.get_value(
@@ -103,7 +110,7 @@ class TenderComplaint(Document):
             frappe.throw(_("The standstill period does not belong to this tender."))
         if standstill.status not in {"Active", "Challenged"}:
             frappe.throw(_("This standstill period is not accepting complaints."))
-        if get_datetime(standstill.end_date) < now_datetime():
+        if getdate(standstill.end_date) < getdate(today()):
             frappe.throw(_("The standstill complaint window has closed."))
         if not frappe.db.exists(
             "Bid", {"tender": self.tender, "supplier": self.supplier}

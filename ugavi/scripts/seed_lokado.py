@@ -102,6 +102,7 @@ def run():
     """Main entry point."""
     _check_production()
     _seed_foundation()
+    _seed_demo_mail_relay()        # opening codes and notices land in Mailpit
     _seed_roles_and_users()
     _seed_donors()
     _seed_items_and_warehouses()   # creates Item Groups that suppliers need
@@ -118,6 +119,7 @@ def run():
     _seed_projects_and_grants()
     _seed_procurement_workflow()  # governed requests, source-linked tenders, submitted bids
     _prepare_live_opening_demo()
+    _seed_evaluation_journeys()   # real opening -> COI -> scores -> minutes -> recommendation
 
     # ── Supply-Chain Depth ──
     _seed_batch_tracking()         # Batch records with expiry dates (must come before QC)
@@ -146,6 +148,32 @@ def run():
 # ─────────────────────────────────────────────────
 # 1. FOUNDATION — LOKADO Company
 # ─────────────────────────────────────────────────
+
+DEMO_MAIL_ACCOUNT = "LOKADO Demo Mailpit"
+
+
+def _seed_demo_mail_relay():
+    """Route outgoing demo mail to the local Mailpit relay (developer sites only)."""
+    if frappe.db.exists("Email Account", DEMO_MAIL_ACCOUNT):
+        return
+    if frappe.db.exists("Email Account", {"default_outgoing": 1, "enable_outgoing": 1}):
+        return  # respect an operator-configured outgoing account
+    frappe.get_doc({
+        "doctype": "Email Account",
+        "email_account_name": DEMO_MAIL_ACCOUNT,
+        "email_id": "procurement@lokado.org",
+        "enable_incoming": 0,
+        "enable_outgoing": 1,
+        "default_outgoing": 1,
+        "smtp_server": frappe.conf.get("demo_mail_relay", "mailpit"),
+        "smtp_port": 1025,
+        "use_tls": 0,
+        "use_ssl_for_outgoing": 0,
+        "no_smtp_authentication": 1,
+        "awaiting_password": 0,
+    }).insert(ignore_permissions=True)
+    print(f"  Mail relay: {DEMO_MAIL_ACCOUNT} -> Mailpit (http://localhost:8026)")
+
 
 def _seed_foundation():
     company_name = "Lotus Kenya Action for Development Organization"
@@ -199,6 +227,7 @@ ROLES = [
     "Procurement Officer", "Approver Level 1", "Approver Level 2",
     "Bid Opening Officer", "Evaluation Committee", "Fleet Manager",
     "Asset Manager", "Logistics Officer", "Finance Officer", "Auditor", "Store Keeper",
+    "Tender Committee Chair",
 ]
 
 LOKADO_USERS = [
@@ -210,6 +239,8 @@ LOKADO_USERS = [
     ("opening2@lokado.org",     "James",   "Ebei",      "Bid Opening Officer"),
     ("opening3@lokado.org",     "Sarah",   "Nabwel",    "Bid Opening Officer"),
     ("committee@lokado.org",    "Dorothy", "Nekesa",    "Evaluation Committee"),
+    ("chair@lokado.org",        "Grace",   "Lokwang",   "Tender Committee Chair"),
+    ("evaluator@lokado.org",    "Samuel",  "Lomuria",   "Evaluation Committee"),
     ("logistics@lokado.org",    "John",    "Ekiru",     "Logistics Officer"),
     ("fleet@lokado.org",        "David",   "Ewoi",      "Fleet Manager"),
     ("assets@lokado.org",       "Agnes",   "Ekal",      "Asset Manager"),
@@ -231,7 +262,15 @@ SUPPLIER_PORTAL_LINKS = {
     "lodwar-supplies@outlook.com": "Lodwar General Supplies",
 }
 
+# Evaluation panel for sealed tenders; distinct from the three opening officers.
+LOKADO_EVALUATION_COMMITTEE = (
+    ("chair@lokado.org", "Chairperson"),
+    ("committee@lokado.org", "Secretary"),
+    ("evaluator@lokado.org", "Member"),
+)
+
 LOKADO_UPSTREAM_ROLES = {
+    "chair@lokado.org": ("Evaluation Committee",),
     "procurement@lokado.org": ("Purchase User",),
     "logistics@lokado.org": ("Stock User",),
     "storekeeper@lokado.org": ("Stock User",),
@@ -1070,7 +1109,7 @@ def _seed_procurement_workflow():
         ("Livestock Restocking - Galla Goats (USAID)", "USAID", 380000,
          "Restricted Tender", "Approved",
          "Livelihoods & Food Security - LOKADO", "GOAT-GALLA",
-         "Procurement of 95 Galla goats for distribution to 238 households in "
+         "Procurement of 100 Galla goats for distribution to 238 households in "
          "Turkana South and East. Part of livelihoods recovery programme."),
         # PR03: IOM warehouse construction — Japan funded, Open Tender
         ("Construction of IOM-Supported Warehouse - Kakuma", "JAPAN", 1200000,
@@ -1223,7 +1262,7 @@ def _seed_procurement_workflow():
 
         qty_map = {
             "Water Tanks": 12,
-            "Livestock": 95,
+            "Livestock": 100,
             "Construction": 1,
             "Hygiene": 900,
             "Motorcycles": 4,
@@ -1334,6 +1373,10 @@ def _seed_lokado_tenders_and_bids(td, dm, pr_map):
             "opening_officer_1": "opening1@lokado.org",
             "opening_officer_2": "opening2@lokado.org",
             "opening_officer_3": "opening3@lokado.org",
+            "evaluation_committee": [
+                {"user": user, "role": role, "email": user}
+                for user, role in LOKADO_EVALUATION_COMMITTEE
+            ] if requisition.procurement_method in ("Restricted Tender", "Open Tender") else [],
             "bid_security_required": (
                 25000 if "Warehouse" in t_title else
                 10000 if value > 500000 else 0
@@ -1514,6 +1557,182 @@ def _prepare_live_opening_demo():
         tender.submission_deadline = str(add_days(today(), -1)) + " 17:00:00"
         tender.save(ignore_permissions=True)
     print("  Live opening ready: Solar Water Pumps EU Resilience (closed, four sealed bids)")
+
+
+# Tender -> whether the approved recommendation proceeds to an active standstill.
+EVALUATION_JOURNEYS = (
+    ("Field Motorcycles Peace Building USAID", True),
+    ("Livestock Galla Goats USAID", False),
+)
+
+
+def _read_opening_code(officer, tender):
+    """Read the officer's code from the local outbox, as the officer reads Mailpit."""
+    import email
+    import re
+
+    rows = frappe.db.sql(
+        """SELECT q.message FROM `tabEmail Queue` q
+           JOIN `tabEmail Queue Recipient` r ON r.parent = q.name
+           WHERE r.recipient = %s AND q.message LIKE %s
+           ORDER BY q.creation DESC LIMIT 1""",
+        (officer, f"%Bid Opening OTP - {tender}%"),
+    )
+    if not rows:
+        frappe.throw(f"No opening code was delivered to {officer} for {tender}")
+    message = email.message_from_string(rows[0][0])
+    for part in message.walk():
+        if part.get_content_maintype() == "text":
+            body = part.get_payload(decode=True).decode(part.get_content_charset() or "utf-8")
+            match = re.search(r"Your OTP is (\d{6})", body)
+            if match:
+                return match.group(1)
+    frappe.throw(f"Opening code for {officer} could not be read")
+
+
+def _close_submission_window(tender):
+    """Date a fixture tender as closed after its bids were submitted."""
+    if getdate(tender.submission_deadline) >= getdate(today()):
+        tender.publish_date = add_days(today(), -30)
+        tender.submission_deadline = str(add_days(today(), -8)) + " 17:00:00"
+        tender.save(ignore_permissions=True)
+
+
+def _run_opening_ceremony(tender):
+    from ugavi.procurement.services.sealed_bid import init_opening_ceremony, open_bids
+
+    with _demo_actor(tender.opening_officer_1):
+        init_opening_ceremony(tender.name)
+        codes = {
+            f"officer_{index}_otp": _read_opening_code(
+                tender.get(f"opening_officer_{index}"), tender.name
+            )
+            for index in (1, 2, 3)
+        }
+        return open_bids(tender.name, **codes)
+
+
+def _score_criteria(rank, evaluator_index, price_score):
+    return [
+        {"criterion_name": "Technical compliance with specification", "category": "Technical",
+         "max_score": 100, "score": 88 - 6 * rank + evaluator_index, "weight": 40},
+        {"criterion_name": "Price (lowest responsive bid = 100)", "category": "Financial",
+         "max_score": 100, "score": price_score, "weight": 40},
+        {"criterion_name": "Delivery schedule to Turkana sites", "category": "Delivery",
+         "max_score": 100, "score": 85 - 5 * rank, "weight": 10},
+        {"criterion_name": "Past performance and references", "category": "Past Performance",
+         "max_score": 100, "score": 80 - 4 * rank, "weight": 10},
+    ]
+
+
+def _seed_evaluation_journeys():
+    """Drive real opening, declarations, scoring, minutes and recommendation controllers."""
+    from ugavi.tendering.doctype.coi_declaration.coi_declaration import create_coi_declaration
+    from ugavi.tendering.services.evaluation import (
+        approved_minutes,
+        approved_recommendation,
+        score_ranking,
+    )
+
+    chair, secretary = LOKADO_EVALUATION_COMMITTEE[0][0], LOKADO_EVALUATION_COMMITTEE[1][0]
+    for title, start_standstill in EVALUATION_JOURNEYS:
+        name = frappe.db.get_value("Tender", {"title": title}, "name")
+        if not name:
+            frappe.throw(f"Missing evaluation journey tender: {title}")
+        tender = frappe.get_doc("Tender", name)
+        if not tender.evaluation_committee and tender.status in ("Published", "Bids Received"):
+            for user, role in LOKADO_EVALUATION_COMMITTEE:
+                tender.append("evaluation_committee", {"user": user, "role": role, "email": user})
+            tender.save(ignore_permissions=True)
+
+        if tender.status in ("Published", "Bids Received"):
+            _close_submission_window(tender)
+            result = _run_opening_ceremony(tender)
+            print(f"  Opening: {title[:40]} -> {result['opening_record']} ({result['bids_opened']} bids)")
+            tender.reload()
+        if tender.status != "Under Evaluation":
+            continue
+
+        for user, _role in LOKADO_EVALUATION_COMMITTEE:
+            if not frappe.db.exists("COI Declaration", {"tender": tender.name, "declarant": user}):
+                with _demo_actor(user):
+                    create_coi_declaration(
+                        tender.name, user,
+                        "DEMO: no financial, family or business interest in any bidder.",
+                    )
+
+        bids = frappe.get_all(
+            "Bid", filters={"tender": tender.name, "status": "Opened"},
+            fields=["name", "bid_amount"], order_by="bid_amount asc",
+        )
+        lowest = bids[0].bid_amount
+        for evaluator_index, (user, _role) in enumerate(LOKADO_EVALUATION_COMMITTEE):
+            for rank, bid in enumerate(bids):
+                if frappe.db.exists("Evaluation Score", {"bid": bid.name, "evaluator": user}):
+                    continue
+                with _demo_actor(user):
+                    score = frappe.get_doc({
+                        "doctype": "Evaluation Score",
+                        "tender": tender.name,
+                        "evaluator": user,
+                        "bid": bid.name,
+                        "criteria": _score_criteria(
+                            rank, evaluator_index, round(100 * lowest / bid.bid_amount, 1)
+                        ),
+                        "comments": "DEMO: scored against the published criteria.",
+                    })
+                    score.insert()
+                    score.submit_score()
+
+        if not approved_minutes(tender.name):
+            with _demo_actor(secretary):
+                minutes = frappe.get_doc({
+                    "doctype": "Evaluation Minutes",
+                    "tender": tender.name,
+                    "session_date": today(),
+                    "chairperson": chair,
+                    "secretary": secretary,
+                    "attendees": [
+                        {"user": user, "role": role, "present": 1}
+                        for user, role in LOKADO_EVALUATION_COMMITTEE
+                    ],
+                    "recommendation": (
+                        "<p>DEMO: The committee recommends the highest-ranked responsive bid "
+                        "after technical, price, delivery and past-performance scoring.</p>"
+                    ),
+                    "next_steps": "Chair approval, then intended-award notice and standstill.",
+                })
+                minutes.insert()
+            with _demo_actor(chair):
+                minutes.approve()
+
+        if not approved_recommendation(tender.name):
+            best = score_ranking(tender.name)[0]
+            with _demo_actor("procurement@lokado.org"):
+                summary = frappe.get_doc({
+                    "doctype": "Bid Evaluation Summary",
+                    "tender": tender.name,
+                    "evaluation_date": today(),
+                    "evaluation_minutes": approved_minutes(tender.name),
+                    "recommended_bidder": best["supplier"],
+                    "recommended_amount": best["bid_amount"],
+                    "justification": (
+                        f"<p>DEMO: highest average committee score ({best['average']}) "
+                        "and lowest evaluated price.</p>"
+                    ),
+                })
+                summary.insert()
+            with _demo_actor(chair):
+                summary.approve()
+            print(f"  Recommendation: {title[:40]} -> {best['supplier']} {best['bid_amount']:,.0f}")
+
+        if start_standstill:
+            with _demo_actor("procurement@lokado.org"):
+                tender.reload()
+                standstill = tender.start_standstill()
+            print(f"  Standstill: {title[:40]} -> {standstill} (complaint window open)")
+
+    frappe.db.commit()
 
 
 def _seed_lokado_addendum(td):
@@ -1918,7 +2137,7 @@ def _seed_logistics():
             ("WATER-TANK-10K", 6, 52000, "BAT-2025-IOM-TANK", "2026-12-31"),
         ]),
         ("Nadirkonyen Women's Group", "LOKADO Main Warehouse - Lodwar", [
-            ("GOAT-GALLA", 95, 3842, "BAT-2025-USAID-GOAT", "2026-06-30"),
+            ("GOAT-GALLA", 100, 3650, "BAT-2025-USAID-GOAT", "2026-06-30"),
             ("ANIMAL-FEED", 50, 520, "BAT-2025-USAID-FEED", "2025-12-31"),
         ]),
         ("Lodwar General Supplies", "IOM Supported Warehouse - Kakuma", [
@@ -2638,7 +2857,7 @@ def _seed_quality_inspections():
 # ─────────────────────────────────────────────────
 
 STOCK_RECEIPT_RATES = {
-    "CEMENT-BAG": 1100, "WATER-TANK-10K": 52000, "GOAT-GALLA": 3842,
+    "CEMENT-BAG": 1100, "WATER-TANK-10K": 52000, "GOAT-GALLA": 3650,
     "ANIMAL-FEED": 520, "VET-KIT": 4500, "HYGIENE-KIT": 175,
     "FIRST-AID-KIT": 1500, "PIPE-HDPE-63MM": 290, "MOTORCYCLE-FIELD": 130000,
     "WATER-PUMP-SOLAR": 185000, "LAPTOP-DELL": 97500, "FUEL-DIESEL": 210,
@@ -2662,7 +2881,7 @@ def _seed_stock_entries():
          add_days(td, -18), [("CEMENT-BAG", 250), ("WATER-TANK-10K", 6)],
          "Receive construction materials from Turkana Construction"),
         ("Material Receipt", None, _wh("LOKADO Main Warehouse - Lodwar"),
-         add_days(td, -14), [("GOAT-GALLA", 95), ("ANIMAL-FEED", 50), ("VET-KIT", 30)],
+         add_days(td, -14), [("GOAT-GALLA", 100), ("ANIMAL-FEED", 50), ("VET-KIT", 30)],
          "Receive livestock from Nadirkonyen Women's Group"),
         ("Material Receipt", None, _wh("LOKADO Field Store - Lokichoggio"),
          add_days(td, -10), [("HYGIENE-KIT", 900), ("FIRST-AID-KIT", 120)],
@@ -3471,7 +3690,7 @@ def _seed_lokado_purchase_orders():
          [("CEMENT-BAG", 250, 1100), ("WATER-TANK-10K", 6, 52000)],
          "LPO: IOM warehouse construction materials"),
         ("Nadirkonyen Women's Group", add_days(td, -8), add_days(td, 37),
-         [("GOAT-GALLA", 95, 3842)],
+         [("GOAT-GALLA", 100, 3650)],
          "LPO: Galla goats - USAID livelihoods"),
         ("Lodwar General Supplies", add_days(td, -6), add_days(td, 54),
          [("WATER-TANK-10K", 12, 35417)],

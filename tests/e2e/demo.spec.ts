@@ -8,7 +8,9 @@ for (const [email, doctypes] of [
   ['opening1@lokado.org', ['Tender', 'Bid Opening Record']],
   ['opening2@lokado.org', ['Tender', 'Bid Opening Record']],
   ['opening3@lokado.org', ['Tender', 'Bid Opening Record']],
-  ['committee@lokado.org', ['Bid Evaluation Summary']],
+  ['committee@lokado.org', ['Bid Evaluation Summary', 'Evaluation Minutes']],
+  ['chair@lokado.org', ['Evaluation Minutes', 'Bid Evaluation Summary', 'Standstill Period']],
+  ['evaluator@lokado.org', ['Evaluation Score', 'COI Declaration']],
   ['storekeeper@lokado.org', ['Purchase Receipt']],
   ['logistics@lokado.org', ['Donor Warehouse', 'Monthly Stock Report', 'Inter Donor Transfer', 'Stock Entry']],
   ['fleet@lokado.org', ['Vehicle', 'Vehicle Allocation', 'Fuel Log', 'Spare Parts Issue', 'Fleet Utilization Report']],
@@ -30,10 +32,7 @@ for (const [email, doctypes] of [
       expect(response.ok(), `${email}: read ${doctype}`).toBeTruthy();
       const { message } = await response.json();
       expect(Array.isArray(message), `${doctype}: list response`).toBeTruthy();
-      // These records only exist after the real opening/evaluation workflow.
-      if (!['Bid Opening Record', 'Bid Evaluation Summary'].includes(doctype)) {
-        expect(message.length, `${email}: seeded ${doctype} evidence`).toBeGreaterThan(0);
-      }
+      expect(message.length, `${email}: seeded ${doctype} evidence`).toBeGreaterThan(0);
     }
 
     const route = doctypes[0].toLowerCase().replaceAll(' ', '-');

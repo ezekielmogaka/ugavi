@@ -94,6 +94,9 @@ class TestOpeningCeremonyRuntime(IntegrationTestCase):
                         )
                         self.assertEqual(frappe.db.get_value("Bid", bid.name, "bid_amount"), 0)
                     else:
+                        typo = dict(args, officer_3_otp="000000" if args["officer_3_otp"] != "000000" else "111111")
+                        with self.assertRaisesRegex(frappe.ValidationError, "Invalid OTP"):
+                            sealed_bid.open_bids(tender.name, **typo)
                         result = sealed_bid.open_bids(tender.name, **args)
                         self.assertEqual(result["bids_opened"], 1)
                         self.assertEqual(result["decrypted_bids"][0]["amount"], 580000)
@@ -265,3 +268,113 @@ class TestApprovalDelegation(IntegrationTestCase):
                 "start_date": "2025-01-01",
                 "end_date": "2025-01-31",
             }).insert(ignore_permissions=True)
+
+class TestStandstillAwardChain(IntegrationTestCase):
+    """Recommendation -> standstill -> complaint/confirmation -> award (EV6, CT1).
+
+    Uses the seeded LOKADO evaluation journeys; every change is rolled back.
+    """
+
+    def setUp(self):
+        self.livestock = frappe.db.get_value(
+            "Tender", {"title": "Livestock Galla Goats USAID", "status": "Under Evaluation"}
+        )
+        self.motorcycles = frappe.db.get_value(
+            "Tender", {"title": "Field Motorcycles Peace Building USAID",
+                       "status": "Standstill Period"}
+        )
+        if not (self.livestock and self.motorcycles):
+            self.skipTest("Seeded LOKADO evaluation journeys are not present")
+        frappe.set_user("procurement@lokado.org")
+
+    def tearDown(self):
+        frappe.set_user("Administrator")
+        frappe.db.rollback()
+
+    def test_standstill_must_end_before_award(self):
+        from ugavi.tendering.services.evaluation import approved_recommendation
+
+        tender = frappe.get_doc("Tender", self.livestock)
+        recommendation = approved_recommendation(tender.name)
+        standstill = tender.start_standstill()
+        self.assertEqual(frappe.db.get_value("Tender", tender.name, "status"), "Standstill Period")
+        tender.reload()
+        with self.assertRaisesRegex(frappe.ValidationError, "after the standstill ends"):
+            tender.confirm_standstill()
+        with self.assertRaisesRegex(frappe.ValidationError, "completed standstill"):
+            tender.award(recommendation.recommended_bidder, recommendation.recommended_amount)
+
+        # Fixture: the statutory window has elapsed.
+        frappe.db.set_value("Standstill Period", standstill, {
+            "start_date": add_days(today(), -15), "end_date": add_days(today(), -1),
+        })
+        tender.confirm_standstill()
+        self.assertEqual(
+            frappe.db.get_value("Standstill Period", standstill, "resolution"), "Award Confirmed"
+        )
+        tender.reload()
+        losing_bid = frappe.db.get_value(
+            "Bid", {"tender": tender.name, "supplier": ("!=", recommendation.recommended_bidder)},
+            ["supplier", "bid_amount"], as_dict=True,
+        )
+        with self.assertRaisesRegex(frappe.ValidationError, "recommended bidder"):
+            tender.award(losing_bid.supplier, losing_bid.bid_amount)
+        with self.assertRaisesRegex(frappe.ValidationError, "must match"):
+            tender.award(recommendation.recommended_bidder, recommendation.recommended_amount + 1)
+
+        result = tender.award(recommendation.recommended_bidder, recommendation.recommended_amount)
+        po = frappe.get_doc("Purchase Order", result["purchase_order"])
+        self.assertEqual(po.docstatus, 1)
+        self.assertEqual(po.supplier, recommendation.recommended_bidder)
+        self.assertAlmostEqual(po.net_total, recommendation.recommended_amount, places=2)
+        self.assertEqual(po.ugavi_tender, tender.name)
+        self.assertTrue(result["contract"])
+        self.assertEqual(frappe.db.get_value("Tender", tender.name, "status"), "Awarded")
+        self.assertEqual(frappe.db.get_value("Bid", recommendation.recommended_bid, "status"),
+                         "Accepted")
+
+    def test_upheld_complaint_returns_tender_to_evaluation(self):
+        from ugavi.tendering.doctype.standstill_period.standstill_period import (
+            get_open_standstill,
+        )
+        from ugavi.tendering.services.evaluation import approved_recommendation
+
+        standstill = get_open_standstill(self.motorcycles)
+        losing_supplier = frappe.db.get_value(
+            "Bid",
+            {"tender": self.motorcycles,
+             "supplier": ("!=", approved_recommendation(self.motorcycles).recommended_bidder)},
+            "supplier",
+        )
+        frappe.set_user("Administrator")
+        complaint = frappe.get_doc({
+            "doctype": "Tender Complaint", "tender": self.motorcycles,
+            "standstill_period": standstill, "supplier": losing_supplier,
+            "grounds": "Test: delivery-score inconsistency.", "status": "Submitted",
+        }).insert()
+        tender = frappe.get_doc("Tender", self.motorcycles)
+        frappe.db.set_value("Standstill Period", standstill, {
+            "start_date": add_days(today(), -15), "end_date": add_days(today(), -1),
+        })
+        with self.assertRaisesRegex(frappe.ValidationError, "complaint remains unresolved"):
+            tender.confirm_standstill()
+
+        complaint.status = "Under Review"
+        complaint.review_panel = []
+        for user in ("chair@lokado.org", "auditor@lokado.org", "finance@lokado.org"):
+            complaint.append("review_panel", {"user": user})
+        complaint.save()
+        complaint.status = "Upheld"
+        complaint.outcome = "Test: re-score delivery criterion."
+        complaint.remedial_action = "Re-evaluation"
+        complaint.save()
+
+        self.assertEqual(
+            frappe.db.get_value("Standstill Period", standstill, "resolution"),
+            "Re-evaluation Required",
+        )
+        self.assertEqual(
+            frappe.db.get_value("Tender", self.motorcycles, "status"), "Under Evaluation"
+        )
+        # Evidence created before the re-evaluation no longer supports an award.
+        self.assertIsNone(approved_recommendation(self.motorcycles))

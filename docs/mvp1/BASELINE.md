@@ -107,7 +107,7 @@
 | Item | Finding | Severity |
 |------|---------|----------|
 | Dockerfile | frappe/erpnext:v16 mutable tag | MEDIUM |
-| compose.yaml | mailpit:latest mutable tag | MEDIUM |
+| compose.yaml | mailpit:latest mutable tag | MEDIUM — resolved: pinned to v1.33.0 (override with MAILPIT_TAG) |
 | Makefile | PYTHONPATH workaround on every bench cmd | MEDIUM |
 | .env | DB passwords (OK - .gitignored) | OK |
 

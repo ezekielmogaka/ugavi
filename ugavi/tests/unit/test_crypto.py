@@ -103,59 +103,66 @@ class TestOTP(unittest.TestCase):
             "test@example.com", ANY, "TEST-TENDER-001"
         )
 
+    def _issue(self, email, tender):
+        from ugavi.procurement.services.sealed_bid import generate_otp
+        with patch("ugavi.procurement.services.sealed_bid._send_otp_email") as send_email:
+            generate_otp(email, tender)
+        return send_email.call_args.args[1]
+
+    def tearDown(self):
+        import frappe
+        for key in ("TEST-002:test2@example.com", "TEST-003:test3@example.com",
+                    "TEST-004:test4@example.com", "TEST-005:test5@example.com"):
+            frappe.cache().delete(f"bid_otp:{key}")
+
     def test_verify_otp_correct(self):
-        """Correct OTP input should verify True."""
-        import secrets as sec
+        """Correct OTP verifies once and is consumed by default."""
+        import frappe
 
         from ugavi.procurement.services.sealed_bid import verify_otp
-        # Generate an OTP directly (bypassing cache)
-        otp = str(sec.randbelow(1000000)).zfill(6)
-        import hashlib
-        import time
-        stored = hashlib.sha256(
-            f"test2@example.com:TEST-002:{otp}:{int(time.time()/60)}".encode()
-        ).hexdigest()
-        # Store in cache manually
-        import json
-        from datetime import datetime, timedelta
-
-        import frappe
-        frappe.cache().setex(
-            "bid_otp:TEST-002:test2@example.com", 300,
-            json.dumps({"hash": stored, "attempts": 0, "max_attempts": 3,
-                         "expires_at": (datetime.now() + timedelta(minutes=5)).isoformat()})
-        )
+        otp = self._issue("test2@example.com", "TEST-002")
         with patch("ugavi.procurement.services.sealed_bid._log_audit") as audit:
-            result = verify_otp("test2@example.com", "TEST-002", otp, stored)
-        self.assertTrue(result)
+            self.assertTrue(verify_otp("test2@example.com", "TEST-002", otp))
         audit.assert_called_once_with(
             "TEST-002", "test2@example.com", "OTP_VERIFIED", "Success"
         )
+        self.assertIsNone(frappe.cache().get("bid_otp:TEST-002:test2@example.com"))
 
     def test_verify_otp_wrong_code(self):
-        """Wrong OTP should return False."""
-        import hashlib
+        """Wrong OTP returns False and keeps the code usable."""
+        from ugavi.procurement.services.sealed_bid import verify_otp
+        otp = self._issue("test3@example.com", "TEST-003")
+        wrong = "000000" if otp != "000000" else "111111"
+        with patch("ugavi.procurement.services.sealed_bid._log_audit") as audit:
+            self.assertFalse(verify_otp("test3@example.com", "TEST-003", wrong))
+            self.assertTrue(verify_otp("test3@example.com", "TEST-003", otp))
+        audit.assert_any_call("TEST-003", "test3@example.com", "OTP_FAILED_1", "Failed")
+
+    def test_otp_valid_for_configured_window_not_clock_minute(self):
+        """Codes stay valid across minute boundaries until the configured expiry."""
         import time
 
-        from ugavi.procurement.services.sealed_bid import verify_otp
-        stored = hashlib.sha256(
-            f"test3@example.com:TEST-003:123456:{int(time.time()/60)}".encode()
-        ).hexdigest()
-        import json
-        from datetime import datetime, timedelta
-
         import frappe
-        frappe.cache().setex(
-            "bid_otp:TEST-003:test3@example.com", 300,
-            json.dumps({"hash": stored, "attempts": 0, "max_attempts": 3,
-                         "expires_at": (datetime.now() + timedelta(minutes=5)).isoformat()})
-        )
-        with patch("ugavi.procurement.services.sealed_bid._log_audit") as audit:
-            result = verify_otp("test3@example.com", "TEST-003", "999999", stored)
-        self.assertFalse(result)
-        audit.assert_called_once_with(
-            "TEST-003", "test3@example.com", "OTP_FAILED_1", "Failed"
-        )
+
+        from ugavi.procurement.services.sealed_bid import _otp_expiry_seconds, verify_otp
+        otp = self._issue("test4@example.com", "TEST-004")
+        later = time.time() + min(240, _otp_expiry_seconds() - 30)
+        with patch("ugavi.procurement.services.sealed_bid._log_audit"), \
+                patch("ugavi.procurement.services.sealed_bid.time.time", return_value=later):
+            self.assertTrue(verify_otp("test4@example.com", "TEST-004", otp, consume=False))
+        expired = time.time() + _otp_expiry_seconds() + 1
+        with patch("ugavi.procurement.services.sealed_bid._log_audit"), \
+                patch("ugavi.procurement.services.sealed_bid.time.time", return_value=expired):
+            with self.assertRaises(frappe.ValidationError):
+                verify_otp("test4@example.com", "TEST-004", otp)
+
+    def test_non_consuming_verification_keeps_code(self):
+        """Ceremony verification must not burn codes before all officers pass."""
+        from ugavi.procurement.services.sealed_bid import verify_otp
+        otp = self._issue("test5@example.com", "TEST-005")
+        with patch("ugavi.procurement.services.sealed_bid._log_audit"):
+            self.assertTrue(verify_otp("test5@example.com", "TEST-005", otp, consume=False))
+            self.assertTrue(verify_otp("test5@example.com", "TEST-005", otp, consume=False))
 
     def test_otp_uses_secrets_compare_digest(self):
         """confirm secrets.compare_digest is imported (constant-time comparison)."""

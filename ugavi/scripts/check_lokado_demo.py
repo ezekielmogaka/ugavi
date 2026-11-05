@@ -4,7 +4,7 @@ import json
 
 import frappe
 from frappe import _
-from frappe.utils import get_datetime, now_datetime
+from frappe.utils import get_datetime, getdate, now_datetime, today
 from frappe.utils.password import check_password
 
 from ugavi.scripts.seed_lokado import (
@@ -313,6 +313,8 @@ def get_report() -> dict:
     elif not frappe.db.exists("Bid Opening Record", {"tender": opening_tender.name}):
         issues.append("Solar-pump tender advanced without verified bid-opening evidence")
 
+    issues.extend(_evaluation_journey_issues())
+
     movement_gaps = frappe.db.sql(
         """SELECT name FROM `tabUgavi Asset Movement`
            WHERE status = 'Completed'
@@ -364,6 +366,55 @@ def get_report() -> dict:
         "counts": counts,
         "fleet": fleet_report,
     }
+
+
+def _evaluation_journey_issues() -> list[str]:
+    """The live evaluation scenes need real, controller-produced evidence."""
+    from ugavi.tendering.services.evaluation import (
+        approved_minutes,
+        approved_recommendation,
+        assert_recommendation_supported,
+    )
+    from ugavi.tendering.doctype.standstill_period.standstill_period import get_open_standstill
+
+    issues = []
+    expected = {
+        "Field Motorcycles Peace Building USAID": "Standstill Period",
+        "Livestock Galla Goats USAID": "Under Evaluation",
+    }
+    for title, status in expected.items():
+        tender = frappe.db.get_value("Tender", {"title": title}, ["name", "status"], as_dict=True)
+        label = f"Evaluation journey {title}"
+        if not tender:
+            issues.append(f"{label}: missing tender")
+            continue
+        if not frappe.db.exists("Bid Opening Record", {"tender": tender.name}):
+            issues.append(f"{label}: no three-officer opening record")
+        if frappe.db.count("COI Declaration", {"tender": tender.name, "has_conflict": "No"}) < 3:
+            issues.append(f"{label}: committee COI declarations incomplete")
+        if not approved_minutes(tender.name):
+            issues.append(f"{label}: no approved evaluation minutes")
+        recommendation = approved_recommendation(tender.name)
+        if not recommendation:
+            issues.append(f"{label}: no approved recommendation")
+        else:
+            try:
+                assert_recommendation_supported(
+                    tender.name, recommendation.recommended_bidder,
+                    recommendation.recommended_amount,
+                )
+            except frappe.ValidationError as exc:
+                issues.append(f"{label}: recommendation not supported by evidence ({exc})")
+        if tender.status != status:
+            issues.append(f"{label}: expected {status}, found {tender.status}")
+        standstill = get_open_standstill(tender.name)
+        if status == "Standstill Period":
+            end_date = standstill and frappe.db.get_value("Standstill Period", standstill, "end_date")
+            if not end_date or getdate(end_date) < getdate(today()):
+                issues.append(f"{label}: complaint window is not open")
+        elif standstill:
+            issues.append(f"{label}: standstill started before the live scene")
+    return issues
 
 
 def run() -> dict:

@@ -25,10 +25,16 @@ make clean && make setup && make seed-lokado
 
 make demo-check     # LOKADO acceptance gate: "ready": true, "issues": []
 make fleet-check    # fleet purchase-to-vehicle reconciliation
+make demo-index     # print this site's demo record IDs and Desk links for the tour
 make e2e            # Playwright browser tests (host prerequisites below)
 ```
 
 **URL:** http://ugavi.localhost:8080 | Login: `Administrator` / `admin`
+
+**Demo mail (dev only):** Mailpit at http://localhost:8026 catches every outgoing
+email, including the bid-opening codes. Supporting images are pinned in
+`compose.yaml` (`axllent/mailpit:v1.33.0`, `valkey/valkey:9.1.2-alpine`); override
+them with `MAILPIT_TAG=... VALKEY_TAG=... make setup` when testing an upgrade.
 
 **LOKADO Demo Tour:** `docs/demo/LOKADO-DEMO-TOUR.md` — complete functional-requirements walkthrough
 
@@ -42,6 +48,7 @@ make e2e            # Playwright browser tests (host prerequisites below)
 | Pick up code changes in the demo stack (keeps data) | `make setup && make seed-lokado` |
 | Re-run the seed (idempotent, keeps data) | `make seed-lokado` |
 | Verify the demo is presentable | `make demo-check && make fleet-check` |
+| Get the record IDs for the tour worksheet | `make demo-index` |
 | Wipe only the site data, keep containers | `make reset-lokado` |
 | Snapshot a known-good demo | `make backup-demo` |
 | Roll back to that snapshot | `make restore-demo` |
@@ -80,12 +87,13 @@ the image: if you edit code and skip `make setup` (or `make build` +
 | `make seed-check` | Integrity report for the legacy generic seed (not the LOKADO gate) |
 | `make demo-check` | Verify LOKADO users, supplier links, data lineage, ledger reconciliation and health |
 | `make fleet-check` | Verify fleet purchase-to-vehicle reconciliation |
+| `make demo-index` | Print the real IDs and Desk links of every tour anchor (tenders, evaluation, standstill, payables, assets, fleet) |
 | `make tenant-manifest-check TENANT_MANIFEST=<file>` | Validate an MVP3 isolated-tenant manifest (default `deploy/tenants.example.json`) |
 | `make backup-demo` | Native Bench snapshot (database + public + private files) to `backups/lokado-demo/` |
 | `make restore-demo` | Restore `backups/lokado-demo/` into the site, then migrate and clear cache |
 | `make reset-lokado` | **Destructive:** reinstall the site + `setup_config` + LOKADO seed + `demo-check` |
 | `make reset-demo` | Alias for `reset-lokado` |
-| `make test` | Run full test suite in the image |
+| `make test` | Enable tests on the site, then run the unit + integration suites in the image |
 | `make lint` | Run ruff + black format check |
 | `make e2e` | Run Playwright E2E tests (requires a seeded, running site) |
 | `make security-scan` | Bandit (SAST) + Safety (deps) + detect-secrets |
@@ -185,7 +193,7 @@ Customer-specific demo for Lotus Kenya Action for Development Organization (LOKA
 ```bash
 make clean && make setup && make seed-lokado   # from scratch (destructive)
 make seed-lokado    # canonical LOKADO seed (idempotent; ends with the acceptance gate)
-make demo-check     # verify: 19 users, "ready": true, 0 issues
+make demo-check     # verify: 21 users, "ready": true, 0 issues
 make fleet-check    # verify: fleet reconciliation, donor isolation
 ```
 

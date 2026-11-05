@@ -5,8 +5,8 @@ Anonymized mode hides bidder identity from the evaluator.
 """
 
 import frappe
-from frappe.model.document import Document
 from frappe import _
+from frappe.model.document import Document
 from frappe.utils import now_datetime
 
 
@@ -22,7 +22,13 @@ class EvaluationScore(Document):
             self.submitted_by = frappe.session.user
             self.submitted_at = now_datetime()
 
+    def on_trash(self):
+        if self.status != "Draft":
+            frappe.throw(_("Submitted evaluation scores are part of the audit trail and cannot be deleted."))
+
     def before_insert(self):
+        if self.evaluator != frappe.session.user and "System Manager" not in frappe.get_roles():
+            frappe.throw(_("Evaluators may only record their own scores."))
         self._validate_one_per_evaluator_per_bid()
         self._validate_anonymized()
 

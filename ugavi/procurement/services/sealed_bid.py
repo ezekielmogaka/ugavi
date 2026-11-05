@@ -14,7 +14,7 @@ import json
 import os
 import secrets
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import frappe
 from frappe import _
@@ -322,11 +322,9 @@ def open_bids(tender: str,
     for officer, otp in zip(officers, otps):
         if not otp:
             frappe.throw(_("Missing OTP for officer {0}").format(officer))
-        stored = frappe.cache().get(f"bid_otp:{tender}:{officer}")
-        if not stored:
+        if not frappe.cache().get(_otp_cache_key(tender, officer)):
             frappe.throw(_("OTP not requested or expired for officer {0}").format(officer))
-        data = json.loads(stored)
-        if not verify_otp(officer, tender, otp, data.get("hash", "")):
+        if not verify_otp(officer, tender, otp, consume=False):
             frappe.throw(_("Invalid OTP for officer {0}").format(officer))
         verification_logs.append(
             _("Verified for {0} at {1}").format(
@@ -401,7 +399,7 @@ def open_bids(tender: str,
         })
     bor.insert(ignore_permissions=True)
     for officer in officers:
-        frappe.cache().delete(f"bid_otp:{tender}:{officer}")
+        frappe.cache().delete(_otp_cache_key(tender, officer))
 
     # Advance tender
     tender_doc.status = "Under Evaluation"
@@ -465,51 +463,63 @@ def _sealed_bid_enabled() -> bool:
 
 # ---- OTP Management ----
 
+def _otp_cache_key(tender_id: str, officer_email: str) -> str:
+    return f"bid_otp:{tender_id}:{officer_email}"
+
+
+def _hash_otp(officer_email: str, tender_id: str, otp: str, salt: str) -> str:
+    return hashlib.sha256(f"{salt}:{officer_email}:{tender_id}:{otp}".encode()).hexdigest()
+
+
 def generate_otp(officer_email: str, tender_id: str) -> str:
-    """Generate 6-digit OTP with configurable expiry and attempt limit."""
+    """Generate a 6-digit OTP valid for the configured expiry window."""
     otp = str(secrets.randbelow(1000000)).zfill(6)
-    otp_hash = hashlib.sha256(
-        f"{officer_email}:{tender_id}:{otp}:{int(time.time()/60)}".encode()
-    ).hexdigest()
+    salt = secrets.token_hex(16)
+    otp_hash = _hash_otp(officer_email, tender_id, otp, salt)
     expiry_secs = _otp_expiry_seconds()
-    max_attempts_val = _max_otp_attempts()
     frappe.cache().setex(
-        f"bid_otp:{tender_id}:{officer_email}", expiry_secs,
+        _otp_cache_key(tender_id, officer_email), expiry_secs,
         json.dumps({
             "hash": otp_hash,
+            "salt": salt,
             "attempts": 0,
-            "max_attempts": max_attempts_val,
-            "expires_at": (datetime.now() + timedelta(seconds=expiry_secs)).isoformat(),
+            "max_attempts": _max_otp_attempts(),
+            "expires_at": time.time() + expiry_secs,
         })
     )
     _send_otp_email(officer_email, otp, tender_id)
     return otp_hash
 
 
-def verify_otp(officer_email: str, tender_id: str, otp_input: str, stored_hash: str) -> bool:
-    """Verify OTP with rate limiting and constant-time comparison."""
-    cache_key = f"bid_otp:{tender_id}:{officer_email}"
+def verify_otp(officer_email: str, tender_id: str, otp_input: str,
+               stored_hash: str | None = None, consume: bool = True) -> bool:
+    """Verify an OTP with attempt limiting and constant-time comparison.
+
+    Expiry is governed only by the cache TTL / ``expires_at``. With
+    ``consume=False`` a valid code stays usable so that one officer's typo in
+    a three-officer ceremony does not invalidate the other officers' codes.
+    """
+    cache_key = _otp_cache_key(tender_id, officer_email)
     cached = frappe.cache().get(cache_key)
     if not cached:
         frappe.throw(_("OTP expired. Please request a new code."))
     data = json.loads(cached)
-    max_attempts_val = data.get("max_attempts", _max_otp_attempts())
-    if data["attempts"] >= max_attempts_val:
+    remaining = int(float(data.get("expires_at") or 0) - time.time())
+    if remaining <= 0:
+        frappe.cache().delete(cache_key)
+        frappe.throw(_("OTP expired. Please request a new code."))
+    if data["attempts"] >= data.get("max_attempts", _max_otp_attempts()):
         frappe.cache().delete(cache_key)
         _log_audit(tender_id, officer_email, "OTP_MAX_ATTEMPTS", "Failed")
         frappe.throw(_("Max OTP attempts exceeded."))
-    data["attempts"] += 1
-    frappe.cache().setex(cache_key, _otp_expiry_seconds(), json.dumps(data))
-    # Constant-time comparison across two time windows
-    for offset in [0, -60]:
-        t = int(time.time() / 60) * 60 + offset
-        expected = hashlib.sha256(
-            f"{officer_email}:{tender_id}:{otp_input}:{t//60}".encode()
-        ).hexdigest()
-        if secrets.compare_digest(expected, stored_hash):
+    expected = _hash_otp(officer_email, tender_id, str(otp_input or "").strip(), data.get("salt", ""))
+    if secrets.compare_digest(expected, data["hash"]):
+        if consume:
             frappe.cache().delete(cache_key)
-            _log_audit(tender_id, officer_email, "OTP_VERIFIED", "Success")
-            return True
+        _log_audit(tender_id, officer_email, "OTP_VERIFIED", "Success")
+        return True
+    data["attempts"] += 1
+    frappe.cache().setex(cache_key, remaining, json.dumps(data))
     _log_audit(tender_id, officer_email, f"OTP_FAILED_{data['attempts']}", "Failed")
     return False
 

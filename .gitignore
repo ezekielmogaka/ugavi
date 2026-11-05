@@ -81,3 +81,4 @@ validation-2/
 
 # Utility scripts (with local paths)
 _*.py
+!__init__.py

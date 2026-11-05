@@ -23,7 +23,7 @@
 | Ugavi | 0.1.0 | [verified: `bench version`, 2026-10-21] |
 | Python | 3.14.9 | [verified: container `python3 --version`, 2026-10-22] |
 | MariaDB | 11.4 | [verified: `mariadb:11.4` in compose.yaml] |
-| Valkey | 8.1-alpine | [verified: `valkey/valkey:8.1-alpine` in compose.yaml] |
+| Valkey | 9.1.2-alpine | [verified: `valkey/valkey:9.1.2-alpine` in compose.yaml] |
 | Docker Image | ugavi:16 (sha256:4663b55e) | [verified: `docker images`, 2026-10-21 03:29:49 EAT] |
 | Image Size | 4.37 GB | [measured: `docker images`, 2026-10-21] |
 

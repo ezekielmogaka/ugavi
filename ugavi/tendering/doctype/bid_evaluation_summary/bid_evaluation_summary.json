@@ -1,1 +1,161 @@
-{"autoname":"BES-.YYYY.-.####","custom":0,"doctype":"DocType","document_type":"","engine":"InnoDB","name":"Bid Evaluation Summary","fields":[{"fieldname":"tender","fieldtype":"Link","label":"Tender","options":"Tender","reqd":1},{"fieldname":"evaluation_date","fieldtype":"Date","label":"Evaluation Date","default":"Today"},{"fieldname":"committee","fieldtype":"Link","label":"Committee","options":"Evaluation Committee"},{"fieldname":"recommended_bidder","fieldtype":"Link","label":"Recommended Bidder","options":"Supplier"},{"fieldname":"recommended_amount","fieldtype":"Currency","label":"Recommended Amount"},{"fieldname":"justification","fieldtype":"Text Editor","label":"Justification"},{"fieldname":"status","fieldtype":"Select","label":"Status","options":"Draft\nSubmitted\nApproved\nRejected","default":"Draft"}],"istable":0,"module":"Tendering","permissions":[{"role":"Procurement Officer","read":1,"write":1,"create":1,"delete":1}],"sort_field":"creation","sort_order":"DESC","track_changes":1}
+{
+ "autoname": "BES-.YYYY.-.####",
+ "custom": 0,
+ "doctype": "DocType",
+ "document_type": "",
+ "engine": "InnoDB",
+ "field_order": [
+  "tender",
+  "evaluation_date",
+  "evaluation_minutes",
+  "column_break_rec",
+  "status",
+  "approved_by",
+  "approved_at",
+  "section_recommendation",
+  "recommended_bidder",
+  "recommended_bid",
+  "recommended_amount",
+  "justification",
+  "rejection_reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "tender",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Tender",
+   "options": "Tender",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "evaluation_date",
+   "fieldtype": "Date",
+   "label": "Evaluation Date"
+  },
+  {
+   "description": "Approved committee minutes supporting this recommendation",
+   "fieldname": "evaluation_minutes",
+   "fieldtype": "Link",
+   "label": "Evaluation Minutes",
+   "options": "Evaluation Minutes"
+  },
+  {
+   "fieldname": "column_break_rec",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nSubmitted\nApproved\nRejected",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approved_at",
+   "fieldtype": "Datetime",
+   "label": "Approved At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_recommendation",
+   "fieldtype": "Section Break",
+   "label": "Recommendation"
+  },
+  {
+   "fieldname": "recommended_bidder",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Recommended Bidder",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "recommended_bid",
+   "fieldtype": "Link",
+   "label": "Recommended Bid",
+   "options": "Bid",
+   "read_only": 1
+  },
+  {
+   "fieldname": "recommended_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Recommended Amount"
+  },
+  {
+   "fieldname": "justification",
+   "fieldtype": "Text Editor",
+   "label": "Justification"
+  },
+  {
+   "depends_on": "eval:doc.status=='Rejected'",
+   "fieldname": "rejection_reason",
+   "fieldtype": "Small Text",
+   "label": "Rejection Reason",
+   "read_only": 1
+  }
+ ],
+ "istable": 0,
+ "modified": "2026-11-05 10:00:00.000000",
+ "module": "Tendering",
+ "name": "Bid Evaluation Summary",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Procurement Officer",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Tender Committee Chair",
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Evaluation Committee"
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Auditor"
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "title_field": "tender",
+ "track_changes": 1
+}

@@ -21,19 +21,8 @@ frappe.ui.form.on('Tender', {
             }).addClass('btn-primary');
         }
 
-        // Award action
-        if (frm.doc.status === 'Under Evaluation') {
-            frm.add_custom_button(__('Award Tender'), () => {
-                frappe.prompt([
-                    { label: __('Supplier'), fieldname: 'supplier', fieldtype: 'Link', options: 'Supplier', reqd: 1 },
-                    { label: __('Award Amount'), fieldname: 'amount', fieldtype: 'Currency', reqd: 1 }
-                ], (values) => {
-                    frm.call('award', values).then(() => {
-                        frm.reload_doc();
-                        frappe.show_alert({ message: __('Tender awarded. PO and contract generated.'), indicator: 'green' });
-                    });
-                }, __('Award Tender'), __('Award'));
-            }).addClass('btn-success');
+        if (['Under Evaluation', 'Standstill Period'].includes(frm.doc.status) && !frm.is_new()) {
+            add_award_actions(frm);
         }
 
         if (
@@ -124,6 +113,7 @@ function render_timeline(frm) {
         { status: 'Published', label: __('Published'), icon: 'share' },
         { status: 'Bids Received', label: __('Bids Received'), icon: 'inbox' },
         { status: 'Under Evaluation', label: __('Evaluation'), icon: 'checklist' },
+        { status: 'Standstill Period', label: __('Standstill'), icon: 'clock' },
         { status: 'Awarded', label: __('Awarded'), icon: 'award' }
     ];
     // Render as colored pills in sidebar
@@ -137,3 +127,52 @@ function render_timeline(frm) {
     html += '</div>';
     frm.dashboard.add_section(html);
 }
+
+function add_award_actions(frm) {
+    frm.call('get_award_recommendation').then(({ message }) => {
+        const rec = (message && message.recommendation) || {};
+        const standstill = (message && message.standstill) || {};
+
+        if (frm.doc.status === 'Under Evaluation') {
+            if (!rec.name) {
+                frm.dashboard.add_indicator(__('Awaiting approved Bid Evaluation Summary'), 'orange');
+                return;
+            }
+            frm.dashboard.add_indicator(
+                __('Recommended: {0} ({1})', [rec.recommended_bidder, format_currency(rec.recommended_amount)]),
+                'blue'
+            );
+            frm.add_custom_button(__('Start Standstill'), () => {
+                frappe.confirm(
+                    __('Notify all bidders of the intended award to {0} and open the complaint window?', [rec.recommended_bidder]),
+                    () => frm.call('start_standstill').then(() => frm.reload_doc())
+                );
+            }).addClass('btn-primary');
+            return;
+        }
+
+        if (['Active', 'Challenged'].includes(standstill.status)) {
+            const ended = frappe.datetime.get_day_diff(frappe.datetime.get_today(), standstill.end_date) > 0;
+            frm.dashboard.add_indicator(
+                ended
+                    ? __('Standstill ended {0}', [frappe.datetime.str_to_user(standstill.end_date)])
+                    : __('Complaint window open until {0}', [frappe.datetime.str_to_user(standstill.end_date)]),
+                standstill.status === 'Challenged' ? 'red' : 'orange'
+            );
+            if (ended) {
+                frm.add_custom_button(__('Confirm Standstill'), () => {
+                    frm.call('confirm_standstill').then(() => frm.reload_doc());
+                }).addClass('btn-primary');
+            }
+        } else if (standstill.status === 'Resolved' && standstill.resolution === 'Award Confirmed' && rec.name) {
+            frm.add_custom_button(__('Award Tender'), () => {
+                frappe.confirm(
+                    __('Award {0} for {1} and issue the Purchase Order?', [rec.recommended_bidder, format_currency(rec.recommended_amount)]),
+                    () => frm.call('award', { supplier: rec.recommended_bidder, amount: rec.recommended_amount })
+                        .then(() => frm.reload_doc())
+                );
+            }).addClass('btn-primary');
+        }
+    });
+}
+

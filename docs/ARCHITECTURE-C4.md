@@ -37,7 +37,7 @@ C4Container
         Container(nginx, "Nginx", "Reverse proxy, TLS, security headers", "Serves static + proxies")
         Container(frappe_app, "Frappe App", "Python 3.14", "Ugavi + ERPNext + Frappe")
         Container(mariadb, "MariaDB 11.8", "Relational DB", "Donor-segregated data")
-        Container(valkey, "Valkey 8", "In-Memory", "Cache, queue, rate limiter")
+        Container(valkey, "Valkey 9", "In-Memory", "Cache, queue, rate limiter")
         Container(worker, "Background Worker", "Python", "Scheduled jobs, email, reports")
     }
 

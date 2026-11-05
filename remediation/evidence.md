@@ -103,7 +103,7 @@ $ curl -s -H 'Host: ugavi.localhost' -b cookie \
 |---------|-------|--------|
 | MariaDB | mariadb:11.4 | Healthy |
 | Valkey | valkey/valkey:8.1-alpine | Healthy |
-| Mailpit | axllent/mailpit:latest | Healthy |
+| Mailpit | axllent/mailpit:v1.33.0 (pinned) | Healthy |
 | Backend | frappe/erpnext:v16 | Running |
 
 ## Ports

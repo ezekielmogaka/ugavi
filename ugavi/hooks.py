@@ -13,6 +13,9 @@ doctype_js = {
     "Tender": "js/tender.js",
     "Bid": "js/bid.js",
     "Bid Opening Record": "js/bid_opening_record.js",
+    "Bid Evaluation Summary": "js/bid_evaluation_summary.js",
+    "Evaluation Minutes": "js/evaluation_minutes.js",
+    "Evaluation Score": "js/evaluation_score.js",
 }
 
 # Cross-DocType integrations with ERPNext-owned transactions.
@@ -54,10 +57,6 @@ doc_events = {
             "ugavi.integrations.mpesa.queue_supplier_payment",
         ],
     },
-    "Evaluation Score": {
-        "validate": "ugavi.tendering.doctype.evaluation_score.evaluation_score.validate",
-        "on_trash": "ugavi.tendering.doctype.evaluation_score.evaluation_score.on_trash",
-    },
 }
 
 # Scheduler events for automated tasks
@@ -66,6 +65,7 @@ scheduler_events = {
         "ugavi.procurement.services.rules_engine.check_expiring_prequalifications",
         "ugavi.scripts.scheduled_tasks.check_contract_expiry",
         "ugavi.scripts.scheduled_tasks.check_vehicle_service_due",
+        "ugavi.tendering.doctype.standstill_period.standstill_period.check_expired_standstills",
     ],
     "weekly": [
         "ugavi.scripts.scheduled_tasks.flag_inactive_suppliers",

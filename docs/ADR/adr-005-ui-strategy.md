@@ -15,7 +15,7 @@ Ugavi needs client-side form logic, role-based workspaces, dashboards, print for
 ### Mechanisms chosen:
 | Mechanism | Use Case | Upgrade Risk |
 |-----------|----------|-------------|
-| **doctype_js** (hooks.py) | Client-side form logic for PR, Prequal, Tender, Bid, BOR | Zero (Frappe core hook) |
+| **doctype_js** (hooks.py) | Client-side form logic for PR, Prequal, Tender, Bid, BOR, Evaluation Score, Evaluation Minutes, Bid Evaluation Summary | Zero (Frappe core hook) |
 | **Workspace JSON** | Role-based landing pages per module | Zero (Frappe DocType) |
 | **Dashboard + Number Card JSON** | Procurement/stocks/fleet/asset KPIs | Zero (Frappe DocType) |
 | **Print Format JSON** | BOR PDF, Contract, GRN, Stock Report | Zero (Frappe DocType) |

@@ -1,70 +1,97 @@
 {
-  "autoname": "SSP-.YYYY.-.####",
-  "custom": 0,
-  "doctype": "DocType",
-  "fields": [
-    {
-      "fieldname": "tender",
-      "fieldtype": "Link",
-      "label": "Tender",
-      "options": "Tender",
-      "reqd": 1
-    },
-    {
-      "fieldname": "start_date",
-      "fieldtype": "Date",
-      "label": "Start Date",
-      "reqd": 1
-    },
-    {
-      "fieldname": "end_date",
-      "fieldtype": "Date",
-      "label": "End Date",
-      "reqd": 1
-    },
-    {
-      "fieldname": "status",
-      "fieldtype": "Select",
-      "label": "Status",
-      "options": "Active\nChallenged\nExpired\nResolved",
-      "default": "Active"
-    },
-    {
-      "default": "0",
-      "fieldname": "challenges_count",
-      "fieldtype": "Int",
-      "label": "Complaints Received",
-      "read_only": 1
-    },
-    {
-      "fieldname": "resolution",
-      "fieldtype": "Select",
-      "label": "Resolution",
-      "options": "\nAward Confirmed\nRe-evaluation Required\nChallenges Under Review",
-      "read_only": 1
-    },
-    {
-      "fieldname": "resolved_date",
-      "fieldtype": "Datetime",
-      "label": "Resolved Date",
-      "read_only": 1
-    }
-  ],
-  "istable": 0,
-  "module": "Tendering",
-  "permissions": [
-    {
-      "role": "Procurement Officer",
-      "read": 1,
-      "write": 1,
-      "create": 1,
-      "delete": 1
-    }
-  ],
-  "sort_field": "creation",
-  "sort_order": "DESC",
-  "track_changes": 1,
-  "name": "Standstill Period",
-  "document_type": "",
-  "engine": "InnoDB"
+ "autoname": "SSP-.YYYY.-.####",
+ "custom": 0,
+ "doctype": "DocType",
+ "document_type": "",
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "fieldname": "tender",
+   "fieldtype": "Link",
+   "label": "Tender",
+   "options": "Tender",
+   "reqd": 1
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "label": "Start Date",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "label": "End Date",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nChallenged\nExpired\nResolved",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "challenges_count",
+   "fieldtype": "Int",
+   "label": "Complaints Received",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resolution",
+   "fieldtype": "Select",
+   "label": "Resolution",
+   "options": "\nAward Confirmed\nRe-evaluation Required\nChallenges Under Review",
+   "read_only": 1
+  },
+  {
+   "fieldname": "resolved_date",
+   "fieldtype": "Datetime",
+   "label": "Resolved Date",
+   "read_only": 1
+  }
+ ],
+ "istable": 0,
+ "modified": "2026-11-05 10:00:00.000000",
+ "module": "Tendering",
+ "name": "Standstill Period",
+ "permissions": [
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Procurement Officer"
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Tender Committee Chair"
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Evaluation Committee"
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Auditor"
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager"
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "track_changes": 1
 }

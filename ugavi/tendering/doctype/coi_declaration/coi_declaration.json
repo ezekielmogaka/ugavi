@@ -1,1 +1,92 @@
-{"autoname":"COI-.YYYY.-.####","custom":0,"doctype":"DocType","document_type":"","engine":"InnoDB","name":"COI Declaration","fields":[{"fieldname":"declarant","fieldtype":"Link","label":"Declarant","options":"User","reqd":1},{"fieldname":"tender","fieldtype":"Link","label":"Tender","options":"Tender"},{"fieldname":"declaration_date","fieldtype":"Date","label":"Declaration Date","default":"Today"},{"fieldname":"has_conflict","fieldtype":"Select","label":"Has Conflict of Interest","options":"Yes\nNo","default":"No"},{"fieldname":"conflict_description","fieldtype":"Small Text","label":"Conflict Description"},{"fieldname":"status","fieldtype":"Select","label":"Status","options":"Draft\nSubmitted\nReviewed","default":"Draft"}],"istable":0,"module":"Tendering","permissions":[{"role":"System Manager","read":1,"write":1,"create":1,"delete":1}],"sort_field":"creation","sort_order":"DESC","track_changes":1}
+{
+ "autoname": "COI-.YYYY.-.####",
+ "custom": 0,
+ "doctype": "DocType",
+ "document_type": "",
+ "engine": "InnoDB",
+ "fields": [
+  {
+   "default": "__user",
+   "fieldname": "declarant",
+   "fieldtype": "Link",
+   "label": "Declarant",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "tender",
+   "fieldtype": "Link",
+   "label": "Tender",
+   "options": "Tender",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "declaration_date",
+   "fieldtype": "Date",
+   "label": "Declaration Date"
+  },
+  {
+   "default": "No",
+   "fieldname": "has_conflict",
+   "fieldtype": "Select",
+   "label": "Has Conflict of Interest",
+   "options": "Yes\nNo"
+  },
+  {
+   "fieldname": "conflict_description",
+   "fieldtype": "Small Text",
+   "label": "Conflict Description"
+  },
+  {
+   "default": "Submitted",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nSubmitted\nReviewed",
+   "read_only": 1
+  }
+ ],
+ "istable": 0,
+ "modified": "2026-11-05 10:00:00.000000",
+ "module": "Tendering",
+ "name": "COI Declaration",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "if_owner": 1,
+   "read": 1,
+   "role": "Evaluation Committee",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Tender Committee Chair",
+   "write": 1
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Procurement Officer"
+  },
+  {
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Auditor"
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

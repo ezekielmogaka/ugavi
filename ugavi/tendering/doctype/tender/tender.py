@@ -98,12 +98,73 @@ class Tender(Document):
             "Use generate_and_distribute_keys instead."
         )
 
+    def _require_procurement_role(self):
+        if not {"Procurement Officer", "System Manager"}.intersection(frappe.get_roles()):
+            frappe.throw(_("Only a Procurement Officer can perform this action."), frappe.PermissionError)
+
+    @frappe.whitelist()
+    def get_award_recommendation(self) -> dict:
+        """Approved recommendation and standstill state used by the Desk actions."""
+        from ugavi.tendering.services.evaluation import approved_recommendation
+
+        recommendation = approved_recommendation(self.name) or {}
+        standstill = frappe.db.get_value(
+            "Standstill Period",
+            {"tender": self.name},
+            ["name", "status", "resolution", "end_date"],
+            order_by="creation desc",
+            as_dict=True,
+        ) or {}
+        return {"recommendation": recommendation, "standstill": standstill}
+
+    @frappe.whitelist()
+    def start_standstill(self):
+        """Issue the intended-award notice and open the complaint window."""
+        from ugavi.tendering.doctype.standstill_period.standstill_period import (
+            initiate_standstill,
+        )
+        from ugavi.tendering.services.evaluation import (
+            approved_recommendation,
+            assert_recommendation_supported,
+        )
+
+        self._require_procurement_role()
+        if self.status != "Under Evaluation":
+            frappe.throw(_("A standstill can only start while the tender is Under Evaluation."))
+        recommendation = approved_recommendation(self.name)
+        if not recommendation:
+            frappe.throw(_("An approved Bid Evaluation Summary is required before the standstill."))
+        assert_recommendation_supported(
+            self.name, recommendation.recommended_bidder, recommendation.recommended_amount
+        )
+        standstill = initiate_standstill(self.name, recommendation.recommended_bidder)
+        self.status = "Standstill Period"
+        self.save()
+        return standstill
+
+    @frappe.whitelist()
+    def confirm_standstill(self):
+        """Confirm the intended award once the standstill has ended without open complaints."""
+        from ugavi.tendering.doctype.standstill_period.standstill_period import (
+            resolve_standstill,
+        )
+
+        self._require_procurement_role()
+        if self.status != "Standstill Period":
+            frappe.throw(_("The tender is not in a standstill period."))
+        return resolve_standstill(self.name, "Award Confirmed")
+
     @frappe.whitelist()
     def award(self, supplier: str, amount: float):
-        """Award tender to supplier and create Purchase Order."""
-        if self.status not in {"Under Evaluation", "Standstill Period"}:
-            frappe.throw(_("Tender must be evaluated before award."))
-        self._validate_evaluation_governance()
+        """Award the confirmed recommendation and issue the Purchase Order."""
+        from ugavi.tendering.services.evaluation import (
+            approved_recommendation,
+            assert_recommendation_supported,
+        )
+
+        self._require_procurement_role()
+        if self.status != "Standstill Period":
+            frappe.throw(_("Tender must complete its standstill period before award."))
         standstill = frappe.db.get_value(
             "Standstill Period",
             {"tender": self.name},
@@ -119,21 +180,13 @@ class Tender(Document):
             frappe.throw(
                 _("The award requires a completed standstill with no unresolved complaint.")
             )
-
-        bid = frappe.db.get_value(
-            "Bid",
-            {
-                "tender": self.name,
-                "supplier": supplier,
-                "status": ("in", ["Opened", "Evaluated", "Accepted"]),
-            },
-            ["name", "bid_amount"],
-            as_dict=True,
-        )
-        if not bid:
-            frappe.throw(_("Only a supplier with an opened and evaluated bid can be awarded"))
-        if abs(float(amount) - float(bid.bid_amount)) > 0.01:
-            frappe.throw(_("Award amount must match the opened bid amount"))
+        recommendation = approved_recommendation(self.name)
+        if not recommendation or recommendation.recommended_bidder != supplier:
+            frappe.throw(_("Only the approved recommended bidder can be awarded."))
+        amount = float(amount)
+        if abs(amount - float(recommendation.recommended_amount or 0)) > 0.01:
+            frappe.throw(_("Award amount must match the approved recommendation."))
+        bid = assert_recommendation_supported(self.name, supplier, amount)
 
         requisition = frappe.get_doc("Purchase Requisition", self.purchase_requisition)
         settings = frappe.get_single("Ugavi Procurement Settings")
@@ -151,13 +204,13 @@ class Tender(Document):
                 "schedule_date": schedule_date,
             }
         )
-        for item in requisition.items:
+        for item, rate in zip(requisition.items, _award_rates(requisition.items, amount)):
             po.append(
                 "items",
                 {
                     "item_code": item.item_code,
                     "qty": item.quantity,
-                    "rate": item.estimated_unit_price,
+                    "rate": rate,
                     "uom": item.uom,
                     "schedule_date": schedule_date,
                 },
@@ -167,15 +220,12 @@ class Tender(Document):
         contract_name = frappe.db.get_value(
             "Ugavi Contract", {"purchase_order": po.name}, "name"
         )
-        frappe.db.set_value(
-            "Ugavi Contract",
-            contract_name,
-            "tender",
-            self.name,
-            update_modified=False,
-        )
+        if contract_name:
+            frappe.db.set_value(
+                "Ugavi Contract", contract_name, "tender", self.name, update_modified=False
+            )
 
-        frappe.db.set_value("Bid", bid.name, "status", "Accepted")
+        frappe.get_doc("Bid", bid["bid"]).db_set("status", "Accepted")
         self.awarded_supplier = supplier
         self.award_amount = amount
         self.purchase_order = po.name
@@ -191,8 +241,9 @@ class Tender(Document):
             self.name,
         )
         frappe.msgprint(
-            _("Purchase Order {0} and Contract {1} created").format(po.name, contract.name)
+            _("Purchase Order {0} and Contract {1} created").format(po.name, contract_name or "-")
         )
+        return {"purchase_order": po.name, "contract": contract_name}
 
     @frappe.whitelist()
     def close(self):
@@ -265,22 +316,6 @@ class Tender(Document):
         self.save()
         return len(self.tender_documents)
 
-    def _validate_evaluation_governance(self):
-        from ugavi.tendering.doctype.coi_declaration.coi_declaration import (
-            check_coi_compliance,
-        )
-
-        compliance = check_coi_compliance(self.name)
-        if not compliance["compliant"]:
-            frappe.throw(
-                _(
-                    "Evaluation governance is incomplete. Pending declarations: {0}; conflicted members: {1}."
-                ).format(
-                    ", ".join(compliance["pending"]) or _("None"),
-                    ", ".join(compliance["conflicted"]) or _("None"),
-                )
-            )
-
     @frappe.whitelist()
     def verify_bid_security(self, bid_name: str) -> bool:
         """Check if a bid has a valid bid security that meets the tender requirement."""
@@ -308,3 +343,25 @@ class Tender(Document):
             frappe.throw(_("Bid security {0} ({1}) is below minimum {2}").format(
                 bid_sec.name, bid_sec.security_amount, self.bid_security_required))
         return True
+
+
+def _award_rates(items, amount: float) -> list[float]:
+    """Scale requisition estimates so the order totals the awarded bid amount."""
+    estimate = sum(float(row.quantity or 0) * float(row.estimated_unit_price or 0) for row in items)
+    if estimate <= 0:
+        frappe.throw(_("The source requisition needs estimated prices to allocate the award."))
+    factor = amount / estimate
+    rates = [round(float(row.estimated_unit_price or 0) * factor, 2) for row in items]
+    allocated = sum(float(row.quantity or 0) * rate for row, rate in zip(items[:-1], rates[:-1]))
+    last_qty = float(items[-1].quantity or 0)
+    if last_qty:
+        rates[-1] = round((amount - allocated) / last_qty, 2)
+    total = sum(float(row.quantity or 0) * rate for row, rate in zip(items, rates))
+    if abs(total - amount) >= 0.01:
+        frappe.throw(
+            _(
+                "The awarded amount {0} cannot be split into unit rates over the requisition "
+                "quantities (closest total {1}). Record the bid's unit prices before awarding."
+            ).format(frappe.format_value(amount, "Currency"), frappe.format_value(total, "Currency"))
+        )
+    return rates
