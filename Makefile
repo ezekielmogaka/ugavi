@@ -4,7 +4,7 @@ BENCH_DIR ?= $(HOME)/frappe-bench
 SITE ?= ugavi.localhost
 UGAVI_IMAGE ?= ugavi
 UGAVI_TAG ?= 0.1.0
-ERPNEXT_TAG ?= v16.52.1
+ERPNEXT_TAG ?= v16.53.0
 NGINX_LISTEN_PORT ?= 8080
 TENANT_MANIFEST ?= deploy/tenants.example.json
 # Local development credentials only; override for any shared environment.

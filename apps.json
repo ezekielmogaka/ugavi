@@ -1,14 +1,14 @@
 {
   "frappe": {
     "repository": "https://github.com/frappe/frappe",
-    "branch": "v16.52.0",
-    "min_version": "16.52.0",
+    "branch": "v16.54.0",
+    "min_version": "16.54.0",
     "eol": "2029-12-31"
   },
   "erpnext": {
     "repository": "https://github.com/frappe/erpnext",
-    "branch": "v16.52.1",
-    "min_version": "16.52.1",
+    "branch": "v16.53.0",
+    "min_version": "16.53.0",
     "eol": "2029-12-31"
   }
 }

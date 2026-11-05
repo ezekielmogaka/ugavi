@@ -21,7 +21,7 @@ This third pass (Phase I) targeted structural gaps not caught in Phase D-H:
 | G3-008 | PATCHES.md | Missing | Created with patch policy, current queue (0), upgrade assessment checklist | ✅ |
 | G3-009 | PROMETHEUS METRICS | No metrics endpoint | Created governance/services/metrics.py (Prometheus, 9 metrics) | ✅ |
 | G3-010 | Hook collision CI | No test for hook merge safety | Created tests/test_hook_safety.py (3 tests: merge safety, patch queue, no core overrides) | ✅ |
-| G3-011 | apps.json | Missing version pinning file | Created with Frappe v16.52+ and ERPNext v16.52.1+ pinned | ✅ |
+| G3-011 | apps.json | Missing version pinning file | Created with Frappe v16.54+ and ERPNext v16.53+ pinned | ✅ |
 
 ## Files Created (Phase I)
 

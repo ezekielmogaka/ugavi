@@ -2,7 +2,7 @@
 ## Architecture Decision Record
 
 **Version:** 0.1.0 | **Date:** 2026-10-19  
-**ERPNext:** v16.52.1 (version-16) | **Frappe:** v16.52.0 (version-16)
+**ERPNext:** v16.53.0 (version-16) | **Frappe:** v16.54.0 (version-16)
 
 ## 1. High-Level Architecture
 

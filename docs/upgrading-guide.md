@@ -8,7 +8,7 @@ Frappe/ERPNext files, replace core controllers, or override whitelisted methods.
 
 | Ugavi | Frappe | ERPNext | Python | MariaDB |
 |---|---|---|---|---|
-| 0.1.x | 16.53.0 (rehearsed) | 16.52.1 (pinned/rehearsed) | 3.14 | 11.4+ |
+| 0.1.x | 16.54.0 (rehearsed) | 16.53.0 (pinned/rehearsed) | 3.14 | 11.4+ |
 
 Exact production image versions are pinned in `Dockerfile` and `apps.json`.
 The CI compatibility job also installs the current `version-16` upstream
@@ -49,7 +49,7 @@ curl -fsS http://localhost:8000/api/method/frappe.ping
 For the Docker demo, `make upgrade-check` runs the same compatibility,
 migration, app-test, and health sequence.
 
-The current baseline is ERPNext 16.52.1 and Frappe 16.53.0. The
+The current baseline is ERPNext 16.53.0 and Frappe 16.54.0. The
 [evidence registry](traceability/evidence.md) records the latest rehearsal:
 
 - 67 Ugavi DocTypes and 529 ERPNext DocTypes;

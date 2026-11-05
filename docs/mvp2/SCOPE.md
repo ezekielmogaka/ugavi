@@ -321,5 +321,5 @@ W12 (only if D2/D3 confirmed)
 ---
 
 *Document version: 1.0 — PROPOSAL. Decisions D1-D10 needed for blocked workstreams.*
-**ERPNext capability:** Native Quality Inspection DocType. Verify for v16.52.1.
+**ERPNext capability:** Native Quality Inspection DocType. Verify for v16.53.0.
 **Acceptance:** 1 inspection → partial accept → stock receipt → scorecard update.

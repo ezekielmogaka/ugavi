@@ -454,12 +454,12 @@ formats, retention policy and SSO decisions remain blocked by
 
 | Capability | Upstream source retained | Ugavi extension |
 |---|---|---|
-| Supplier master | [Supplier docs](https://docs.frappe.io/erpnext/supplier), [v16.52.1 source](https://github.com/frappe/erpnext/tree/v16.52.1/erpnext/buying/doctype/supplier) | Prequalification, portal identity boundary, supplier-specific evaluation |
-| Purchase Order | [Purchase Order docs](https://docs.frappe.io/erpnext/purchase-order), [v16.52.1 source](https://github.com/frappe/erpnext/tree/v16.52.1/erpnext/buying/doctype/purchase_order) | `ugavi_*` donor, PR, tender, method, and acknowledgement fields |
-| Purchase Receipt | [Purchase Receipt docs](https://docs.frappe.io/erpnext/purchase-receipt), [v16.52.1 source](https://github.com/frappe/erpnext/tree/v16.52.1/erpnext/stock/doctype/purchase_receipt) | Donor integrity event and post-receipt evaluation |
-| Stock ledger | [Stock Ledger docs](https://docs.frappe.io/erpnext/stock-ledger), [v16.52.1 stock source](https://github.com/frappe/erpnext/tree/v16.52.1/erpnext/stock) | Donor warehouse, inter-donor approval, monthly donor report |
-| Assets | [Asset docs](https://docs.frappe.io/erpnext/asset), [v16.52.1 asset source](https://github.com/frappe/erpnext/tree/v16.52.1/erpnext/assets/doctype) | Donor flag, QR verification, Ugavi movement/disposal workflow |
-| Vehicles | [v16.52.1 Vehicle source](https://github.com/frappe/erpnext/tree/v16.52.1/erpnext/setup/doctype/vehicle) | Allocation, fuel, spares, trip, and utilization records |
+| Supplier master | [Supplier docs](https://docs.frappe.io/erpnext/supplier), [v16.53.0 source](https://github.com/frappe/erpnext/tree/v16.53.0/erpnext/buying/doctype/supplier) | Prequalification, portal identity boundary, supplier-specific evaluation |
+| Purchase Order | [Purchase Order docs](https://docs.frappe.io/erpnext/purchase-order), [v16.53.0 source](https://github.com/frappe/erpnext/tree/v16.53.0/erpnext/buying/doctype/purchase_order) | `ugavi_*` donor, PR, tender, method, and acknowledgement fields |
+| Purchase Receipt | [Purchase Receipt docs](https://docs.frappe.io/erpnext/purchase-receipt), [v16.53.0 source](https://github.com/frappe/erpnext/tree/v16.53.0/erpnext/stock/doctype/purchase_receipt) | Donor integrity event and post-receipt evaluation |
+| Stock ledger | [Stock Ledger docs](https://docs.frappe.io/erpnext/stock-ledger), [v16.53.0 stock source](https://github.com/frappe/erpnext/tree/v16.53.0/erpnext/stock) | Donor warehouse, inter-donor approval, monthly donor report |
+| Assets | [Asset docs](https://docs.frappe.io/erpnext/asset), [v16.53.0 asset source](https://github.com/frappe/erpnext/tree/v16.53.0/erpnext/assets/doctype) | Donor flag, QR verification, Ugavi movement/disposal workflow |
+| Vehicles | [v16.53.0 Vehicle source](https://github.com/frappe/erpnext/tree/v16.53.0/erpnext/setup/doctype/vehicle) | Allocation, fuel, spares, trip, and utilization records |
 | Notifications | [Frappe version-16 Notification Log](https://github.com/frappe/frappe/tree/version-16/frappe/desk/doctype/notification_log) | Supplier-journey events scoped to linked website users |
 
 ## Completion checklist

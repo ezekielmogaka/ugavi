@@ -11,7 +11,7 @@
 #   - sites/assets removed so clean volume mount works
 #   - Same image serves backend (gunicorn) and frontend (nginx)
 
-ARG ERPNEXT_TAG=v16.52.1
+ARG ERPNEXT_TAG=v16.53.0
 FROM frappe/erpnext:${ERPNEXT_TAG}
 
 LABEL org.opencontainers.image.title="Ugavi SCM"
