@@ -16,7 +16,7 @@ Ugavi is a donor-segregated procurement and logistics system on Frappe v16.
 
 ```bash
 git clone <repo-url> && cd ugavi
-make clean && make setup   # from scratch (destructive)
+make bootstrap           # from scratch (destructive)
 make demo-check
 make fleet-check
 ```
@@ -109,7 +109,7 @@ make test                             # run test suite
 | Sealed-bid key rotation fails | Manual: `bench execute ugavi.governance.services.key_rotation.flag_stale_keys` |
 | Rate limit blocking legitimate bids | Reset: `bench execute ugavi.governance.services.rate_limiter.RateLimiter().reset` |
 | Hash chain broken | Investigate audit log tampering; restore from verified backup |
-| Docker containers not starting | `make clean && make setup` (destructive) |
-| Demo gate fails with old minimums, unreconciled stock reports or invalid tender lineage | Stale image/data: `make clean && make setup` |
+| Docker containers not starting | `make bootstrap` (destructive) |
+| Demo gate fails with old minimums, unreconciled stock reports or invalid tender lineage | Stale image/data: `make bootstrap` |
 | Seed data stale | `make reset-demo` (reinstalls + reseeds) |
 | LOKADO data missing | `make seed` or `make seed-lokado` (idempotent) |

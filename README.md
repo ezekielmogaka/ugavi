@@ -126,7 +126,7 @@ All site-scoped targets accept `SITE=<site>` (default `ugavi.localhost`), e.g.
 - **`LOKADO demo verification failed: ... expected at least 40 ...`, stock
   reports that "do not reconcile", or "invalid requisition lineage"**: the site
   holds data from an older seed, and/or the image holds old code. Rebuild from
-  scratch: `make clean && make setup` (or keep containers
+  scratch: `make bootstrap` (or keep containers
   and run `make setup && make reset-lokado`).
 - **Seed refuses to run:** `seed-lokado` sets `developer_mode` itself; if you
   call scripts by hand, enable it first. Prefer the make targets.
@@ -201,7 +201,7 @@ Customer-specific demo for Lotus Kenya Action for Development Organization (LOKA
 - **Full workflow**: PR → Tender → Sealed-Bid Opening → Evaluation → Contract → Logistics (live award steps are performed in the tour, not fabricated by the seed)
 
 ```bash
-make clean && make setup   # from scratch (destructive)
+make bootstrap          # from scratch (destructive)
 make seed-lokado    # canonical LOKADO seed (idempotent; ends with the acceptance gate)
 make demo-check     # verify: 21 users, "ready": true, 0 issues
 make fleet-check    # verify: fleet reconciliation, donor isolation

@@ -13,7 +13,7 @@ scenes retain their existing numbers **5-19**. The shorter guide has its own
 independent scene numbering.
 
 **Evidence boundary:** on 2026-11-05 the demo site `ugavi.localhost` was
-rebuilt from scratch with `make clean && make setup`. The
+rebuilt from scratch with `make bootstrap`. The
 seed ended with the acceptance gate `"ready": true` and empty issues. A second
 `make seed-lokado` run (idempotent), `make demo-check`, `make fleet-check`,
 `make demo-index`, `make test` (17 integration + 67 unit tests) and `make e2e`
@@ -44,7 +44,7 @@ Run everything from the repository root with `make`. No manual `docker` or
 
 ```bash
 # From scratch: DESTRUCTIVE (deletes DB, files and the host backups/ folder)
-make clean && make setup
+make bootstrap
 
 # Gates (the seed already runs the LOKADO gate at the end)
 make demo-check
@@ -67,7 +67,7 @@ make backup-demo              # writes backups/lokado-demo/
 | Re-run seed only (idempotent) | `make seed-lokado` |
 | Undo a rehearsal (opened tenders, receipts, etc.) | `make restore-demo` |
 | Wipe site data but keep containers | `make reset-lokado` |
-| Start over completely | `make clean && make setup` |
+| Start over completely | `make bootstrap` |
 | Rehearse an upstream upgrade | `make upgrade-check` |
 | Pause / resume without data loss | `make stop` / `make start` |
 
@@ -75,7 +75,7 @@ make backup-demo              # writes backups/lokado-demo/
 is how new code reaches port 8080. `make seed-lokado`, `make demo-check` and `make fleet-check` run the **baked**
 image code. If a count, ledger reconciliation or lineage check fails, capture
 the output and investigate the image and data. A fresh seed may be appropriate
-on a disposable demo site, but `make clean && make setup`
+on a disposable demo site, but `make bootstrap`
 destroys data **and backups**: copy anything needed elsewhere first and do not
 use a reset to hide a reproducible defect.
 

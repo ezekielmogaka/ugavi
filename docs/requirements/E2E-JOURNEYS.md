@@ -712,7 +712,7 @@ Every critical document (Tender, Bid, BOR, Contract) has immutable hash chain. T
 
 ### 11.1 Presenter Checklist (Before Demo)
 
-- [ ] Run `make clean && make setup` for fresh environment
+- [ ] Run `make bootstrap` for fresh environment
 - [ ] Run `make demo-check` and `make fleet-check` — both must show "ready": true
 - [ ] Run `make demo-index` — copy all record IDs
 - [ ] Open Mailpit at http://localhost:8026

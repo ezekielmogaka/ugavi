@@ -11,7 +11,7 @@ For the expanded November seed, use the
 [step-by-step functional tour](demo/LOKADO-DEMO-TOUR.md) as the primary runbook:
 it includes exact record locators, inputs, role handoffs, expected outcomes,
 and intentional live-workflow boundaries. On 2026-11-05 `ugavi.localhost` was
-rebuilt from scratch with `make clean && make setup`; the
+rebuilt from scratch with `make bootstrap`; the
 acceptance and fleet gates reported `"ready": true` with no issues, and the
 `make backup-demo` → `make restore-demo` round-trip passed. These are historical
 results, not proof of the current site's state. The expanded tour is the
@@ -28,7 +28,7 @@ Everything is a `make` target run from the repository root:
 
 ```bash
 # Fresh disposable demo only (DESTRUCTIVE: deletes DB, files and backups/)
-make clean && make setup
+make bootstrap
 
 # Or, keep the data and load new code / refresh the seed (idempotent)
 make setup
@@ -541,7 +541,7 @@ still requires compatibility review, migration tests and a backup/restore rehear
 | OTP not in Mailpit | Check the default outgoing account is `mailpit:1025`, the officer recipient and Email Queue; then refresh Mailpit |
 | SSL / HTTPS error | Use `http://` not `https://` (local development) |
 | Browser shows old data | Hard refresh (Cmd+Shift+R) or clear cache |
-| Fresh disposable site needed | Preserve required data/backups outside the workspace; `make clean && make setup` is destructive |
+| Fresh disposable site needed | Preserve required data/backups outside the workspace; `make bootstrap` is destructive |
 ---
 
 ## 6. Validation Checklist (Presenter)
