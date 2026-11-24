@@ -20,8 +20,11 @@ Everything is driven by `make` from the repository root. No manual `docker` or
 ```bash
 git clone <repo-url> && cd ugavi
 
-# First run, or a clean rebuild from scratch (DESTRUCTIVE: wipes DB + files)
-make clean && make setup
+# First run — bootstrap a fresh environment with demo data
+make bootstrap
+
+# Subsequent runs (keeps data, safe to rerun)
+make setup
 
 make demo-check     # LOKADO acceptance gate: "ready": true, "issues": []
 make fleet-check    # fleet purchase-to-vehicle reconciliation
@@ -44,7 +47,7 @@ them with `MAILPIT_TAG=... VALKEY_TAG=... make setup` when testing an upgrade.
 
 | Goal | Commands |
 |------|----------|
-| Brand-new environment / start over | `make clean && make setup` |
+| Brand-new environment / start over | `make bootstrap` |
 | Pick up code changes in the demo stack (keeps data) | `make setup` |
 | Re-run the seed (idempotent, keeps data) | `make seed-lokado` |
 | Verify the demo is presentable | `make demo-check && make fleet-check` |
@@ -68,6 +71,7 @@ acceptance gate. If you edit code and skip `make setup` (or `make build` +
 
 | Target | Description |
 |--------|-------------|
+| `make bootstrap` | Start from scratch: `clean` + `setup` (DESTRUCTIVE, wipes data, then seeds demo) |
 | `make setup` | Build the image, start all services, create the site on first run, migrate, apply `setup_config`, seed LOKADO demo (safe to rerun; keeps data) |
 | `make build` | Build the immutable `ugavi:0.1.0` image (override `UGAVI_IMAGE`/`UGAVI_TAG`) |
 | `make start` | Start all services (fast, no health check) |

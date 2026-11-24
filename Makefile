@@ -1,4 +1,4 @@
-.PHONY: setup build start stop dev-up dev-down dev-logs dev-shell dev-migrate dev-config dev-seed dev-check dev-test dev-reset seed seed-lokado seed-generic seed-check demo-check demo-index fleet-check tenant-manifest-check test lint backup restore backup-demo restore-demo reset-demo reset-lokado upgrade-check clean e2e help
+.PHONY: setup build start stop dev-up dev-down dev-logs dev-shell dev-migrate dev-config dev-seed dev-check dev-test dev-reset seed seed-lokado seed-generic seed-check demo-check demo-index fleet-check tenant-manifest-check test lint backup restore backup-demo restore-demo reset-demo reset-lokado upgrade-check clean e2e bootstrap help
 
 BENCH_DIR ?= $(HOME)/frappe-bench
 SITE ?= ugavi.localhost
@@ -187,6 +187,9 @@ clean:
 	$(DEV_COMPOSE) down -v --remove-orphans
 	rm -rf backups/*
 
+bootstrap: clean
+	$(MAKE) setup
+
 e2e:
 	@echo "==> Running e2e Playwright tests..."
 	cd tests/e2e && npx playwright test
@@ -227,7 +230,8 @@ all-checks: lint security-scan sbom test e2e
 
 help:
 	@echo "Ugavi Makefile targets:"
-	@echo "  Fresh demo:  make clean && make setup"
+	@echo "  Fresh demo:  make bootstrap"
+	@echo "  make bootstrap      - Start from scratch: clean + build + seed (DESTRUCTIVE, wipes data)"
 	@echo "  make setup          - Build image, start stack, migrate, configure, seed LOKADO demo (safe to rerun; keeps data)"
 	@echo "  make build          - Build the immutable Ugavi image ($(UGAVI_IMAGE):$(UGAVI_TAG))"
 	@echo "  make start          - Start Docker services"
