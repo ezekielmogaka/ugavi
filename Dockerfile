@@ -11,7 +11,7 @@
 #   - sites/assets removed so clean volume mount works
 #   - Same image serves backend (gunicorn) and frontend (nginx)
 
-ARG ERPNEXT_TAG=v16.53.0
+ARG ERPNEXT_TAG=v16.55.0
 FROM frappe/erpnext:${ERPNEXT_TAG}
 
 LABEL org.opencontainers.image.title="Ugavi SCM"
@@ -46,9 +46,13 @@ RUN /home/frappe/frappe-bench/env/bin/pip install --no-cache-dir \
 # Verify ugavi is importable (via .pth created in step 3)
 RUN /home/frappe/frappe-bench/env/bin/python -c "import ugavi; print('ugavi import OK')"
 
-# Build assets for ugavi (and rebuild shared bundles for all apps).
+# Install solvronix_desk theme for the internal Desk (pinned v3.2.0)
 RUN cd /home/frappe/frappe-bench && \
-    bench build --app ugavi
+    bench get-app --branch v3.2.0 https://github.com/Solvronix/Solvronix-Desk
+
+# Build all assets (ugavi + solvronix_desk + frappe/erpnext shared bundles).
+RUN cd /home/frappe/frappe-bench && \
+    bench build
 
 # Merge freshly-built ugavi assets into the existing image-layer /assets
 # bench build writes compiled bundles to apps/ugavi/public/dist/
@@ -74,6 +78,10 @@ RUN cd /home/frappe/frappe-bench && \
     mkdir -p assets/ugavi && \
     cp -r apps/ugavi/ugavi/public/* assets/ugavi/ && \
     echo "Assets merged: $(find assets/ugavi -type f 2>/dev/null | wc -l) ugavi files" && \
+    # Copy solvronix_desk public directory
+    mkdir -p assets/solvronix_desk && \
+    cp -r apps/solvronix_desk/solvronix_desk/public/* assets/solvronix_desk/ && \
+    echo "Assets merged: $(find assets/solvronix_desk -type f 2>/dev/null | wc -l) solvronix_desk files" && \
     rm -rf sites/assets
 
 USER root

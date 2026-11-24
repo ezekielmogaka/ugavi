@@ -3,10 +3,88 @@
 import inspect
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import frappe
 from frappe.utils import add_days, today
+
+
+class TestPortalThemeSetup(unittest.TestCase):
+    def test_colors_exist_before_theme_save_and_activation(self):
+        from ugavi.scripts import setup_config
+
+        settings = MagicMock(website_theme="Standard")
+        theme = MagicMock(name="theme")
+        theme.name = "LOKADO Portal"
+        colors = set()
+
+        def exists(doctype, name):
+            return doctype == "DocType" or (doctype == "Color" and name in colors)
+
+        def get_doc(data):
+            if data["doctype"] == "Color":
+                color = MagicMock()
+                color.insert.side_effect = lambda **kwargs: colors.add(data["name"])
+                return color
+            self.assertEqual(data["custom"], 1)
+            return theme
+
+        def save(**kwargs):
+            self.assertEqual(len(colors), 4)
+            settings.save.assert_not_called()
+
+        theme.save.side_effect = save
+        with patch.object(setup_config, "frappe") as framework:
+            framework.db.exists.side_effect = exists
+            framework.get_doc.side_effect = get_doc
+            framework.get_single.return_value = settings
+            setup_config._configure_portal_theme()
+
+        theme.save.assert_called_once_with(ignore_permissions=True)
+        self.assertEqual(settings.website_theme, theme.name)
+        settings.save.assert_called_once_with(ignore_permissions=True)
+
+    def test_theme_save_failure_does_not_activate_missing_theme(self):
+        from ugavi.scripts import setup_config
+
+        with patch.object(setup_config, "frappe") as framework:
+            framework.db.exists.return_value = True
+            framework.get_doc.return_value.save.side_effect = ValueError("Compile failed")
+            with self.assertRaisesRegex(ValueError, "Compile failed"):
+                setup_config._configure_portal_theme()
+            framework.get_single.assert_not_called()
+            framework.db.set_single_value.assert_not_called()
+
+    def test_existing_active_theme_is_preserved(self):
+        from ugavi.scripts import setup_config
+
+        with patch.object(setup_config, "frappe") as framework:
+            framework.db.exists.return_value = True
+            settings = MagicMock(website_theme="Customer Theme")
+            framework.get_single.return_value = settings
+            setup_config._configure_portal_theme()
+            self.assertEqual(settings.website_theme, "Customer Theme")
+            settings.save.assert_not_called()
+
+    def test_migration_repairs_only_missing_active_lokado_theme(self):
+        from ugavi.scripts import setup_config
+
+        for active, exists, expected in (
+            ("LOKADO Portal", False, True),
+            ("LOKADO Portal", True, False),
+            ("Customer Theme", False, False),
+            ("Standard", False, False),
+            (None, False, False),
+        ):
+            with (
+                self.subTest(active=active, exists=exists),
+                patch.object(setup_config, "frappe") as framework,
+                patch.object(setup_config, "_configure_portal_theme") as configure,
+            ):
+                framework.db.get_single_value.return_value = active
+                framework.db.exists.return_value = exists
+                setup_config.repair_portal_theme_before_migrate()
+                self.assertEqual(configure.called, expected)
 
 
 class TestUpgradeSafety(unittest.TestCase):

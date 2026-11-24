@@ -10,5 +10,11 @@
     "branch": "v16.53.0",
     "min_version": "16.53.0",
     "eol": "2029-12-31"
+  },
+  "solvronix_desk": {
+    "repository": "https://github.com/Solvronix/Solvronix-Desk",
+    "branch": "v3.2.0",
+    "min_version": "3.2.0",
+    "eol": "2029-12-31"
   }
 }

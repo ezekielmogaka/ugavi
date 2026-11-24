@@ -63,8 +63,8 @@
   border-radius: var(--ugavi-radius-lg);
   color: #fff;
   background:
-    radial-gradient(circle at 82% 18%, rgba(132, 204, 99, 0.42), transparent 24%),
-    radial-gradient(circle at 12% 105%, rgba(56, 189, 248, 0.3), transparent 32%),
+    radial-gradient(circle at 82% 18%, rgba(214, 168, 95, 0.35), transparent 24%),
+    radial-gradient(circle at 12% 105%, rgba(22, 125, 120, 0.3), transparent 32%),
     var(--ugavi-gradient-brand);
   box-shadow: var(--ugavi-shadow-elevated);
 }
@@ -242,7 +242,7 @@
 .ugavi-portal__journey a.ugavi-portal__journey-link--active {
   background: var(--ugavi-gradient-brand);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(46, 49, 148, 0.25);
+  box-shadow: 0 2px 8px rgba(20, 45, 78, 0.25);
 }
 .ugavi-portal__journey a.ugavi-portal__journey-link--active:hover {
   background: var(--ugavi-brand-dark);
@@ -282,7 +282,7 @@
 }
 .ugavi-portal__card--featured {
   border-color: var(--ugavi-brand-light);
-  background: linear-gradient(135deg, rgba(46, 49, 148, 0.03), var(--ugavi-surface) 60%);
+  background: linear-gradient(135deg, rgba(20, 45, 78, 0.03), var(--ugavi-surface) 60%);
 }
 
 .ugavi-portal__readiness {
@@ -293,7 +293,7 @@
   margin-bottom: var(--ugavi-space-md);
   padding: var(--ugavi-space-lg);
   background:
-    linear-gradient(135deg, rgba(46, 49, 148, 0.08), transparent 58%),
+    linear-gradient(135deg, rgba(20, 45, 78, 0.08), transparent 58%),
     var(--ugavi-surface);
 }
 
@@ -421,7 +421,7 @@
 .ugavi-portal__form select:focus-visible,
 .ugavi-portal__form textarea:focus-visible {
   border-color: var(--ugavi-brand);
-  box-shadow: 0 0 0 3px rgba(46, 49, 148, 0.15), 0 1px 4px rgba(23, 32, 51, 0.06);
+  box-shadow: 0 0 0 3px rgba(20, 45, 78, 0.15), 0 1px 4px rgba(23, 43, 69, 0.06);
   outline: none;
 }
 .ugavi-portal__form input[aria-invalid="true"],
@@ -549,7 +549,7 @@
   padding: 0.75rem 1.25rem;
   color: #fff;
   background: var(--ugavi-gradient-brand);
-  box-shadow: 0 8px 18px rgba(46, 49, 148, 0.2);
+  box-shadow: 0 8px 18px rgba(20, 45, 78, 0.2);
 }
 
 .ugavi-portal__secondary-action {

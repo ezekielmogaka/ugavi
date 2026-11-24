@@ -58,14 +58,8 @@ The current baseline is ERPNext 16.53.0 and Frappe 16.54.0. The
 - passing integration and unit suites (15 + 62 at this checkpoint); and
 - `{"message":"pong"}` from the public health endpoint.
 
-After the upgrade rehearsal, validate the seeded business evidence separately:
-
-```bash
-make seed                # or: make seed-lokado
-make demo-check
-make fleet-check
-make e2e                 # separately prepared host browser runtime
-```
+After the upgrade rehearsal, validate the seeded business evidence separately
+(with `make demo-check` and `make fleet-check`, or re-seed with `make seed-lokado`):
 
 For mounted local source use `make dev-config`, `make dev-seed`, `make dev-test`
 and `make dev-check`, then `UGAVI_BASE_URL=http://ugavi.localhost:8000 make e2e`.

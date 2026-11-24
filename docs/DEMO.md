@@ -11,7 +11,7 @@ For the expanded November seed, use the
 [step-by-step functional tour](demo/LOKADO-DEMO-TOUR.md) as the primary runbook:
 it includes exact record locators, inputs, role handoffs, expected outcomes,
 and intentional live-workflow boundaries. On 2026-11-05 `ugavi.localhost` was
-rebuilt from scratch with `make clean && make setup && make seed-lokado`; the
+rebuilt from scratch with `make clean && make setup`; the
 acceptance and fleet gates reported `"ready": true` with no issues, and the
 `make backup-demo` → `make restore-demo` round-trip passed. These are historical
 results, not proof of the current site's state. The expanded tour is the
@@ -28,10 +28,10 @@ Everything is a `make` target run from the repository root:
 
 ```bash
 # Fresh disposable demo only (DESTRUCTIVE: deletes DB, files and backups/)
-make clean && make setup && make seed-lokado
+make clean && make setup
 
 # Or, keep the data and load new code / refresh the seed (idempotent)
-make setup && make seed-lokado
+make setup
 
 make demo-check               # LOKADO gate: 21 users, "ready": true, no issues
 make fleet-check              # purchase-backed fleet reconciliation
@@ -47,8 +47,8 @@ the local `backups/` contents. `make reset-lokado` reinstalls the site and
 reseeds without rebuilding containers. `make upgrade-check` rehearses an
 upstream upgrade (rebuild, migrate, configure, backend tests).
 
-`make seed-lokado`/`demo-check` run the code baked into the image; `make setup`
-rebuilds it. If a count, ledger reconciliation or lineage gate fails, capture
+`make setup` now builds the image, configures, and seeds the LOKADO demo data
+with the acceptance gate. If a count, ledger reconciliation or lineage gate fails, capture
 the output and investigate the image and data; do not reset a shared site
 without preserving the data and backups needed.
 
@@ -541,7 +541,7 @@ still requires compatibility review, migration tests and a backup/restore rehear
 | OTP not in Mailpit | Check the default outgoing account is `mailpit:1025`, the officer recipient and Email Queue; then refresh Mailpit |
 | SSL / HTTPS error | Use `http://` not `https://` (local development) |
 | Browser shows old data | Hard refresh (Cmd+Shift+R) or clear cache |
-| Fresh disposable site needed | Preserve required data/backups outside the workspace; `make clean && make setup && make seed-lokado` is destructive |
+| Fresh disposable site needed | Preserve required data/backups outside the workspace; `make clean && make setup` is destructive |
 ---
 
 ## 6. Validation Checklist (Presenter)

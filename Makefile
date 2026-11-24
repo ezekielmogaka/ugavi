@@ -4,7 +4,7 @@ BENCH_DIR ?= $(HOME)/frappe-bench
 SITE ?= ugavi.localhost
 UGAVI_IMAGE ?= ugavi
 UGAVI_TAG ?= 0.1.0
-ERPNEXT_TAG ?= v16.53.0
+ERPNEXT_TAG ?= v16.55.0
 NGINX_LISTEN_PORT ?= 8080
 TENANT_MANIFEST ?= deploy/tenants.example.json
 # Local development credentials only; override for any shared environment.
@@ -31,6 +31,7 @@ setup:
 	test $$ready -eq 1
 	$(COMPOSE) exec -T backend bench --site $(SITE) migrate
 	$(COMPOSE) exec -T backend bench --site $(SITE) execute ugavi.scripts.setup_config.run
+	$(MAKE) seed-lokado
 	@echo "==> Setup complete! Visit http://localhost:$(NGINX_LISTEN_PORT)"
 
 build:
@@ -226,8 +227,8 @@ all-checks: lint security-scan sbom test e2e
 
 help:
 	@echo "Ugavi Makefile targets:"
-	@echo "  Fresh demo:  make clean && make setup && make seed-lokado"
-	@echo "  make setup          - Build image, start stack, create site (first run), migrate, configure (keeps data)"
+	@echo "  Fresh demo:  make clean && make setup"
+	@echo "  make setup          - Build image, start stack, migrate, configure, seed LOKADO demo (safe to rerun; keeps data)"
 	@echo "  make build          - Build the immutable Ugavi image ($(UGAVI_IMAGE):$(UGAVI_TAG))"
 	@echo "  make start          - Start Docker services"
 	@echo "  make dev-up        - Build image, mount source, and run native bench serve"

@@ -102,11 +102,11 @@
 }
 
 .ugavi-chart-palette {
-  --chart-1: #2e3194; --chart-2: #61a744; --chart-3: #e8a11a;
-  --chart-4: #5c67c8; --chart-5: #4f8f58; --chart-6: #7255b5;
+  --chart-1: #142D4E; --chart-2: #167D78; --chart-3: #D6A85F;
+  --chart-4: #4f8fa8; --chart-5: #5cc5c0; --chart-6: #7255b5;
   --chart-7: #c56b2d; --chart-8: #3c8196;
 }
 
-.ugavi-branded { --ugavi-brand: var(--brand-accent-color, #2e3194); }
+.ugavi-branded { --ugavi-brand: var(--brand-accent-color, #142D4E); }
 .ugavi-donor-report { border-top: 4px solid var(--donor-accent-color, var(--ugavi-brand)); }
 .ugavi-donor-report__logo { max-height: 60px; object-fit: contain; }

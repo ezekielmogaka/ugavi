@@ -8,29 +8,29 @@ def run():
 
     # Check each module's record counts match expectations
     checks = [
-        ("Donor Profile", 5),
+        ("Donor Profile", 6),
         ("Supplier", 30),
         ("Supplier Prequalification", 30),
-        ("Vehicle", 5),
-        ("Vehicle Allocation", 4),
+        ("Vehicle", 8),
+        ("Vehicle Allocation", 8),
         ("Fuel Log", 6),
         ("Trip Log", 3),
-        ("Asset Register", 5),
-        ("Ugavi Asset Movement", 2),
+        ("Asset Register", 16),
+        ("Ugavi Asset Movement", 5),
         ("Asset Disposal", 1),
-        ("Delegation of Authority", 5),
+        ("Delegation of Authority", 4),
         ("Waiver", 1),
         ("Segregation of Duties", 3),
         ("Audit Log", 1),
-        ("Purchase Requisition", 6),
-        ("Tender", 6),
-        ("Bid", 3),
-        ("Bid Opening Record", 1),
-        ("Ugavi Contract", 1),
-        ("Ugavi Supplier Evaluation", 2),
-        ("Donor Warehouse", 6),
-        ("Monthly Stock Report", 4),
-        ("Inter Donor Transfer", 1),
+        ("Purchase Requisition", 25),
+        ("Tender", 20),
+        ("Bid", 46),
+        ("Bid Opening Record", 2),
+        ("Ugavi Contract", 32),
+        ("Ugavi Supplier Evaluation", 36),
+        ("Donor Warehouse", 8),
+        ("Monthly Stock Report", 6),
+        ("Inter Donor Transfer", 7),
     ]
 
     for dt, expected in checks:
@@ -41,7 +41,7 @@ def run():
 
     # Check specific values
     tender_values = [v[0] for v in frappe.db.get_values("Tender", filters={}, fieldname="estimated_value", pluck="estimated_value")]
-    expected_values = {150000, 350000, 499000, 499500, 500000, 800000}
+    expected_values = {95000, 140000, 150000, 175000, 180000, 195000, 240000, 260000, 280000}
     found = set(tender_values)
     if not expected_values.issubset(found):
         errors.append(f"Tender values missing: {expected_values - found}")

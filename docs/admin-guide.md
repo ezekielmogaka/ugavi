@@ -16,15 +16,15 @@ Ugavi is a donor-segregated procurement and logistics system on Frappe v16.
 
 ```bash
 git clone <repo-url> && cd ugavi
-make clean && make setup && make seed-lokado   # from scratch (destructive)
+make clean && make setup   # from scratch (destructive)
 make demo-check
 make fleet-check
 ```
 
-`make setup` builds the image, creates the site on first run, migrates and
-applies configuration; rerun it after code changes (data is kept).
+`make setup` builds the image, creates the site on first run, migrates,
+configures, and seeds the LOKADO demo data; rerun it after code changes
+(data is kept).
 
-`make seed-lokado` is an alias alternative, not a second required seed step.
 For daily source-mounted development use `make dev-up`, then `make dev-config`,
 `make dev-seed`, `make dev-check` and `make dev-test`. Image-based commands
 require `make setup` (or `make upgrade-check`) after code changes. See the
@@ -109,7 +109,7 @@ make test                             # run test suite
 | Sealed-bid key rotation fails | Manual: `bench execute ugavi.governance.services.key_rotation.flag_stale_keys` |
 | Rate limit blocking legitimate bids | Reset: `bench execute ugavi.governance.services.rate_limiter.RateLimiter().reset` |
 | Hash chain broken | Investigate audit log tampering; restore from verified backup |
-| Docker containers not starting | `make clean && make setup && make seed-lokado` (destructive) |
-| Demo gate fails with old minimums, unreconciled stock reports or invalid tender lineage | Stale image/data: `make clean && make setup && make seed-lokado` |
+| Docker containers not starting | `make clean && make setup` (destructive) |
+| Demo gate fails with old minimums, unreconciled stock reports or invalid tender lineage | Stale image/data: `make clean && make setup` |
 | Seed data stale | `make reset-demo` (reinstalls + reseeds) |
 | LOKADO data missing | `make seed` or `make seed-lokado` (idempotent) |

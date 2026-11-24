@@ -51,12 +51,18 @@ if [ ! -d "/home/frappe/frappe-bench/sites/$SITE_NAME" ]; then
     bench --site "$SITE_NAME" install-app erpnext
     # ugavi is already in the bench (from Dockerfile build), install to site
     bench --site "$SITE_NAME" install-app ugavi
+    # solvronix_desk is already in the bench (from Dockerfile build), install to site
+    bench --site "$SITE_NAME" install-app solvronix_desk
     echo "==> Site created and apps installed."
 elif ! bench --site "$SITE_NAME" list-apps 2>/dev/null | grep -q ugavi; then
     echo "==> Installing ugavi on existing site..."
     bench --site "$SITE_NAME" install-app ugavi
+    # Ensure solvronix_desk is also installed on existing sites
+    bench --site "$SITE_NAME" install-app solvronix_desk
+elif ! bench --site "$SITE_NAME" list-apps 2>/dev/null | grep -q solvronix_desk; then
+    echo "==> Installing solvronix_desk on existing site..."
+    bench --site "$SITE_NAME" install-app solvronix_desk
 fi
-
 # --- Step 3: Migrate (on first install or if lock is stale) ---
 if [ ! -f "/home/frappe/frappe-bench/sites/.ugavi-migrated" ]; then
     echo "==> Running migrations for $SITE_NAME..."

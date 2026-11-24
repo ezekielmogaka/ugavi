@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 48" fill="none">
+  <!-- LOKADO wordmark -- navy primary -->
+  <text x="0" y="36" font-family="Inter, 'Source Sans 3', system-ui, sans-serif" font-weight="700" font-size="32" fill="#142D4E" letter-spacing="-0.5">LOKADO</text>
+  <!-- Gold accent underline -->
+  <rect x="0" y="40" width="240" height="3" rx="1.5" fill="#D6A85F"/>
+  <!-- Teal dot accent -->
+  <rect x="0" y="0" width="6" height="6" rx="3" fill="#167D78"/>
+</svg>

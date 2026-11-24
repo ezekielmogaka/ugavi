@@ -21,7 +21,7 @@ class TripLog(Document):
         self._apply_allocation()
 
     def before_submit(self):
-        if self.status != "Completed" or not self.end_date or not self.end_odometer:
+        if self.status != "Completed" or not self.end_date or self.end_odometer is None:
             frappe.throw(
                 _("Complete the trip with an end date and odometer before submitting.")
             )

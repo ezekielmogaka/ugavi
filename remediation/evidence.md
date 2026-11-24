@@ -131,7 +131,6 @@ $ curl -s -H 'Host: ugavi.localhost' -b cookie \
 ## Reproducibility
 
 From zero:
-1. `make setup` → starts all services, creates site, installs apps, starts Frappe
-2. `make seed` → seeds demo data
-3. `make test` → runs test suite (23/23 passing)
-4. `make stop` → stops all services
+1. `make setup` → starts all services, creates site, installs apps, configures, seeds demo data
+2. `make test` → runs test suite (23/23 passing)
+3. `make stop` → stops all services

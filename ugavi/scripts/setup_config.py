@@ -20,6 +20,7 @@ def run():
     configure_stock_settings()
     configure_security()
     configure_workflows()
+    configure_theme()
     frappe.db.commit()
     print("Phase B configuration complete!")
 
@@ -512,6 +513,128 @@ def configure_security():
     settings.logout_on_password_reset = 1
     settings.save(ignore_permissions=True)
     print("  Frappe TOTP and hardened session policy configured")
+
+
+def configure_theme():
+    """Configure Solvronix Desk theme and Frappe Website Theme with LOKADO brand.
+
+    Brand palette:
+      Primary (navy):  #142D4E   — sidebar, headers
+      Secondary (teal): #167D78   — accents, success
+      Gold:            #D6A85F   — highlights, CTAs
+
+    Idempotent — only sets values that are uninitialised or at factory defaults.
+    """
+    _configure_desk_theme()
+    _configure_portal_theme()
+    _configure_navbar_branding()
+    print("  LOKADO brand theme configured")
+
+
+def _configure_desk_theme():
+    """Seed Solvronix Desk Theme Settings with LOKADO brand palette."""
+    if not frappe.db.exists("DocType", "Theme Settings"):
+        return
+
+    settings = frappe.get_single("Theme Settings")
+
+    # Only overwrite factory defaults (#1B3F7E / #F57C00) or unset values.
+    if (settings.brand_color or "") in ("", "#1B3F7E"):
+        settings.brand_color = "#142D4E"
+    if (settings.accent_color or "") in ("", "#F57C00"):
+        settings.accent_color = "#D6A85F"
+    if not (settings.company_name or "").strip():
+        settings.company_name = "LOKADO"
+    if settings.enable_command_palette is None:
+        settings.enable_command_palette = 1
+    if settings.enable_smart_home is None:
+        settings.enable_smart_home = 1
+    if settings.default_theme_mode is None:
+        settings.default_theme_mode = "Light"
+    if settings.base_font_size is None:
+        settings.base_font_size = "Default"
+    if settings.default_density is None:
+        settings.default_density = "Comfortable"
+    if settings.corner_radius is None:
+        settings.corner_radius = 8
+    settings.save(ignore_permissions=True)
+
+    # Also configure Login Page Settings if the docType exists
+    if frappe.db.exists("DocType", "Login Page Settings"):
+        for field, value in {
+            "enabled": 1,
+            "auto_fetch_branding": 1,
+            "show_hero_pattern": 1,
+            "show_feature_panel": 1,
+        }.items():
+            existing = frappe.db.get_single_value("Login Page Settings", field)
+            if existing is None:
+                frappe.db.set_single_value("Login Page Settings", field, value)
+
+
+def _configure_portal_theme():
+    """Apply the LOKADO brand to the Frappe Website Theme for the customer portal.
+
+    Uses the native Website Theme doctype — no custom CSS injection needed beyond
+    the already loaded ugavi-portal.css (see hooks.py web_include_css).
+    """
+    if not frappe.db.exists("DocType", "Website Theme"):
+        return
+
+    theme_name = "LOKADO Portal"
+    colors = {
+        "primary_color": "#142D4E",
+        "text_color": "#172B45",
+        "light_color": "#F5F7FA",
+        "dark_color": "#0d2139",
+        "background_color": "#F5F7FA",
+    }
+    for color in set(colors.values()):
+        if not frappe.db.exists("Color", color):
+            frappe.get_doc(
+                {"doctype": "Color", "name": color, "color": color}
+            ).insert(ignore_permissions=True)
+
+    if frappe.db.exists("Website Theme", theme_name):
+        theme = frappe.get_doc("Website Theme", theme_name)
+    else:
+        theme = frappe.get_doc(
+            {"doctype": "Website Theme", "theme": theme_name, "custom": 1}
+        )
+
+    theme.update(colors)
+    theme.button_rounded_corners = 1
+    theme.save(ignore_permissions=True)
+
+    settings = frappe.get_single("Website Settings")
+    if settings.website_theme in (None, "", "Standard", theme_name):
+        settings.website_theme = theme.name
+        settings.save(ignore_permissions=True)
+
+
+def repair_portal_theme_before_migrate():
+    """Restore the app's dangling theme before Frappe recompiles active themes."""
+    theme_name = "LOKADO Portal"
+    current_theme = frappe.db.get_single_value("Website Settings", "website_theme")
+    if current_theme == theme_name and not frappe.db.exists("Website Theme", theme_name):
+        print("  Repairing missing LOKADO Portal website theme before migration")
+        _configure_portal_theme()
+
+
+def _configure_navbar_branding():
+    """Customise the Desk and website navbar with LOKADO branding."""
+    # Navbar Settings: app logo
+    if frappe.db.exists("DocType", "Navbar Settings"):
+        settings = frappe.get_single("Navbar Settings")
+        if not settings.app_logo:
+            settings.app_logo = "/assets/ugavi/images/ugavi-logo.svg"
+        settings.save(ignore_permissions=True)
+
+    # Website Settings: app name (app_name belongs to Website Settings, not Navbar Settings)
+    settings = frappe.get_single("Website Settings")
+    if not settings.app_name or settings.app_name == "Frappe":
+        settings.app_name = "LOKADO"
+        settings.save(ignore_permissions=True)
 
 
 def configure_workflows():

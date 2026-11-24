@@ -6,6 +6,8 @@ app_description = "Enterprise Supply Chain Management"
 app_email = "info@ugavi.dev"
 app_license = "MIT"
 
+before_migrate = "ugavi.scripts.setup_config.repair_portal_theme_before_migrate"
+
 # DocTypes registered in this app
 doctype_js = {
     "Purchase Requisition": "js/purchase_requisition.js",
@@ -108,3 +110,7 @@ web_include_css = [
     "/assets/ugavi/css/ugavi-components.css",
     "/assets/ugavi/css/ugavi-portal.css",
 ]
+
+# LOKADO brand assets
+favicon = "/assets/ugavi/images/ugavi-favicon.svg"
+app_logo_url = "/assets/ugavi/images/ugavi-logo.svg"

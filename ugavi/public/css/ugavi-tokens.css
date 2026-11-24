@@ -1,33 +1,45 @@
-/* Shared Ugavi design tokens.
-   Loaded in Desk and Website contexts; contains no upstream component overrides. */
+/* Shared Ugavi design tokens — LOKADO brand palette.
+   Loaded in Desk and Website contexts; contains no upstream component overrides.
+
+   Brand identity:
+     Primary   #142D4E   Deep navy — sidebar, headers, hero
+     Secondary #167D78   Teal — accents, success states
+     Gold      #D6A85F   Warm gold — highlights, CTAs, badges
+     Bg        #F5F7FA   Cool grey — page backgrounds
+     Surface   #FFFFFF   White — cards, modals
+     Text      #172B45   Dark navy — body copy
+     Muted     #64748B   Slate — secondary text, captions */
 
 :root {
-  --ugavi-brand: #2e3194;
-  --ugavi-brand-vivid: #4f46e5;
-  --ugavi-brand-light: #e8e9ff;
-  --ugavi-brand-dark: #20236f;
-  --ugavi-accent: #61a744;
-  --ugavi-accent-vivid: #84cc63;
+  --ugavi-brand: #142D4E;
+  --ugavi-brand-vivid: #1a3a6b;
+  --ugavi-brand-light: #e6edf5;
+  --ugavi-brand-dark: #0d2139;
+  --ugavi-accent: #167D78;
+  --ugavi-accent-vivid: #1a9e98;
   --ugavi-signal: #38bdf8;
-  --ugavi-accent-soft: #edf7e9;
+  --ugavi-accent-soft: #e6f5f4;
+  --ugavi-gold: #D6A85F;
+  --ugavi-gold-light: #faf3e5;
+  --ugavi-gold-vivid: #e8c47a;
   --ugavi-warm: #e8a11a;
-  --ugavi-surface: #ffffff;
-  --ugavi-surface-alt: #f6f7fb;
-  --ugavi-surface-strong: #eef0f7;
-  --ugavi-border: #dfe3ec;
-  --ugavi-text-primary: #172033;
-  --ugavi-text-secondary: #5c667a;
-  --ugavi-success: #2f7d32;
+  --ugavi-surface: #FFFFFF;
+  --ugavi-surface-alt: #F5F7FA;
+  --ugavi-surface-strong: #e8ecf1;
+  --ugavi-border: #dce1e7;
+  --ugavi-text-primary: #172B45;
+  --ugavi-text-secondary: #64748B;
+  --ugavi-success: #167D78;
   --ugavi-warning: #a86200;
   --ugavi-critical: #b42318;
-  --ugavi-info: #2e3194;
+  --ugavi-info: #142D4E;
   --ugavi-pending: #7255b5;
   --ugavi-chip-draft-bg: #eef0f4;
   --ugavi-chip-draft-text: #50596a;
-  --ugavi-chip-published-bg: #e8e9ff;
-  --ugavi-chip-published-text: #2e3194;
-  --ugavi-chip-awarded-bg: #e7f5e2;
-  --ugavi-chip-awarded-text: #286b2c;
+  --ugavi-chip-published-bg: #e6edf5;
+  --ugavi-chip-published-text: #142D4E;
+  --ugavi-chip-awarded-bg: #e6f5f4;
+  --ugavi-chip-awarded-text: #0d5e5a;
   --ugavi-chip-closed-bg: #f0f1f5;
   --ugavi-chip-closed-text: #667085;
   --ugavi-space-xs: 0.25rem;
@@ -40,11 +52,12 @@
   --ugavi-radius-md: 0.75rem;
   --ugavi-radius-lg: 1rem;
   --ugavi-radius-full: 9999px;
-  --ugavi-shadow-card: 0 1px 2px rgba(23, 32, 51, 0.06), 0 8px 24px rgba(23, 32, 51, 0.05);
-  --ugavi-shadow-card-hover: 0 2px 4px rgba(23, 32, 51, 0.08), 0 12px 28px rgba(23, 32, 51, 0.09);
-  --ugavi-shadow-elevated: 0 24px 64px rgba(23, 32, 51, 0.14);
-  --ugavi-shadow-modal: 0 18px 48px rgba(23, 32, 51, 0.16);
-  --ugavi-gradient-brand: linear-gradient(135deg, #20236f 0%, #3730a3 52%, #2563a8 100%);
+  --ugavi-shadow-card: 0 1px 2px rgba(23, 43, 69, 0.06), 0 8px 24px rgba(23, 43, 69, 0.05);
+  --ugavi-shadow-card-hover: 0 2px 4px rgba(23, 43, 69, 0.08), 0 12px 28px rgba(23, 43, 69, 0.09);
+  --ugavi-shadow-elevated: 0 24px 64px rgba(23, 43, 69, 0.14);
+  --ugavi-shadow-modal: 0 18px 48px rgba(23, 43, 69, 0.16);
+  --ugavi-gradient-brand: linear-gradient(135deg, #0d2139 0%, #142D4E 52%, #167D78 100%);
+  --ugavi-gradient-accent: linear-gradient(135deg, #D6A85F 0%, #c49a4a 50%, #b8883a 100%);
   --ugavi-font: Inter, "Source Sans 3", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --ugavi-font-size-xs: 0.75rem;
   --ugavi-font-size-sm: 0.875rem;
@@ -58,30 +71,33 @@
 
 :root[data-theme="dark"],
 .dark-mode {
-  --ugavi-brand: #aeb0ff;
-  --ugavi-brand-vivid: #a5b4fc;
-  --ugavi-brand-light: #292d68;
-  --ugavi-brand-dark: #d8d9ff;
-  --ugavi-accent: #8fcf72;
-  --ugavi-accent-vivid: #a7e58b;
+  --ugavi-brand: #8fb3d6;
+  --ugavi-brand-vivid: #a5c8e8;
+  --ugavi-brand-light: #1d2e42;
+  --ugavi-brand-dark: #c5d9ed;
+  --ugavi-accent: #5cc5c0;
+  --ugavi-accent-vivid: #7dd5d0;
   --ugavi-signal: #7dd3fc;
-  --ugavi-accent-soft: #203c25;
+  --ugavi-accent-soft: #1a3331;
+  --ugavi-gold: #e8c47a;
+  --ugavi-gold-light: #2d2618;
+  --ugavi-gold-vivid: #f0d69e;
   --ugavi-warm: #f4bd4f;
-  --ugavi-surface: #151a27;
-  --ugavi-surface-alt: #1d2433;
-  --ugavi-surface-strong: #252d3e;
-  --ugavi-border: #374155;
+  --ugavi-surface: #111827;
+  --ugavi-surface-alt: #1a2435;
+  --ugavi-surface-strong: #1f2d40;
+  --ugavi-border: #2d3a4d;
   --ugavi-text-primary: #f2f4f8;
-  --ugavi-text-secondary: #b2bbcb;
+  --ugavi-text-secondary: #94a3b8;
   --ugavi-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2);
   --ugavi-shadow-card-hover: 0 12px 28px rgba(0, 0, 0, 0.3);
-  --ugavi-chip-draft-bg: #30394a;
+  --ugavi-chip-draft-bg: #2d3748;
   --ugavi-chip-draft-text: #c7ced9;
-  --ugavi-chip-published-bg: #292d68;
-  --ugavi-chip-published-text: #d8d9ff;
-  --ugavi-chip-awarded-bg: #203c25;
-  --ugavi-chip-awarded-text: #a9dda0;
-  --ugavi-chip-closed-bg: #252d3e;
+  --ugavi-chip-published-bg: #1d2e42;
+  --ugavi-chip-published-text: #c5d9ed;
+  --ugavi-chip-awarded-bg: #1a3331;
+  --ugavi-chip-awarded-text: #8dd5d0;
+  --ugavi-chip-closed-bg: #1f2d40;
   --ugavi-chip-closed-text: #aab3c2;
 }
 

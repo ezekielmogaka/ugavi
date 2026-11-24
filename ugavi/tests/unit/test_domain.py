@@ -135,9 +135,14 @@ def _ensure_supplier(name):
 
 
 def _ensure_supplier_group():
-    sg = "All Supplier Groups"
+    sg = "Ugavi Test Suppliers"
     if not frappe.db.exists("Supplier Group", sg):
-        frappe.get_doc({"doctype": "Supplier Group", "supplier_group_name": sg}).insert(ignore_permissions=True)
+        frappe.get_doc({
+            "doctype": "Supplier Group",
+            "supplier_group_name": sg,
+            "parent_supplier_group": "All Supplier Groups",
+            "is_group": 0,
+        }).insert(ignore_permissions=True)
     return sg
 
 

@@ -10,7 +10,6 @@ the actors, seeded record IDs, communications and requirement coverage.
 
 ```bash
 make setup
-make seed                # canonical LOKADO seed (alias: seed-lokado)
 make demo-check
 make fleet-check
 ```
@@ -169,9 +168,9 @@ Mailpit capture does not prove external delivery.
 
 Ugavi reuses rather than duplicates these upstream records:
 
-- [Supplier documentation](https://docs.frappe.io/erpnext/supplier) and [v16.53.0 Supplier schema](https://github.com/frappe/erpnext/blob/v16.53.0/erpnext/buying/doctype/supplier/supplier.json)
-- [Purchase Order documentation](https://docs.frappe.io/erpnext/purchase-order) and [v16.53.0 Purchase Order controller](https://github.com/frappe/erpnext/blob/v16.53.0/erpnext/buying/doctype/purchase_order/purchase_order.py)
-- [Purchase Receipt documentation](https://docs.frappe.io/erpnext/purchase-receipt) and [v16.53.0 Purchase Receipt controller](https://github.com/frappe/erpnext/blob/v16.53.0/erpnext/stock/doctype/purchase_receipt/purchase_receipt.py)
+- [Supplier documentation](https://docs.frappe.io/erpnext/supplier) and [v16.55.0 Supplier schema](https://github.com/frappe/erpnext/blob/v16.55.0/erpnext/buying/doctype/supplier/supplier.json)
+- [Purchase Order documentation](https://docs.frappe.io/erpnext/purchase-order) and [v16.55.0 Purchase Order controller](https://github.com/frappe/erpnext/blob/v16.55.0/erpnext/buying/doctype/purchase_order/purchase_order.py)
+- [Purchase Receipt documentation](https://docs.frappe.io/erpnext/purchase-receipt) and [v16.55.0 Purchase Receipt controller](https://github.com/frappe/erpnext/blob/v16.55.0/erpnext/stock/doctype/purchase_receipt/purchase_receipt.py)
 - [Frappe Notification Log schema](https://github.com/frappe/frappe/blob/version-16/frappe/desk/doctype/notification_log/notification_log.json)
 
 Ugavi-specific prequalification, sealed tendering, clarification, contract controls, and supplier evaluation remain additive app-owned DocTypes. No ERPNext controller is replaced.

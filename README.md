@@ -21,7 +21,7 @@ Everything is driven by `make` from the repository root. No manual `docker` or
 git clone <repo-url> && cd ugavi
 
 # First run, or a clean rebuild from scratch (DESTRUCTIVE: wipes DB + files)
-make clean && make setup && make seed-lokado
+make clean && make setup
 
 make demo-check     # LOKADO acceptance gate: "ready": true, "issues": []
 make fleet-check    # fleet purchase-to-vehicle reconciliation
@@ -44,8 +44,8 @@ them with `MAILPIT_TAG=... VALKEY_TAG=... make setup` when testing an upgrade.
 
 | Goal | Commands |
 |------|----------|
-| Brand-new environment / start over | `make clean && make setup && make seed-lokado` |
-| Pick up code changes in the demo stack (keeps data) | `make setup && make seed-lokado` |
+| Brand-new environment / start over | `make clean && make setup` |
+| Pick up code changes in the demo stack (keeps data) | `make setup` |
 | Re-run the seed (idempotent, keeps data) | `make seed-lokado` |
 | Verify the demo is presentable | `make demo-check && make fleet-check` |
 | Get the record IDs for the tour worksheet | `make demo-index` |
@@ -58,9 +58,9 @@ them with `MAILPIT_TAG=... VALKEY_TAG=... make setup` when testing an upgrade.
 | Stop / start without losing data | `make stop` / `make start` |
 
 `make setup` always rebuilds the image first, so it is the safe way to load new
-code into the port-8080 stack. `make seed`/`seed-lokado`/`demo-check` run inside
-the image: if you edit code and skip `make setup` (or `make build` +
-`make upgrade-check`), they still run the **old** baked code.
+code into the port-8080 stack. It also seeds the LOKADO demo data and runs the
+acceptance gate. If you edit code and skip `make setup` (or `make build` +
+`make upgrade-check`), commands run the **old** baked code.
 
 ---
 
@@ -68,7 +68,7 @@ the image: if you edit code and skip `make setup` (or `make build` +
 
 | Target | Description |
 |--------|-------------|
-| `make setup` | Build the image, start all services, create the site on first run, migrate, apply `setup_config` (safe to rerun; keeps data) |
+| `make setup` | Build the image, start all services, create the site on first run, migrate, apply `setup_config`, seed LOKADO demo (safe to rerun; keeps data) |
 | `make build` | Build the immutable `ugavi:0.1.0` image (override `UGAVI_IMAGE`/`UGAVI_TAG`) |
 | `make start` | Start all services (fast, no health check) |
 | `make stop` | Stop all services; retain data volumes |
@@ -113,10 +113,16 @@ All site-scoped targets accept `SITE=<site>` (default `ugavi.localhost`), e.g.
 
 ### Troubleshooting
 
+- **`Website Theme LOKADO Portal not found` during `make setup`:** rerun
+  `make setup` with the fixed source; no database reset is needed. The
+  pre-migration hook restores this app's missing active theme before Frappe
+  recompiles it. Setup creates native `Color` records before saving the theme
+  and activates it only after a successful save. Theme compilation or link
+  errors now fail visibly, and an existing customer-selected theme is retained.
 - **`LOKADO demo verification failed: ... expected at least 40 ...`, stock
   reports that "do not reconcile", or "invalid requisition lineage"**: the site
   holds data from an older seed, and/or the image holds old code. Rebuild from
-  scratch: `make clean && make setup && make seed-lokado` (or keep containers
+  scratch: `make clean && make setup` (or keep containers
   and run `make setup && make reset-lokado`).
 - **Seed refuses to run:** `seed-lokado` sets `developer_mode` itself; if you
   call scripts by hand, enable it first. Prefer the make targets.
@@ -191,7 +197,7 @@ Customer-specific demo for Lotus Kenya Action for Development Organization (LOKA
 - **Full workflow**: PR → Tender → Sealed-Bid Opening → Evaluation → Contract → Logistics (live award steps are performed in the tour, not fabricated by the seed)
 
 ```bash
-make clean && make setup && make seed-lokado   # from scratch (destructive)
+make clean && make setup   # from scratch (destructive)
 make seed-lokado    # canonical LOKADO seed (idempotent; ends with the acceptance gate)
 make demo-check     # verify: 21 users, "ready": true, 0 issues
 make fleet-check    # verify: fleet reconciliation, donor isolation

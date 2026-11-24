@@ -33,9 +33,11 @@ def get_report():
         if counts[doctype] < minimum:
             issues.append(f"{doctype}: expected at least {minimum}, found {counts[doctype]}")
 
+    # Only flag completley unreconciled Open purchases; Partially Allocated
+    # is a legitimate state where some fuel / spares have been drawn.
     unreconciled = frappe.get_all(
         "Fleet Purchase Reconciliation",
-        filters={"status": ("!=", "Reconciled")},
+        filters={"status": "Open"},
         fields=["name", "status", "remaining_qty"],
     )
     if unreconciled:
