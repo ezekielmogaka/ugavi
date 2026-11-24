@@ -231,6 +231,11 @@ class TestUpgradeSafety(unittest.TestCase):
         self.assertNotIn("Purchase Requisition", hooks.doctype_js)
         self.assertIn("Submit for Approval", script)
         self.assertIn("submit_for_approval", script)
+        self.assertIn("frm.call('create_tender')", script)
+        self.assertNotIn(
+            "purchase_requisition.create_tender",
+            script,
+        )
 
 
 class TestTenderComplaintBoundary(unittest.TestCase):

@@ -250,12 +250,16 @@ Do not promise two approvals for a value/donor whose DoA chain requires only one
 ```
 Log out
 Log in as: procurement@lokado.org / Ugavi@2024
-Navigate: Ugavi Tendering -> Tender list
-Click on: Solar Water Pumps EU Resilience (Closed, KES 780,000)
+Open: http://localhost:8080/desk/ugavi-tendering
+Choose: Tender Pipeline -> Solar Water Pumps EU Resilience
+Direct list route: http://localhost:8080/app/tender
+Direct record route: http://localhost:8080/app/tender/TND-2026-0006
 ```
 
 1. Peter opens the solar-pump tender prepared for live opening.
-2. Show `Open Tender`, estimated value KES 780,000, and the elapsed deadline.
+2. Show `Open Tender`, estimated value KES 780,000, status **Bids Received**,
+   and the elapsed submission deadline. The deadline is closed; the tender's
+   workflow status is not `Closed` yet.
 3. Open the **Bid** list filtered to this tender: four submissions remain sealed.
 4. Use a different still-open tender for a new supplier submission. The solar-pump
    fixture is deliberately closed; late bids must be rejected.
@@ -270,11 +274,13 @@ Navigate to: Field Motorcycles Peace Building USAID
 Supplier submission uses a different, still-open opportunity. Publishing
 an opportunity does not itself send supplier invitation emails."
 
-**Validation checkpoint:** use `make demo-index`; solar is closed with four
-Submitted bids and no Bid Opening Record before the live ceremony.
-The current PR **Create Tender** shortcut calls an unavailable method: use
-the manual approved-PR link in
-[Scene 9](demo/LOKADO-DEMO-TOUR.md#scene-9-tender-publication-and-opportunities).
+**Validation checkpoint:** use `make demo-index`; solar has status Bids
+Received, an elapsed submission deadline, four Submitted bids and no Bid
+Opening Record before the live ceremony. To rehearse the PR handoff on a live
+approved requisition, Peter clicks **Create Tender** on that PR, then continues
+in the Tender form; this creates the linkage instead of requiring a manual
+record. Do not create a duplicate against an approved PR already converted to
+a tender.
 ---
 
 ### Scene 4: Sealed-Bid Opening Ceremony — 3 officers, 3 keys (8 min)

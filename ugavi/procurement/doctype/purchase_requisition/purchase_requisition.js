@@ -60,17 +60,12 @@ frappe.ui.form.on('Purchase Requisition', {
         }
 
         if (frm.doc.status === 'Approved' && !frm.doc.__unsaved) {
-            frm.add_custom_button('Create Tender', () => {
-                frappe.call({
-                    method: 'ugavi.procurement.doctype.purchase_requisition.purchase_requisition.create_tender',
-                    args: { docname: frm.doc.name },
-                    callback(r) {
-                        if (r.message) {
-                            frappe.msgprint(`Tender ${r.message} created`);
-                            frm.refresh();
-                        }
-                    },
-                });
+            frm.add_custom_button(__('Create Tender'), async () => {
+                const response = await frm.call('create_tender');
+                if (response.message) {
+                    frappe.msgprint(__('Tender {0} created', [response.message]));
+                    frappe.set_route('Form', 'Tender', response.message);
+                }
             });
         }
     },
