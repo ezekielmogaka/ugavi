@@ -10,7 +10,6 @@ before_migrate = "ugavi.scripts.setup_config.repair_portal_theme_before_migrate"
 
 # DocTypes registered in this app
 doctype_js = {
-    "Purchase Requisition": "js/purchase_requisition.js",
     "Supplier Prequalification": "js/supplier_prequalification.js",
     "Tender": "js/tender.js",
     "Bid": "js/bid.js",

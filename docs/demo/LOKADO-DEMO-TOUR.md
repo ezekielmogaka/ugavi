@@ -1,7 +1,7 @@
 # LOKADO Functional-Requirements Demo Tour
 
 > **Client:** Lotus Kenya Action for Development Organization (LOKADO)  
-> **Tour revised:** 2026-11-05 against the expanded [LOKADO seed](../../ugavi/scripts/seed_lokado.py).
+> **Tour revised:** 2026-11-24 against the expanded [LOKADO seed](../../ugavi/scripts/seed_lokado.py).
 > **Full workshop:** allow 120-150 minutes for the complete discussion and handoffs.
 > **Executive tour:** 30 minutes using prepared evidence.
 
@@ -12,11 +12,11 @@ Sections 1-4 are preparation, identities, handoffs and coverage; the business
 scenes retain their existing numbers **5-19**. The shorter guide has its own
 independent scene numbering.
 
-**Evidence boundary:** on 2026-11-05 the demo site `ugavi.localhost` was
+**Evidence boundary:** on 2026-11-24 the demo site `ugavi.localhost` was
 rebuilt from scratch with `make bootstrap`. The
 seed ended with the acceptance gate `"ready": true` and empty issues. A second
 `make seed-lokado` run (idempotent), `make demo-check`, `make fleet-check`,
-`make demo-index`, `make test` (17 integration + 67 unit tests) and `make e2e`
+`make demo-index`, `make test` (18 integration + 73 unit tests) and `make e2e`
 (19 browser tests, including the committee chair and evaluator) also passed.
 
 The seed drives two tenders through the **real** evaluation controllers. It
@@ -78,6 +78,10 @@ the output and investigate the image and data. A fresh seed may be appropriate
 on a disposable demo site, but `make bootstrap`
 destroys data **and backups**: copy anything needed elsewhere first and do not
 use a reset to hide a reproducible defect.
+
+After `make setup`, hard-refresh Desk (`Cmd+Shift+R`) or open a new private
+window. Desk JavaScript is an image asset; an already-open tab can retain an
+older version after a rebuild.
 
 **Development stack (mounted source, port 8000)**
 
@@ -144,9 +148,10 @@ See the [complete Make reference](../../README.md#makefile-reference) and
       show prepared evidence or arrange a fresh disposable site; never change
       dates or reset the current site without an appropriate backup.
 - [ ] Confirm the actual approval chain and each actor's required role.
-- [ ] Rehearse action availability. Some app controllers expose server
-      methods without a dedicated Desk button; use prepared evidence if the
-      installed UI does not expose the action. Do not improvise status edits.
+- [ ] On a saved Draft Purchase Requisition, verify the blue
+      **Submit for Approval** primary button appears in the upper-right form
+      toolbar. It is not in `Actions` or the sidebar. A never-saved New form
+      correctly has no approval button.
 - [ ] Run `make backup-demo` before live opening, receipt, stock issue, or
       disposal; `make restore-demo` resets the rehearsal afterwards.
 
@@ -467,9 +472,25 @@ the example does not prove that every possible exception is configured.
 4. Verify Draft, estimated total **KES 450,000**, Restricted Tender, and
    the displayed approval chain. Show any configured budget response honestly:
    no configured budget line is not proof of available funds.
-5. Click **Submit for Approval**. Verify `Pending Approval`.
+5. Click **Save** and wait for the form to reload. On the saved draft, click
+   the blue primary **Submit for Approval** button in the **upper-right form
+   toolbar** (beside the navigation controls) and verify `Pending Approval`.
+   It is not an `Actions` menu item or a sidebar button. The action saves
+   pending edits before submitting and is shown for every saved Draft.
 6. As Alice, attempt **Approve** once. Expect “The requester cannot approve
    their own requisition”; verify the status did not advance.
+
+**If the button is absent:** first confirm Name is populated, Status is Draft,
+and the record is not merely a New unsaved form. Hard-refresh the page after
+`make setup`. Do not edit status manually. If a saved Draft still lacks the
+button, use the browser console to report the loaded Frappe client handlers;
+the supported fix is a single canonical
+`purchase_requisition.js` handler, not a second `doctype_js` override.
+
+**Dimension permission boundary:** Programme Manager may select Cost Center
+and Account values but cannot create or edit those masters. `Insufficient
+Permission for Cost Center` on a saved/rebuilt demo indicates setup permissions
+were not applied; rerun `make setup` and hard-refresh.
 
 ### 7.2 Approve in the actual required order
 
@@ -795,8 +816,12 @@ dispatch after balance/date checks, 10 min.
    contains `Issue to Concern SERVE Loima distribution`.
 7. Confirm Submitted and source **LOKADO Field Store - Lokichoggio**;
    inspect HYGIENE-KIT 450 and FIRST-AID-KIT 60.
-8. Open native **Stock Ledger**, filter warehouse, one item and a period
-   covering the posting. Locate the voucher and its negative actual quantity.
+8. From **Ugavi Logistics -> Warehouse & Stock**, open native **Stock Ledger
+   Report** (direct route: `/app/query-report/Stock%20Ledger`), then filter
+   warehouse, one item and a period covering the posting. Locate the voucher
+   and its negative actual quantity. `/desk/stock-ledger` is not a valid route:
+   Stock Ledger is an ERPNext query report, while Ugavi's `Stock Ledger`
+   DocType is only the Monthly Stock Report's child table.
 9. An optional live dispatch can use **one HYGIENE-KIT** from that warehouse,
    only after confirming current available, unexpired batch stock. New Stock
    Entry -> Material Issue -> source warehouse -> item/qty 1 -> Save/Submit.

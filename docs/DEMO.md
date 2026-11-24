@@ -1,7 +1,7 @@
 # Ugavi Demo — Presenter Runbook
 
 > **Audience:** LOKADO (Lotus Kenya Action for Development Organization) leadership  
-> **Historical stack verified 2026-10-23:** Frappe 16.53.0 + ERPNext 16.52.1 + Ugavi 0.1.0
+> **Stack verified 2026-11-24:** Frappe 16.56.0 + ERPNext 16.55.0 + Ugavi 0.1.0
 > **Duration:** 55-75 minutes (full tour) or ~15 minutes per scene for standalone  
 > **Business persona passwords:** `Ugavi@2024` (development-only; seed-script enforced)
 
@@ -10,7 +10,7 @@ technical setup guide — for that see the inline commands and Make targets.
 For the expanded November seed, use the
 [step-by-step functional tour](demo/LOKADO-DEMO-TOUR.md) as the primary runbook:
 it includes exact record locators, inputs, role handoffs, expected outcomes,
-and intentional live-workflow boundaries. On 2026-11-05 `ugavi.localhost` was
+and intentional live-workflow boundaries. On 2026-11-24 `ugavi.localhost` was
 rebuilt from scratch with `make bootstrap`; the
 acceptance and fleet gates reported `"ready": true` with no issues, and the
 `make backup-demo` → `make restore-demo` round-trip passed. These are historical
@@ -52,6 +52,10 @@ with the acceptance gate. If a count, ledger reconciliation or lineage gate fail
 the output and investigate the image and data; do not reset a shared site
 without preserving the data and backups needed.
 
+After `make setup`, hard-refresh the Desk browser (`Cmd+Shift+R`) or open a
+new private window. Client JavaScript is baked into the image, so a normal
+page refresh can otherwise retain an older asset.
+
 For source-mounted development, run `make dev-up` in one terminal, then
 `make dev-config dev-seed dev-check dev-test` in another, and test it with
 `UGAVI_BASE_URL=http://ugavi.localhost:8000 make e2e`. `make dev-reset`
@@ -60,10 +64,11 @@ reinstalls and reseeds from local source. `make help` and the
 Do not run `seed-generic` alongside the canonical LOKADO seed.
 
 Expected output:
-- `{"compatible": true, "issues": [], "missing_controllers": []}`
+- `{"ready": true, "issues": [], "users": 21}` from `make demo-check`
+- `{"ready": true, "issues": [], "counts": {…}}` from `make fleet-check`
 - `{"message":"pong"}` from `curl http://localhost:8080/api/method/frappe.ping`
-- backend output: integration and unit runners both finish with `OK`
-- demo and fleet checks: `"ready": true` with an empty `issues` list
+- backend output: 18 integration and 73 unit tests finish with `OK`
+- upgrade rehearsal: `{"compatible": true, "issues": [], "missing_controllers": []}` from `make upgrade-check`
 
 Browser automation is a separate host-side gate. Prepare it once, then run it
 only after the seeded site is healthy:
@@ -186,8 +191,19 @@ Navigate: Purchase Requisition list -> + New
    to create Alice's IOM WASH request for 12 water tanks at KES 37,500 each.
 2. Select the IOM donor and `Emergency WASH - LOKADO` department.
 3. Save and show the **procurement method** is Restricted for KES 450,000.
-4. Save -> system identifier generates `PR-<DONOR>-<YEAR>-<SEQUENCE>`.
-5. Click **Submit for Approval** -> the displayed DoA chain determines the next role.
+4. Click **Save** and wait for the form to reload. The system generates
+   `PR-<DONOR>-<YEAR>-<SEQUENCE>`.
+5. On the saved draft, use the blue primary **Submit for Approval** button at
+   the **upper-right form toolbar** (beside the navigation controls). It is
+   not in the sidebar, an `Actions` menu, or a lower form section. The action
+   saves pending edits first. It is hidden only while the record has never
+   been saved; a saved Draft shows it regardless of current edit state.
+
+**Programme-user permissions:** Cost Center and Account are selectable on the
+PR, but remain read-only. The Programme Manager role cannot create or edit
+these master records. If the field reports `Insufficient Permission for Cost
+Center`, rerun `make setup` and hard-refresh; setup installs the least-privilege
+read/select permissions.
 
 **What to say:** "Every purchase starts with a requisition. The system
 automatically determines the procurement method based on your configured
@@ -235,7 +251,7 @@ Do not promise two approvals for a value/donor whose DoA chain requires only one
 Log out
 Log in as: procurement@lokado.org / Ugavi@2024
 Navigate: Ugavi Tendering -> Tender list
-Click on: Solar Water Pumps EU Resilience (Open, KES 780,000)
+Click on: Solar Water Pumps EU Resilience (Closed, KES 780,000)
 ```
 
 1. Peter opens the solar-pump tender prepared for live opening.
@@ -381,8 +397,12 @@ Navigate: Ugavi Logistics -> Donor Warehouse list
 2. Monthly Stock Report for IOM — opening/closing balance, consumption, value.
 3. Inter Donor Transfer — inspect the prepared IOM -> CONCERN completed
    transfer and its linked stock entry.
-4. Filter the native Stock Ledger by the mapped warehouse and item; compare
-   the prepared donor-book snapshot.
+4. Open the native **Stock Ledger report** from **Ugavi Logistics ->
+   Warehouse & Stock -> Stock Ledger** (direct route:
+   `/app/query-report/Stock%20Ledger`). Filter it by the mapped warehouse and
+   item, then compare the prepared donor-book snapshot. Do not use
+   `/desk/stock-ledger`: Frappe interprets that as a standalone Desk Page, and
+   ERPNext exposes Stock Ledger as a query report.
 5. Scheduled report email depends on recipients and workers. The current
    Monthly Stock Report Desk form has no supported Generate action.
 

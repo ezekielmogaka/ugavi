@@ -1,6 +1,7 @@
 """Upgrade-safety contract tests for ERPNext extension boundaries."""
 
 import inspect
+import json
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -88,6 +89,52 @@ class TestPortalThemeSetup(unittest.TestCase):
 
 
 class TestUpgradeSafety(unittest.TestCase):
+    def test_logistics_workspace_opens_stock_ledger_as_report(self):
+        workspace_path = (
+            Path(__file__).resolve().parents[2]
+            / "logistics"
+            / "workspace"
+            / "ugavi-logistics"
+            / "ugavi-logistics.json"
+        )
+        workspace = json.loads(workspace_path.read_text())
+        stock_ledger = next(
+            link
+            for link in workspace["links"]
+            if link.get("label") == "Stock Ledger"
+        )
+
+        self.assertEqual(stock_ledger["link_to"], "Stock Ledger")
+        self.assertEqual(stock_ledger["link_type"], "Report")
+        self.assertEqual(stock_ledger["is_query_report"], 1)
+
+    def test_existing_logistics_workspace_link_is_repaired(self):
+        from ugavi.scripts import setup_config
+
+        link = MagicMock(
+            label="Stock Ledger",
+            link_type="DocType",
+            link_to="Stock Ledger",
+            is_query_report=0,
+        )
+        link.name = "workspace-link-stock-ledger"
+        workspace = MagicMock(links=[link])
+        with patch.object(setup_config, "frappe") as framework:
+            framework.get_doc.return_value = workspace
+            setup_config.configure_workspace_links()
+
+        framework.db.set_value.assert_called_once_with(
+            "Workspace Link",
+            "workspace-link-stock-ledger",
+            {
+                "link_type": "Report",
+                "link_to": "Stock Ledger",
+                "is_query_report": 1,
+            },
+            update_modified=False,
+        )
+        framework.clear_cache.assert_called_once_with(doctype="Workspace")
+
     def test_no_core_override_hooks_or_doctype_collisions(self):
         from ugavi.scripts.check_upstream_compatibility import get_report
 
@@ -169,6 +216,21 @@ class TestUpgradeSafety(unittest.TestCase):
             hooks.get_website_user_home_page,
             "ugavi.procurement.portal.supplier_portal.get_home_page",
         )
+
+    def test_purchase_requisition_uses_single_canonical_client_script(self):
+        from ugavi import hooks
+
+        script = (
+            Path(__file__).resolve().parents[2]
+            / "procurement"
+            / "doctype"
+            / "purchase_requisition"
+            / "purchase_requisition.js"
+        ).read_text()
+
+        self.assertNotIn("Purchase Requisition", hooks.doctype_js)
+        self.assertIn("Submit for Approval", script)
+        self.assertIn("submit_for_approval", script)
 
 
 class TestTenderComplaintBoundary(unittest.TestCase):

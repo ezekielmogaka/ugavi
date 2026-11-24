@@ -13,6 +13,7 @@ def run():
     configure_custom_fields()
     configure_roles()
     configure_role_permissions()
+    configure_workspace_links()
     configure_fiscal_years()
     configure_procurement_settings()
     configure_taxes()
@@ -53,7 +54,16 @@ def configure_role_permissions():
         },
         "Programme Manager": {
             doctype: ("read", "select")
-            for doctype in ("Item", "Item Group", "Project", "Department", "Company", "UOM")
+            for doctype in (
+                "Item",
+                "Item Group",
+                "Project",
+                "Department",
+                "Cost Center",
+                "Account",
+                "Company",
+                "UOM",
+            )
         },
     }
     for role in (
@@ -75,6 +85,35 @@ def configure_role_permissions():
                 update_permission_property(doctype, role, 0, permission, 1)
     frappe.clear_cache()
     print("  Business-role permissions configured (upstream defaults retained)")
+
+
+def configure_workspace_links():
+    """Repair preserved site workspaces so extension links use their real routes."""
+    workspace = frappe.get_doc("Workspace", "Ugavi Logistics")
+    stock_ledger = next(
+        (link for link in workspace.links if link.label == "Stock Ledger"),
+        None,
+    )
+    if not stock_ledger:
+        frappe.throw("Ugavi Logistics workspace is missing the Stock Ledger link")
+    changed = (
+        stock_ledger.link_type != "Report"
+        or stock_ledger.link_to != "Stock Ledger"
+        or not stock_ledger.is_query_report
+    )
+    if changed:
+        frappe.db.set_value(
+            "Workspace Link",
+            stock_ledger.name,
+            {
+                "link_type": "Report",
+                "link_to": "Stock Ledger",
+                "is_query_report": 1,
+            },
+            update_modified=False,
+        )
+        frappe.clear_cache(doctype="Workspace")
+    print("  Workspace links configured")
 
 
 def configure_custom_fields():

@@ -38,6 +38,21 @@ class TestBusinessRolePermissions(IntegrationTestCase):
             for capability in ("write", "create", "delete", "submit", "cancel"):
                 self.assertFalse(permission.get(capability), (doctype, role, capability))
 
+    def test_programme_manager_can_select_requisition_dimensions(self):
+        for doctype in ("Department", "Project", "Cost Center", "Account"):
+            permission = next(
+                row
+                for row in frappe.get_meta(doctype).permissions
+                if row.role == "Programme Manager"
+            )
+            self.assertTrue(permission.read, (doctype, "read"))
+            self.assertTrue(permission.select, (doctype, "select"))
+            for capability in ("write", "create", "delete", "submit", "cancel"):
+                self.assertFalse(
+                    permission.get(capability),
+                    (doctype, "Programme Manager", capability),
+                )
+
 
 class TestOpeningCeremonyRuntime(IntegrationTestCase):
     def test_sealed_bid_requires_all_codes_and_creates_private_pdf(self):

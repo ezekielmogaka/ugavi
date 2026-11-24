@@ -25,9 +25,10 @@
     },
     {
       "hidden": 0,
+      "is_query_report": 1,
       "label": "Stock Ledger",
       "link_to": "Stock Ledger",
-      "link_type": "DocType",
+      "link_type": "Report",
       "type": "Link"
     },
     {
