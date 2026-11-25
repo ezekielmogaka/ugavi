@@ -108,6 +108,7 @@ web_include_css = [
     "/assets/ugavi/css/ugavi-tokens.css",
     "/assets/ugavi/css/ugavi-components.css",
     "/assets/ugavi/css/ugavi-portal.css",
+    "/assets/ugavi/css/lokado-website.css",
 ]
 
 # LOKADO brand assets

@@ -24,6 +24,38 @@ Open `http://localhost:8080/login` and sign in with:
 - **Password:** `Ugavi@2024`
 
 The supported Frappe website-home hook redirects this linked website user to `/supplier/dashboard`.
+The portal follows Frappe's documented app-owned Portal Page pattern:
+`www/supplier/dashboard.html` and `.py`, with colocated `.css`, Jinja server-side
+context, and the supported `get_website_user_home_page` hook. It extends the
+Ugavi LOKADO web base rather than replacing a Frappe core template:
+[Portal Pages](https://docs.frappe.io/framework/user/en/portal-pages).
+
+## Identity and data management
+
+- The signed-in email in `frappe.session.user` is the only identity source.
+  The controller resolves it to a Supplier through the standard `User
+  Permission` and linked `Contact` / `Dynamic Link` records.
+- The resolver fails closed when one user points to multiple Supplier records.
+  A logged-in but unlinked account sees an explicit recovery message instead of
+  data from another organization.
+- Every supplier-owned list is filtered server-side by the resolved Supplier:
+  bids, prequalifications, clarifications, awards, contracts, purchase orders,
+  receipts, invoices, evaluations and complaints. The browser never supplies a
+  Supplier name to select another organization's records.
+- Notification visibility is filtered by the authenticated `for_user`.
+- Profile writes accept only the supplier-owned editable fields (`email_id`,
+  `mobile_no`, `website`, `tax_id`). Commercial and administrative fields
+  remain controlled in Desk.
+- Private portal files are checked for current-user ownership and privacy
+  before being attached. Commands are fixed-signature Frappe whitelist methods,
+  not arbitrary document saves.
+- Session management uses Frappe's native `logout` method. The UI shows the
+  signed-in email, distinguishes Guest, linked-supplier and unlinked-account
+  states, and redirects to login after sign-out.
+
+This approach follows Frappe's recommended Portal Page controller/context
+model and server-side permission boundary. It does not use client-side supplier
+selection, broad role grants or direct template access to unrestricted records.
 
 ## Journey map
 
@@ -45,6 +77,20 @@ The supported Frappe website-home hook redirects this linked website user to `/s
 The portal also shows a journey-completion indicator and one next-best action.
 These values are calculated server-side from the supplier's own records and
 rendered by the app-owned Frappe website template.
+
+## UI/UX orientation
+
+- The blue header confirms the signed-in supplier workspace and platform
+  assurances.
+- The white identity panel shows the linked ERPNext Supplier and account action.
+- The progress card exposes one recommended next step; four metric cards show
+  open opportunities, active submissions, prequalifications and unread updates.
+- The sticky journey navigation scrolls horizontally on small screens and
+  identifies the current section without hiding any workflow.
+- Forms use clear labels, native controls, keyboard focus states and explicit
+  submission buttons. Private-file fields are marked by their upload purpose.
+- Wide operational tables become stacked records on mobile; statuses remain
+  visible and supplier actions remain available.
 
 ## Presenter walkthrough
 

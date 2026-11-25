@@ -86,6 +86,41 @@ make e2e
 missing, report the browser gate as **not executed** rather than treating it as
 a product failure or claiming that it passed.
 
+### Public website preflight
+
+`make setup` now installs the LOKADO public website as the guest home page and
+configures native Website Settings navigation without replacing Frappe core
+templates.
+
+- Home (Guest): `http://localhost:8080/`
+- Home (also available to signed-in users): `http://localhost:8080/website`
+- About: `http://localhost:8080/about`
+- Leadership: `http://localhost:8080/leadership`
+- Programmes: `http://localhost:8080/programmes`
+- Field updates: `http://localhost:8080/updates`
+- Impact & accountability: `http://localhost:8080/impact`
+- Contact: `http://localhost:8080/contact`
+- Privacy & data use: `http://localhost:8080/privacy`
+- Supplier portal: `http://localhost:8080/supplier/dashboard`
+- Staff sign-in: `http://localhost:8080/login`
+
+Confirm the desktop header, mobile menu, supplier/staff calls to action,
+partner logo strip and footer links. Partner logos are local copies of the
+official marks shown on LOKADO's existing public website; reconfirm current
+partnership status before production publication. The public site deliberately
+avoids unsourced beneficiary
+counters and live operational figures. Photography is reused from LOKADO's
+approved public website, while the layout and SVG artwork are app-owned. Programme
+and impact copy must be approved before production use; seeded ERPNext records
+are not public website evidence.
+
+The Contact page uses Frappe's native `Contact Us Settings` workflow. Submit a
+marked demo enquiry, confirm the acknowledgement, and inspect the resulting
+Communication in Desk. Enquiries are rate-limited by Frappe, stored as
+Communications, and forwarded to `info@lokado.org` when outgoing email is
+configured. A confirmation is sent to the visitor when acknowledgement email
+is enabled.
+
 Open separate browser profiles/private sessions before the demo, not just tabs
 (tabs in one profile share the login cookie):
 1. **Desk** at `http://localhost:8080` (log in with the persona for the first scene)

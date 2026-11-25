@@ -1,0 +1,15 @@
+{% extends "templates/lokado_web_base.html" %}
+{% block title %}Impact & accountability — LOKADO{% endblock %}
+{% block page_content %}
+<section class="lokado-page-hero"><div class="lokado-shell"><span class="lokado-kicker">{{ _("Impact & accountability") }}</span><h1>{{ _("Evidence should be useful, honest and traceable") }}</h1><p>{{ _("We connect community feedback, programme monitoring and operational records so that partners and teams can understand what changed—and what still needs attention.") }}</p></div></section>
+<section class="lokado-section"><div class="lokado-shell lokado-accountability-grid">
+    <article><span>{{ _("01") }}</span><h2>{{ _("Community feedback") }}</h2><p>{{ _("Programme decisions are informed by field teams, affected people and legitimate local structures, with complaints and safeguarding treated as learning and protection channels.") }}</p></article>
+    <article><span>{{ _("02") }}</span><h2>{{ _("Operational traceability") }}</h2><p>{{ _("Purchase, receipt, donor stock, fleet, asset and payment records are connected through governed workflows and named approval responsibilities.") }}</p></article>
+    <article><span>{{ _("03") }}</span><h2>{{ _("Independent review") }}</h2><p>{{ _("Reports distinguish prepared evidence, live transactions and external assurance. Unverified reach or impact is never presented as fact.") }}</p></article>
+    <article><span>{{ _("04") }}</span><h2>{{ _("Adaptive programmes") }}</h2><p>{{ _("Monitoring and feedback are used to refine delivery, strengthen inclusion and reduce preventable risks across programme cycles.") }}</p></article>
+</div></section>
+<section class="lokado-section lokado-section--soft"><div class="lokado-shell lokado-two-column lokado-two-column--copy">
+    <div><span class="lokado-kicker">{{ _("A responsible promise") }}</span><h2>{{ _("The right number, with the right context") }}</h2></div>
+    <div class="lokado-prose"><p>{{ _("LOKADO avoids presenting outdated counters, illustrative demo figures or stock movements as independently verified impact.") }}</p><p>{{ _("Public programme reporting should state the period, geography, evidence source and limitations. Formal impact reports are shared through approved partner and organizational channels.") }}</p></div>
+</div></section>
+{% endblock %}

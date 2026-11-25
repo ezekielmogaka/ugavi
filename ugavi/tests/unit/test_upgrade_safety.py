@@ -11,6 +11,95 @@ from frappe.utils import add_days, today
 
 
 class TestPortalThemeSetup(unittest.TestCase):
+    def test_website_home_and_navigation_are_configured_natively(self):
+        from ugavi.scripts import setup_config
+
+        website = MagicMock(app_name="Frappe", home_page=None, top_bar_items=[])
+        navbar = MagicMock(app_logo=None)
+        contact = MagicMock(
+            is_disabled=1,
+            forward_to_email=None,
+            send_acknowledgement_email=None,
+            query_options=None,
+        )
+        with patch.object(setup_config, "frappe") as framework:
+            framework.db.exists.return_value = True
+            framework.get_single.side_effect = {
+                "Navbar Settings": navbar,
+                "Website Settings": website,
+                "Contact Us Settings": contact,
+            }.__getitem__
+            setup_config._configure_navbar_branding()
+
+        self.assertEqual(website.app_name, "LOKADO")
+        self.assertEqual(website.home_page, "index")
+        self.assertEqual(website.append.call_count, 8)
+        website.save.assert_called_once_with(ignore_permissions=True)
+        self.assertEqual(contact.is_disabled, 0)
+        self.assertEqual(contact.forward_to_email, "info@lokado.org")
+        contact.save.assert_called_once_with(ignore_permissions=True)
+
+    def test_public_site_pages_use_app_owned_frappe_templates(self):
+        app_root = Path(__file__).resolve().parents[2]
+        for route in (
+            "index",
+            "about",
+            "leadership",
+            "programmes",
+            "updates",
+            "impact",
+            "contact",
+            "privacy",
+        ):
+            template = (app_root / "www" / f"{route}.html").read_text()
+            controller = app_root / "www" / f"{route}.py"
+            self.assertIn('extends "templates/lokado_web_base.html"', template)
+            self.assertTrue(controller.exists(), route)
+        self.assertIn(
+            'extends "www/index.html"',
+            (app_root / "www" / "website.html").read_text(),
+        )
+        home = (app_root / "www" / "index.html").read_text()
+        self.assertIn('class="lokado-partner-list"', home)
+        self.assertEqual(home.count("/assets/ugavi/images/partners/"), 9)
+
+    def test_supplier_portal_uses_colocated_frappe_page_assets(self):
+        portal_root = (
+            Path(__file__).resolve().parents[2]
+            / "www"
+            / "supplier"
+        )
+        template = (portal_root / "dashboard.html").read_text()
+
+        self.assertIn('extends "templates/lokado_web_base.html"', template)
+        self.assertIn("ugavi-portal--v2", template)
+        self.assertTrue((portal_root / "dashboard.css").exists())
+
+    def test_supplier_identity_conflict_fails_closed(self):
+        from ugavi.procurement.portal import supplier_portal
+
+        with patch.object(supplier_portal, "frappe") as framework:
+            framework.db.get_value.return_value = "CONTACT-1"
+            framework.get_all.side_effect = [
+                ["Supplier A"],
+                ["Supplier B"],
+            ]
+            framework.throw.side_effect = frappe.ValidationError("ambiguous identity")
+            with self.assertRaisesRegex(frappe.ValidationError, "ambiguous identity"):
+                supplier_portal._get_supplier_for_user("supplier@example.com")
+
+    def test_supplier_workspace_exposes_session_controls(self):
+        portal = (
+            Path(__file__).resolve().parents[2]
+            / "www"
+            / "supplier"
+            / "dashboard.html"
+        ).read_text()
+
+        self.assertIn("data-supplier-logout", portal)
+        self.assertIn('role="tablist"', portal)
+        self.assertIn('data-portal-view="overview"', portal)
+
     def test_colors_exist_before_theme_save_and_activation(self):
         from ugavi.scripts import setup_config
 

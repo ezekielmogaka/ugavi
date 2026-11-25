@@ -1,0 +1,564 @@
+.ugavi-portal--v2 {
+  --portal-ink: #122d55;
+  --portal-blue: #18388f;
+  --portal-green: #2d7d3a;
+  --portal-surface: #fff;
+  --portal-bg: #f4f7f8;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  min-height: 70vh;
+  margin: 0;
+  padding: 44px max(20px, calc((100vw - 1180px) / 2)) 96px;
+  background:
+    radial-gradient(circle at 92% 5%, rgba(45, 125, 58, .11), transparent 24rem),
+    var(--portal-bg);
+}
+
+.ugavi-portal--v2 [hidden] {
+  display: none !important;
+}
+
+.ugavi-portal--v2 .ugavi-portal__skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 12px;
+  left: 12px;
+  transform: translateY(-150%);
+}
+
+.ugavi-portal--v2 .ugavi-portal__skip-link:focus {
+  transform: translateY(0);
+}
+
+.ugavi-portal--v2 .ugavi-portal__hero {
+  position: relative;
+  min-height: 250px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 50px;
+  align-items: end;
+  overflow: hidden;
+  margin: 0;
+  padding: clamp(34px, 5vw, 58px);
+  border-radius: 26px;
+  background:
+    linear-gradient(115deg, rgba(16, 36, 88, .98), rgba(24, 56, 143, .9)),
+    url("/assets/ugavi/images/lokado-energy.jpg") center 45% / cover;
+  color: #fff;
+  box-shadow: 0 22px 55px rgba(18, 45, 85, .16);
+}
+
+.ugavi-portal--v2 .ugavi-portal__hero::before,
+.ugavi-portal--v2 .ugavi-portal__hero::after {
+  display: none;
+}
+
+.ugavi-portal--v2 .ugavi-portal__eyebrow {
+  margin-bottom: 12px;
+  color: var(--portal-green);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.ugavi-portal--v2 .ugavi-portal__hero .ugavi-portal__eyebrow {
+  color: #aee0b4;
+}
+
+.ugavi-portal--v2 .ugavi-portal__identity h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2.3rem, 5vw, 4.6rem);
+  line-height: 1;
+  letter-spacing: -.05em;
+}
+
+.ugavi-portal--v2 .ugavi-portal__identity > p {
+  max-width: 680px;
+  margin: 18px 0 0;
+  color: rgba(255, 255, 255, .78);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.ugavi-portal--v2 .ugavi-portal__assurance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 24px;
+}
+
+.ugavi-portal--v2 .ugavi-portal__assurance span {
+  padding: 7px 11px;
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .08);
+  color: #eaf1fa;
+  font-size: .78rem;
+}
+
+.ugavi-portal--v2 .ugavi-portal__mark {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, .17);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .1);
+  backdrop-filter: blur(12px);
+}
+
+.ugavi-portal--v2 .ugavi-portal__mark img {
+  width: 58px;
+  height: 55px;
+  padding: 6px;
+  border-radius: 12px;
+  background: #fff;
+  object-fit: contain;
+}
+
+.ugavi-portal--v2 .ugavi-portal__mark div {
+  display: grid;
+}
+
+.ugavi-portal--v2 .ugavi-portal__mark span {
+  color: #fff;
+  font-size: .95rem;
+  font-weight: 750;
+}
+
+.ugavi-portal--v2 .ugavi-portal__mark small {
+  margin-top: 5px;
+  color: rgba(255, 255, 255, .65);
+}
+
+.ugavi-portal--v2 .ugavi-portal__welcome,
+.ugavi-portal--v2 .ugavi-portal__readiness,
+.ugavi-portal--v2 .ugavi-portal__metric,
+.ugavi-portal--v2 .ugavi-portal__card,
+.ugavi-portal--v2 .ugavi-portal__sign-in {
+  border: 1px solid #dfe6eb;
+  background: var(--portal-surface);
+  box-shadow: 0 8px 28px rgba(18, 45, 85, .06);
+}
+
+.ugavi-portal--v2 .ugavi-portal__welcome {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin: -28px 26px 0;
+  padding: 26px 30px;
+  border-radius: 18px;
+}
+
+.ugavi-portal--v2 .ugavi-portal__welcome h2 {
+  margin: 0;
+  color: var(--portal-ink);
+  font-size: 1.55rem;
+  letter-spacing: -.025em;
+}
+
+.ugavi-portal--v2 .ugavi-portal__welcome small {
+  display: block;
+  margin-top: 6px;
+  color: var(--ugavi-text-secondary);
+}
+
+.ugavi-portal--v2 .ugavi-portal__account-actions {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.ugavi-portal--v2 .ugavi-portal__session-label {
+  grid-column: 1 / -1;
+  color: var(--ugavi-text-secondary);
+  font-size: .78rem;
+  text-align: right;
+}
+
+.ugavi-portal--v2 .ugavi-portal__sign-out {
+  min-height: 43px;
+  padding: 10px 14px;
+  border: 1px solid #e5c2c4;
+  border-radius: 11px;
+  background: #fff;
+  color: #a32b2f;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.ugavi-portal--v2 .ugavi-portal__journey {
+  position: sticky;
+  z-index: 10;
+  top: 8px;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin: 24px 0 18px;
+  padding: 8px;
+  border: 1px solid #dfe6eb;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 8px 28px rgba(18, 45, 85, .06);
+  scrollbar-width: thin;
+  backdrop-filter: blur(14px);
+}
+
+.ugavi-portal--v2 .ugavi-portal__journey button {
+  flex: 0 0 auto;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #526278;
+  font-size: .84rem;
+  font-weight: 650;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ugavi-portal--v2 .ugavi-portal__journey button:hover,
+.ugavi-portal--v2 .ugavi-portal__journey button:focus-visible,
+.ugavi-portal--v2 .ugavi-portal__journey-link--active {
+  background: #eaf0f9;
+  color: var(--portal-blue);
+  text-decoration: none;
+}
+
+.ugavi-portal--v2 .ugavi-portal__readiness {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+  gap: 40px;
+  align-items: center;
+  margin: 0;
+  padding: 28px 30px;
+  border-radius: 18px;
+}
+
+.ugavi-portal--v2 .ugavi-portal__readiness h2 {
+  margin: 0 0 8px;
+  color: var(--portal-ink);
+  font-size: 1.55rem;
+}
+
+.ugavi-portal--v2 .ugavi-portal__readiness p {
+  margin: 0;
+  color: var(--ugavi-text-secondary);
+  line-height: 1.55;
+}
+
+.ugavi-portal--v2 .ugavi-portal__readiness-action {
+  display: grid;
+  gap: 14px;
+  justify-items: stretch;
+}
+
+.ugavi-portal--v2 .ugavi-portal__progress {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8edf2;
+}
+
+.ugavi-portal--v2 .ugavi-portal__progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--portal-blue), var(--portal-green));
+}
+
+.ugavi-portal--v2 .ugavi-portal__metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.ugavi-portal--v2 .ugavi-portal__metric {
+  display: grid;
+  margin: 0;
+  padding: 22px;
+  border-radius: 17px;
+}
+
+.ugavi-portal--v2 .ugavi-portal__metric > span {
+  color: var(--ugavi-text-secondary);
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.ugavi-portal--v2 .ugavi-portal__metric strong {
+  margin: 13px 0 8px;
+  color: var(--portal-ink);
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.ugavi-portal--v2 .ugavi-portal__metric small {
+  color: #718096;
+}
+
+.ugavi-portal--v2 .ugavi-portal__layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0;
+}
+
+.ugavi-portal--v2 .ugavi-portal__card {
+  min-width: 0;
+  margin: 0;
+  padding: 30px;
+  border-radius: 20px;
+}
+
+.ugavi-portal--v2 .ugavi-portal__card--full {
+  grid-column: 1 / -1;
+}
+
+.ugavi-portal--v2 .ugavi-portal__section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.ugavi-portal--v2 .ugavi-portal__section-heading h2 {
+  margin: 0;
+  color: var(--portal-ink);
+  font-size: 1.45rem;
+  letter-spacing: -.02em;
+}
+
+.ugavi-portal--v2 .ugavi-portal__form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.ugavi-portal--v2 .ugavi-portal__form > label,
+.ugavi-portal--v2 .ugavi-portal__form > .ugavi-portal__form-row {
+  min-width: 0;
+}
+
+.ugavi-portal--v2 .ugavi-portal__form > label:has(textarea),
+.ugavi-portal--v2 .ugavi-portal__form > button,
+.ugavi-portal--v2 .ugavi-portal__form > small {
+  grid-column: 1 / -1;
+}
+
+.ugavi-portal--v2 .ugavi-portal__form label {
+  display: grid;
+  gap: 7px;
+  color: #364b64;
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.ugavi-portal--v2 .ugavi-portal__form input,
+.ugavi-portal--v2 .ugavi-portal__form select,
+.ugavi-portal--v2 .ugavi-portal__form textarea {
+  width: 100%;
+  min-height: 45px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5df;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--portal-ink);
+  font: inherit;
+}
+
+.ugavi-portal--v2 .ugavi-portal__form textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.ugavi-portal--v2 .ugavi-portal__form input:focus,
+.ugavi-portal--v2 .ugavi-portal__form select:focus,
+.ugavi-portal--v2 .ugavi-portal__form textarea:focus,
+.ugavi-portal--v2 button:focus-visible,
+.ugavi-portal--v2 a:focus-visible {
+  outline: 3px solid rgba(36, 77, 178, .22);
+  outline-offset: 2px;
+  border-color: var(--portal-blue);
+}
+
+.ugavi-portal--v2 .ugavi-portal__form-row {
+  display: grid;
+  grid-template-columns: 1fr 110px;
+  gap: 14px;
+}
+
+.ugavi-portal--v2 .ugavi-portal__primary-action,
+.ugavi-portal--v2 .ugavi-portal__secondary-action {
+  min-height: 43px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 11px;
+  font-weight: 750;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ugavi-portal--v2 .ugavi-portal__primary-action {
+  border: 1px solid var(--portal-blue);
+  background: var(--portal-blue);
+  color: #fff;
+}
+
+.ugavi-portal--v2 .ugavi-portal__secondary-action {
+  border: 1px solid #cad5e0;
+  background: #fff;
+  color: var(--portal-blue);
+}
+
+.ugavi-portal--v2 .ugavi-portal__text-action {
+  padding: 5px 0;
+  border: 0;
+  background: transparent;
+  color: var(--portal-blue);
+  font-weight: 750;
+}
+
+.ugavi-portal--v2 .ugavi-portal__status-list {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ugavi-portal--v2 .ugavi-portal__status-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 0;
+  border-bottom: 1px solid #e8edf2;
+}
+
+.ugavi-portal--v2 .ugavi-portal__status-list li:last-child {
+  border-bottom: 0;
+}
+
+.ugavi-portal--v2 .ugavi-portal__status-list strong,
+.ugavi-portal--v2 .ugavi-portal__status-list small {
+  display: block;
+}
+
+.ugavi-portal--v2 .ugavi-portal__status-list small {
+  margin-top: 5px;
+  color: var(--ugavi-text-secondary);
+  line-height: 1.5;
+}
+
+.ugavi-portal--v2 .ugavi-portal__table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e1e7ed;
+  border-radius: 14px;
+}
+
+.ugavi-portal--v2 .ugavi-portal__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ugavi-portal--v2 .ugavi-portal__table th {
+  padding: 13px 14px;
+  background: #f2f5f8;
+  color: #526278;
+  font-size: .72rem;
+  letter-spacing: .06em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.ugavi-portal--v2 .ugavi-portal__table td {
+  padding: 16px 14px;
+  border-top: 1px solid #e8edf2;
+  vertical-align: top;
+}
+
+.ugavi-portal--v2 .ugavi-portal__table strong,
+.ugavi-portal--v2 .ugavi-portal__table small {
+  display: block;
+}
+
+.ugavi-portal--v2 .ugavi-portal__table small {
+  margin-top: 5px;
+  color: var(--ugavi-text-secondary);
+}
+
+.ugavi-portal--v2 .ugavi-chip {
+  display: inline-flex;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.ugavi-portal--v2 .ugavi-empty-state {
+  padding: 26px;
+  border: 1px dashed #cbd5df;
+  border-radius: 14px;
+  background: #fafcfd;
+  color: var(--ugavi-text-secondary);
+  text-align: center;
+}
+
+.ugavi-portal--v2 .ugavi-portal__notification--unread {
+  margin-inline: -12px;
+  padding-inline: 12px !important;
+  border-radius: 10px;
+  background: #f0f6ff;
+}
+
+.ugavi-portal--v2 .ugavi-portal__sign-in {
+  max-width: 680px;
+  margin: 24px auto 0;
+  padding: 50px;
+  border-radius: 22px;
+  text-align: center;
+}
+
+@media (max-width: 920px) {
+  .ugavi-portal--v2 .ugavi-portal__hero { grid-template-columns: 1fr; }
+  .ugavi-portal--v2 .ugavi-portal__mark { max-width: 320px; }
+  .ugavi-portal--v2 .ugavi-portal__metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ugavi-portal--v2 .ugavi-portal__layout { grid-template-columns: 1fr; }
+  .ugavi-portal--v2 .ugavi-portal__card--full { grid-column: auto; }
+}
+
+@media (max-width: 640px) {
+  .ugavi-portal--v2 { padding: 24px 14px 64px; }
+  .ugavi-portal--v2 .ugavi-portal__hero { min-height: auto; padding: 30px 24px; border-radius: 20px; }
+  .ugavi-portal--v2 .ugavi-portal__welcome { align-items: flex-start; flex-direction: column; margin-inline: 12px; padding: 22px; }
+  .ugavi-portal--v2 .ugavi-portal__account-actions { width: 100%; grid-template-columns: 1fr 1fr; }
+  .ugavi-portal--v2 .ugavi-portal__session-label { text-align: left; }
+  .ugavi-portal--v2 .ugavi-portal__readiness { grid-template-columns: 1fr; gap: 24px; padding: 24px; }
+  .ugavi-portal--v2 .ugavi-portal__metrics { grid-template-columns: 1fr 1fr; }
+  .ugavi-portal--v2 .ugavi-portal__metric { padding: 17px; }
+  .ugavi-portal--v2 .ugavi-portal__card { padding: 22px; }
+  .ugavi-portal--v2 .ugavi-portal__form,
+  .ugavi-portal--v2 .ugavi-portal__form-row { grid-template-columns: 1fr; }
+  .ugavi-portal--v2 .ugavi-portal__table-wrap { border: 0; overflow: visible; }
+  .ugavi-portal--v2 .ugavi-portal__table,
+  .ugavi-portal--v2 .ugavi-portal__table tbody,
+  .ugavi-portal--v2 .ugavi-portal__table tr,
+  .ugavi-portal--v2 .ugavi-portal__table td { display: block; width: 100%; }
+  .ugavi-portal--v2 .ugavi-portal__table thead { display: none; }
+  .ugavi-portal--v2 .ugavi-portal__table tr { margin-bottom: 12px; padding: 14px; border: 1px solid #e1e7ed; border-radius: 14px; background: #fff; }
+  .ugavi-portal--v2 .ugavi-portal__table td { padding: 8px 0; border: 0; }
+}

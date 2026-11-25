@@ -1,0 +1,41 @@
+{% extends "templates/lokado_web_base.html" %}
+{% block title %}Leadership — LOKADO{% endblock %}
+{% block page_content %}
+<section class="lokado-page-hero">
+    <div class="lokado-shell">
+        <nav class="lokado-breadcrumb" aria-label="{{ _('Breadcrumb') }}"><a href="/website">{{ _("Home") }}</a><span>/</span><a href="/about">{{ _("Who we are") }}</a><span>/</span><span aria-current="page">{{ _("Leadership") }}</span></nav>
+        <span class="lokado-kicker">{{ _("Leadership") }}</span>
+        <h1>{{ _("Accountable leadership, close to the communities we serve") }}</h1>
+        <p>{{ _("LOKADO's management brings programme, finance, people, humanitarian and monitoring responsibilities together under one organizational mandate.") }}</p>
+    </div>
+</section>
+<section class="lokado-section"><div class="lokado-shell">
+    <div class="lokado-leadership-grid">
+        <article class="lokado-person-card">
+            <img src="/assets/ugavi/images/leadership/augustine-kai-lopie.jpg" alt="Augustine Kai Lopie" width="602" height="601" loading="lazy">
+            <div><span>{{ _("Executive leadership") }}</span><h2>Augustine Kai Lopie</h2><p>{{ _("Executive Director") }}</p></div>
+        </article>
+        <article class="lokado-person-card">
+            <img src="/assets/ugavi/images/leadership/janet-atenge.jpg" alt="Janet Atenge" width="602" height="596" loading="lazy">
+            <div><span>{{ _("Finance") }}</span><h2>Janet Atenge</h2><p>{{ _("Finance Manager") }}</p></div>
+        </article>
+        <article class="lokado-person-card">
+            <img src="/assets/ugavi/images/leadership/truphena-ekasiron.jpg" alt="Truphena Ekasiron" width="482" height="469" loading="lazy">
+            <div><span>{{ _("People & operations") }}</span><h2>Truphena Ekasiron</h2><p>{{ _("Human Resources Manager") }}</p></div>
+        </article>
+        <article class="lokado-person-card">
+            <img src="/assets/ugavi/images/leadership/vernon-yeye.jpg" alt="Vernon Yeye" width="768" height="768" loading="lazy">
+            <div><span>{{ _("Evidence & learning") }}</span><h2>Vernon Yeye</h2><p>{{ _("MEAL Coordinator") }}</p></div>
+        </article>
+        <article class="lokado-person-card">
+            <img src="/assets/ugavi/images/leadership/gerald-ndungu.png" alt="Gerald Ndungu" width="768" height="799" loading="lazy">
+            <div><span>{{ _("Humanitarian delivery") }}</span><h2>Gerald Ndungu</h2><p>{{ _("Humanitarian Manager") }}</p></div>
+        </article>
+    </div>
+    <p class="lokado-content-note">{{ _("Leadership names, roles and photographs are drawn from LOKADO's current public website. Confirm changes before production publication.") }}</p>
+</div></section>
+<section class="lokado-section lokado-section--soft"><div class="lokado-shell lokado-two-column lokado-two-column--copy">
+    <div><span class="lokado-kicker">{{ _("How we lead") }}</span><h2>{{ _("Decisions connected to delivery, evidence and responsibility") }}</h2></div>
+    <div class="lokado-prose"><p>{{ _("LOKADO's public commitment is to community-led decision-making, transparent use of resources and responsible programme management.") }}</p><p>{{ _("Operational details, financial records and confidential beneficiary information remain within authorized Ugavi workspaces and approved reporting channels—not on the public website.") }}</p></div>
+</div></section>
+{% endblock %}

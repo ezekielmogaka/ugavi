@@ -1,0 +1,138 @@
+{% extends "templates/web.html" %}
+
+{% block head_include %}
+{{ super() }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "NGO",
+  "name": "Lotus Kenya Action for Development Organization",
+  "alternateName": "LOKADO",
+  "telephone": ["+254722652268", "+254735637508"],
+  "areaServed": "Turkana County, Kenya",
+  "email": "info@lokado.org"
+}
+</script>
+{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block page_container %}
+<a class="lokado-skip-link" href="#main-content">{{ _("Skip to main content") }}</a>
+<main class="lokado-site" id="main-content">
+    {% block page_content %}{% endblock %}
+</main>
+{% endblock %}
+
+{% block navbar %}
+<header class="lokado-nav">
+    <div class="lokado-shell lokado-nav__inner">
+        <a class="lokado-nav__brand" href="/website" aria-label="{{ _('LOKADO home') }}">
+            <img src="/assets/ugavi/images/lokado-logo.png" alt="" width="85" height="80">
+            <span><strong>LOKADO</strong><small>{{ _("Action for development") }}</small></span>
+        </a>
+        <nav class="lokado-nav__links" aria-label="{{ _('Primary navigation') }}">
+            {% if supplier %}
+            <a href="/supplier/dashboard">{{ _("Dashboard") }}</a>
+            <a href="/supplier/dashboard#opportunities">{{ _("Opportunities") }}</a>
+            <a href="/supplier/dashboard#deliveries">{{ _("Orders & deliveries") }}</a>
+            <a href="/supplier/dashboard#notifications">{{ _("Updates") }}</a>
+            {% else %}
+            <a href="/website">{{ _("Home") }}</a>
+            <a href="/about">{{ _("Who we are") }}</a>
+            <a href="/programmes">{{ _("Our work") }}</a>
+            <a href="/updates">{{ _("Updates") }}</a>
+            <a href="/impact">{{ _("Impact") }}</a>
+            <a href="/contact">{{ _("Contact") }}</a>
+            {% endif %}
+        </nav>
+        <div class="lokado-nav__actions">
+            {% if supplier %}
+            <span class="lokado-nav__session">{{ supplier }}</span>
+            <button class="lokado-button lokado-button--ghost lokado-nav__logout" type="button" data-supplier-logout>{{ _("Sign out") }}</button>
+            {% else %}
+            <a class="lokado-button lokado-button--ghost" href="/supplier/dashboard">{{ _("Supplier portal") }}</a>
+            <a class="lokado-button lokado-button--small" href="/login">{{ _("Staff sign in") }}</a>
+            {% endif %}
+        </div>
+        <details class="lokado-nav__menu">
+            <summary aria-label="{{ _('Open navigation menu') }}"><span></span><span></span><span></span></summary>
+            <nav aria-label="{{ _('Mobile navigation') }}">
+                {% if supplier %}
+                <span>{{ supplier }}</span>
+                <a href="/supplier/dashboard">{{ _("Dashboard") }}</a>
+                <a href="/supplier/dashboard#opportunities">{{ _("Opportunities") }}</a>
+                <a href="/supplier/dashboard#deliveries">{{ _("Orders & deliveries") }}</a>
+                <a href="/supplier/dashboard#notifications">{{ _("Updates") }}</a>
+                <button type="button" data-supplier-logout>{{ _("Sign out") }}</button>
+                {% else %}
+                <a href="/website">{{ _("Home") }}</a>
+                <a href="/about">{{ _("Who we are") }}</a>
+                <a href="/programmes">{{ _("Our work") }}</a>
+                <a href="/updates">{{ _("Updates") }}</a>
+                <a href="/impact">{{ _("Impact") }}</a>
+                <a href="/contact">{{ _("Contact") }}</a>
+                <a href="/supplier/dashboard">{{ _("Supplier portal") }}</a>
+                <a href="/login">{{ _("Staff sign in") }}</a>
+                {% endif %}
+            </nav>
+        </details>
+    </div>
+</header>
+{% endblock %}
+
+{% block footer %}
+<footer class="lokado-footer">
+    <div class="lokado-shell lokado-footer__grid">
+        <div>
+            <div class="lokado-footer__brand">
+                <img src="/assets/ugavi/images/lokado-logo.png" alt="" width="85" height="80">
+                <strong>LOKADO</strong>
+            </div>
+            <p>{{ _("Community-led peace, resilience and sustainable development across Turkana County.") }}</p>
+        </div>
+        <div>
+            <h2>{{ _("Explore") }}</h2>
+            <a href="/website">{{ _("Home") }}</a>
+            <a href="/about">{{ _("Who we are") }}</a>
+            <a href="/leadership">{{ _("Leadership") }}</a>
+            <a href="/programmes">{{ _("Programmes") }}</a>
+            <a href="/updates">{{ _("Field updates") }}</a>
+            <a href="/impact">{{ _("Impact & accountability") }}</a>
+        </div>
+        <div>
+            <h2>{{ _("Connect") }}</h2>
+            <a href="tel:+254722652268">+254 722 652 268</a>
+            <a href="tel:+254735637508">+254 735 637 508</a>
+            <a href="/contact">{{ _("Field offices & enquiries") }}</a>
+            <a href="/privacy">{{ _("Privacy & data use") }}</a>
+        </div>
+        <div>
+            <h2>{{ _("Secure systems") }}</h2>
+            <a href="/supplier/dashboard">{{ _("Supplier portal") }}</a>
+            <a href="/login">{{ _("Staff sign in") }}</a>
+            <span>{{ _("Powered by Frappe and ERPNext") }}</span>
+        </div>
+    </div>
+    <div class="lokado-shell lokado-footer__bottom">
+        <span>© {{ now_year or "2026" }} LOKADO</span>
+        <span>{{ _("Lotus Kenya Action for Development Organization") }}</span>
+    </div>
+</footer>
+{% endblock %}
+
+{% block script %}
+{{ super() }}
+<script>
+frappe.ready(() => {
+    const path = location.pathname.replace(/\/$/, "") || "/";
+    document.querySelectorAll(".lokado-nav__links a, .lokado-footer a").forEach((link) => {
+        const href = link.getAttribute("href");
+        if (href === path || (path.startsWith(href) && href !== "/" && href !== "/website")) {
+            link.setAttribute("aria-current", "page");
+            link.classList.add("lokado-nav-link--current");
+        }
+    });
+});
+</script>
+{% endblock %}

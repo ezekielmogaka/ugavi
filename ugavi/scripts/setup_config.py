@@ -671,9 +671,48 @@ def _configure_navbar_branding():
 
     # Website Settings: app name (app_name belongs to Website Settings, not Navbar Settings)
     settings = frappe.get_single("Website Settings")
+    changed = False
     if not settings.app_name or settings.app_name == "Frappe":
         settings.app_name = "LOKADO"
+        changed = True
+    if not settings.home_page:
+        settings.home_page = "index"
+        changed = True
+    if not settings.top_bar_items:
+        for item in (
+            {"label": "Home", "url": "/website", "right": 0},
+            {"label": "Who we are", "url": "/about", "right": 0},
+            {"label": "Our work", "url": "/programmes", "right": 0},
+            {"label": "Updates", "url": "/updates", "right": 0},
+            {"label": "Impact", "url": "/impact", "right": 0},
+            {"label": "Contact", "url": "/contact", "right": 0},
+            {"label": "Supplier portal", "url": "/supplier/dashboard", "right": 1},
+            {"label": "Staff sign in", "url": "/login", "right": 1},
+        ):
+            settings.append("top_bar_items", item)
+        changed = True
+    if changed:
         settings.save(ignore_permissions=True)
+
+    contact_settings = frappe.get_single("Contact Us Settings")
+    contact_changed = False
+    if contact_settings.is_disabled:
+        contact_settings.is_disabled = 0
+        contact_changed = True
+    if not contact_settings.forward_to_email:
+        contact_settings.forward_to_email = "info@lokado.org"
+        contact_changed = True
+    if contact_settings.send_acknowledgement_email is None:
+        contact_settings.send_acknowledgement_email = 1
+        contact_changed = True
+    if not contact_settings.query_options:
+        contact_settings.query_options = (
+            "Partnership, Programme enquiry, Supplier enquiry, "
+            "Field coordination, General enquiry"
+        )
+        contact_changed = True
+    if contact_changed:
+        contact_settings.save(ignore_permissions=True)
 
 
 def configure_workflows():

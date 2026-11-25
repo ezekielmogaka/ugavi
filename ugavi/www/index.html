@@ -1,0 +1,96 @@
+{% extends "templates/lokado_web_base.html" %}
+
+{% block title %}LOKADO — Peace, resilience and opportunity in Turkana{% endblock %}
+
+{% block page_content %}
+<section class="lokado-hero">
+    <div class="lokado-shell lokado-hero__grid">
+        <div class="lokado-hero__copy">
+            <span class="lokado-kicker">{{ _("Community-led since 2003") }}</span>
+            <h1>{{ _("Local roots. Lasting peace. Shared resilience.") }}</h1>
+            <p>{{ _("LOKADO partners with communities across Turkana to strengthen peace, livelihoods, essential services and accountable local institutions.") }}</p>
+            <div class="lokado-hero__actions">
+                <a class="lokado-button" href="/programmes">{{ _("Explore our work") }}</a>
+                <a class="lokado-text-link" href="/impact">{{ _("How we measure impact") }} <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="lokado-proof">
+                <span><strong>3</strong> {{ _("founding communities") }}</span>
+                <span><strong>20+</strong> {{ _("years of local action") }}</span>
+                <span><strong>6</strong> {{ _("field locations") }}</span>
+            </div>
+        </div>
+        <div class="lokado-hero__visual" aria-label="{{ _('Turkana landscape and connected communities') }}">
+            <img src="/assets/ugavi/images/lokado-peace-building.jpg" alt="{{ _('Community members participating in a LOKADO programme in Turkana') }}" width="670" height="453">
+            <div class="lokado-hero__caption">
+                <span class="lokado-status-dot"></span>
+                <div><strong>{{ _("Turkana County, Kenya") }}</strong><small>{{ _("Working locally, connecting regionally") }}</small></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="lokado-section">
+    <div class="lokado-shell">
+        <div class="lokado-section-heading">
+            <div><span class="lokado-kicker">{{ _("What we do") }}</span><h2>{{ _("Programmes shaped with communities, not for them") }}</h2></div>
+            <p>{{ _("Our work connects immediate humanitarian needs to durable peace, stronger livelihoods and public accountability.") }}</p>
+        </div>
+        <div class="lokado-programme-grid">
+            <a class="lokado-programme-card lokado-programme-card--featured" href="/programmes#peace">
+                <img src="/assets/ugavi/images/lokado-peace-building.jpg" alt="" width="670" height="453" loading="lazy"><span>01</span><h3>{{ _("Peace & social cohesion") }}</h3><p>{{ _("Supporting dialogue, youth leadership and peaceful coexistence across community and cross-border divides.") }}</p><b>{{ _("Explore programme") }} →</b>
+            </a>
+            <a class="lokado-programme-card" href="/programmes#livelihoods">
+                <img src="/assets/ugavi/images/lokado-livelihoods-goats.jpg" alt="" width="670" height="453" loading="lazy"><span>02</span><h3>{{ _("Livelihoods & food security") }}</h3><p>{{ _("Building household resilience through livestock, agroforestry, enterprise and locally led production.") }}</p><b>{{ _("Explore programme") }} →</b>
+            </a>
+            <a class="lokado-programme-card" href="/programmes#wash">
+                <img src="/assets/ugavi/images/lokado-energy.jpg" alt="" width="670" height="453" loading="lazy"><span>03</span><h3>{{ _("WASH & climate resilience") }}</h3><p>{{ _("Advancing access to water, clean energy, environmental restoration and climate adaptation.") }}</p><b>{{ _("Explore programme") }} →</b>
+            </a>
+            <a class="lokado-programme-card" href="/programmes#protection">
+                <img src="/assets/ugavi/images/lokado-agroforestry.jpg" alt="" width="670" height="453" loading="lazy"><span>04</span><h3>{{ _("Protection & inclusion") }}</h3><p>{{ _("Placing women, youth, displaced people and other at-risk groups at the centre of programme design.") }}</p><b>{{ _("Explore programme") }} →</b>
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="lokado-section lokado-section--brand">
+    <div class="lokado-shell lokado-two-column">
+        <div>
+            <span class="lokado-kicker lokado-kicker--light">{{ _("Our approach") }}</span>
+            <h2>{{ _("Trust is built when good intentions are visible, governed and measured.") }}</h2>
+        </div>
+        <div class="lokado-approach-list">
+            <article><span>01</span><div><h3>{{ _("Listen locally") }}</h3><p>{{ _("Programme priorities begin with communities, field teams and legitimate local structures.") }}</p></div></article>
+            <article><span>02</span><div><h3>{{ _("Deliver accountably") }}</h3><p>{{ _("Procurement, stock, fleet and asset records connect every operational decision to evidence.") }}</p></div></article>
+            <article><span>03</span><div><h3>{{ _("Learn and adapt") }}</h3><p>{{ _("Monitoring, community feedback and responsible reporting shape the next action.") }}</p></div></article>
+        </div>
+    </div>
+</section>
+
+<section class="lokado-section">
+    <div class="lokado-shell">
+        <div class="lokado-section-heading">
+            <div><span class="lokado-kicker">{{ _("Partnership") }}</span><h2>{{ _("Local delivery, strengthened by trusted partnerships") }}</h2></div>
+            <p>{{ _("LOKADO works with communities, government and humanitarian and development partners across Turkana.") }}</p>
+        </div>
+        <ul class="lokado-partner-list" aria-label="{{ _('Selected partners shown on the LOKADO public website') }}">
+            <li><img src="/assets/ugavi/images/partners/wfp.png" alt="World Food Programme" width="300" height="300" loading="lazy"></li>
+            <li><img src="/assets/ugavi/images/partners/bmz.jpg" alt="German Federal Ministry for Economic Cooperation and Development (BMZ)" width="1920" height="960" loading="lazy"></li>
+            <li><img src="/assets/ugavi/images/partners/kenya.png" alt="Government of Kenya" width="300" height="290" loading="lazy"></li>
+            <li><img src="/assets/ugavi/images/partners/welthungerhilfe.jpg" alt="Welthungerhilfe" width="300" height="270" loading="lazy"></li>
+            <li><img src="/assets/ugavi/images/partners/giz.png" alt="GIZ" width="1024" height="300" loading="lazy"></li>
+            <li><img src="/assets/ugavi/images/partners/catholic-diocese-lodwar.jpg" alt="Catholic Diocese of Lodwar" width="150" height="129" loading="lazy"></li>
+            <li><img src="/assets/ugavi/images/partners/unhcr.png" alt="UNHCR" width="256" height="300" loading="lazy"></li>
+            <li><img src="/assets/ugavi/images/partners/turkana-county.jpg" alt="Turkana County Government" width="300" height="300" loading="lazy"></li>
+            <li><img src="/assets/ugavi/images/partners/acted.jpg" alt="ACTED Kenya" width="300" height="300" loading="lazy"></li>
+        </ul>
+        <p class="lokado-partner-note">{{ _("Partner marks are presented for institutional reference and do not imply website endorsement. Confirm current partnership status before publication.") }}</p>
+    </div>
+</section>
+
+<section class="lokado-cta">
+    <div class="lokado-shell lokado-cta__inner">
+        <div><span class="lokado-kicker">{{ _("Partner with LOKADO") }}</span><h2>{{ _("Build durable change with us.") }}</h2></div>
+        <div><p>{{ _("Connect with our team, explore supplier opportunities or support community-led programmes.") }}</p><a class="lokado-button" href="/contact">{{ _("Start a conversation") }}</a></div>
+    </div>
+</section>
+{% endblock %}

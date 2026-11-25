@@ -1,0 +1,28 @@
+{% extends "templates/lokado_web_base.html" %}
+{% block title %}Who we are — LOKADO{% endblock %}
+{% block page_content %}
+<section class="lokado-page-hero"><div class="lokado-shell"><span class="lokado-kicker">{{ _("Who we are") }}</span><h1>{{ _("A local institution for peace, dignity and shared prosperity") }}</h1><p>{{ _("LOKADO is a community-driven Kenyan organization rooted in Lokichoggio, Oropoi and Kakuma.") }}</p></div></section>
+<section class="lokado-section"><div class="lokado-shell lokado-two-column lokado-two-column--copy">
+    <div><span class="lokado-kicker">{{ _("Our story") }}</span><h2>{{ _("Formed by communities facing a common challenge") }}</h2></div>
+    <div class="lokado-prose"><p>{{ _("LOKADO was formed in 2003 by members from Lokichoggio, Oropoi and Kakuma to help address violent cross-border conflict affecting communities in Turkana and neighbouring areas.") }}</p><p>{{ _("The organization became a registered NGO in 2007 and expanded its work across Turkana County. Today, LOKADO connects peacebuilding, resilient livelihoods, protection, essential services and institutional accountability.") }}</p></div>
+</div></section>
+<section class="lokado-section lokado-section--soft"><div class="lokado-shell">
+    <div class="lokado-section-heading"><div><span class="lokado-kicker">{{ _("Values in practice") }}</span><h2>{{ _("Principles that guide every programme") }}</h2></div></div>
+    <div class="lokado-value-grid">
+        <article><h3>{{ _("Human dignity") }}</h3><p>{{ _("Respect for life, rights and the agency of every person.") }}</p></article>
+        <article><h3>{{ _("Quality service") }}</h3><p>{{ _("Fit-for-purpose, responsible and continuously improving delivery.") }}</p></article>
+        <article><h3>{{ _("Social justice") }}</h3><p>{{ _("Fair access to resources, opportunity and accountable decisions.") }}</p></article>
+        <article><h3>{{ _("Equity & inclusion") }}</h3><p>{{ _("Programmes designed to identify and remove barriers to participation.") }}</p></article>
+        <article><h3>{{ _("Transparency") }}</h3><p>{{ _("Clear decisions, traceable resources and open partner engagement.") }}</p></article>
+        <article><h3>{{ _("Community ownership") }}</h3><p>{{ _("Solutions that communities can shape, sustain and lead.") }}</p></article>
+    </div>
+</div></section>
+<section class="lokado-section"><div class="lokado-shell lokado-cta__inner">
+    <div><span class="lokado-kicker">{{ _("Leadership") }}</span><h2>{{ _("Meet the people carrying the mandate forward") }}</h2></div>
+    <div><p>{{ _("See LOKADO's public leadership team and the responsibilities they hold across programme delivery, finance, people, evidence and humanitarian response.") }}</p><a class="lokado-button" href="/leadership">{{ _("Meet our leadership") }}</a></div>
+</div></section>
+<section class="lokado-section lokado-section--brand"><div class="lokado-shell lokado-two-column">
+    <div><span class="lokado-kicker lokado-kicker--light">{{ _("Our vision") }}</span><h2>{{ _("A peaceful and just society built through people-driven means.") }}</h2></div>
+    <div><span class="lokado-kicker lokado-kicker--light">{{ _("Our mission") }}</span><p class="lokado-statement">{{ _("Promote sustainable livelihoods and peaceful coexistence through peace and development, stronger resilience and better service delivery.") }}</p></div>
+</div></section>
+{% endblock %}

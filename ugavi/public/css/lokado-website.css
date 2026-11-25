@@ -1,0 +1,1144 @@
+.lokado-site,
+.lokado-nav,
+.lokado-footer {
+  --lokado-blue: #18388f;
+  --lokado-blue-vivid: #244db2;
+  --lokado-green: #2d7d3a;
+  --lokado-gold: #e7a63b;
+  --ugavi-brand: var(--lokado-blue);
+  --ugavi-brand-vivid: var(--lokado-blue-vivid);
+  --ugavi-brand-dark: #102458;
+  --ugavi-accent: var(--lokado-green);
+  font-family: var(--ugavi-font);
+  color: var(--ugavi-text-primary);
+}
+
+.lokado-site {
+  overflow: hidden;
+  background: #fff;
+}
+
+.lokado-skip-link {
+  position: fixed;
+  z-index: 1000;
+  top: 10px;
+  left: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ugavi-brand);
+  box-shadow: var(--ugavi-shadow-elevated);
+  font-weight: 750;
+  transform: translateY(-150%);
+}
+
+.lokado-skip-link:focus {
+  transform: translateY(0);
+}
+
+.lokado-shell {
+  width: min(1180px, calc(100% - 40px));
+  margin-inline: auto;
+}
+
+.lokado-nav {
+  position: relative;
+  z-index: 20;
+  border-bottom: 1px solid rgba(20, 45, 78, .1);
+  background: rgba(255, 255, 255, .96);
+  backdrop-filter: blur(18px);
+}
+
+.lokado-nav__inner {
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+  gap: 36px;
+}
+
+.lokado-nav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: auto;
+  color: var(--lokado-blue);
+  text-decoration: none;
+}
+
+.lokado-nav__brand img {
+  width: 48px;
+  height: 45px;
+  object-fit: contain;
+}
+
+.lokado-nav__brand span {
+  display: grid;
+  line-height: 1;
+}
+
+.lokado-nav__brand strong {
+  color: var(--lokado-blue);
+  font-size: 1.55rem;
+  letter-spacing: -.04em;
+}
+
+.lokado-nav__brand small {
+  margin-top: 5px;
+  color: var(--lokado-green);
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.lokado-nav__links,
+.lokado-nav__actions {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.lokado-nav__session {
+  max-width: 230px;
+  overflow: hidden;
+  color: var(--ugavi-text-secondary);
+  font-size: .84rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lokado-nav__logout {
+  cursor: pointer;
+}
+
+.lokado-nav__links a,
+.lokado-footer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.lokado-nav__links a {
+  font-size: .94rem;
+  font-weight: 650;
+}
+
+.lokado-nav__links a:hover {
+  color: var(--ugavi-accent);
+}
+
+.lokado-nav__links a[aria-current="page"],
+.lokado-nav-link--current {
+  color: var(--lokado-blue);
+  box-shadow: inset 0 -3px var(--lokado-green);
+}
+
+.lokado-nav__menu {
+  display: none;
+}
+
+.lokado-button {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 22px;
+  border: 1px solid var(--ugavi-brand);
+  border-radius: 999px;
+  background: var(--ugavi-brand);
+  color: #fff !important;
+  font-weight: 750;
+  text-decoration: none;
+  transition: transform var(--ugavi-transition-fast), box-shadow var(--ugavi-transition-fast), background var(--ugavi-transition-fast);
+}
+
+.lokado-button:hover {
+  transform: translateY(-2px);
+  background: var(--ugavi-brand-vivid);
+  box-shadow: 0 12px 28px rgba(20, 45, 78, .18);
+  text-decoration: none;
+}
+
+.lokado-button--small {
+  min-height: 42px;
+  padding: 9px 18px;
+  font-size: .9rem;
+}
+
+.lokado-button--ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--ugavi-brand) !important;
+  padding-inline: 6px;
+}
+
+.lokado-kicker {
+  display: inline-block;
+  margin-bottom: 18px;
+  color: var(--ugavi-accent);
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.lokado-kicker--light {
+  color: #92d3cf;
+}
+
+.lokado-text-link {
+  color: var(--ugavi-brand);
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.lokado-hero {
+  padding: 92px 0 84px;
+  background:
+    radial-gradient(circle at 4% 8%, rgba(214, 168, 95, .17), transparent 25%),
+    linear-gradient(180deg, #fbfcfe 0%, #f0f5f4 100%);
+}
+
+.lokado-hero__grid,
+.lokado-two-column,
+.lokado-cta__inner,
+.lokado-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(48px, 7vw, 96px);
+  align-items: center;
+}
+
+.lokado-hero__copy h1,
+.lokado-page-hero h1 {
+  max-width: 760px;
+  margin: 0;
+  color: var(--ugavi-brand-dark);
+  font-size: clamp(3rem, 6.3vw, 5.8rem);
+  line-height: .96;
+  letter-spacing: -.055em;
+  text-wrap: balance;
+}
+
+.lokado-hero__copy > p,
+.lokado-page-hero p {
+  max-width: 660px;
+  margin: 28px 0 0;
+  color: var(--ugavi-text-secondary);
+  font-size: clamp(1.06rem, 2vw, 1.28rem);
+  line-height: 1.75;
+}
+
+.lokado-hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-top: 34px;
+}
+
+.lokado-proof {
+  display: flex;
+  gap: 26px;
+  margin-top: 54px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(20, 45, 78, .12);
+}
+
+.lokado-proof span {
+  display: grid;
+  color: var(--ugavi-text-secondary);
+  font-size: .78rem;
+}
+
+.lokado-proof strong {
+  color: var(--ugavi-brand);
+  font-size: 1.35rem;
+}
+
+.lokado-hero__visual {
+  position: relative;
+  min-height: 560px;
+  overflow: hidden;
+  border-radius: 32px 8px 32px 32px;
+  box-shadow: 0 34px 75px rgba(13, 33, 57, .22);
+}
+
+.lokado-hero__visual > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lokado-hero__visual::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(180deg, transparent 35%, rgba(10, 29, 75, .72));
+  pointer-events: none;
+}
+
+.lokado-hero__caption {
+  position: absolute;
+  right: 22px;
+  bottom: 22px;
+  left: 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 16px;
+  background: rgba(13, 33, 57, .68);
+  color: #fff;
+  backdrop-filter: blur(12px);
+  z-index: 1;
+}
+
+.lokado-hero__caption div {
+  display: grid;
+}
+
+.lokado-hero__caption small {
+  margin-top: 3px;
+  color: rgba(255, 255, 255, .7);
+}
+
+.lokado-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #92d3cf;
+  box-shadow: 0 0 0 7px rgba(146, 211, 207, .15);
+}
+
+.lokado-section {
+  padding: 112px 0;
+}
+
+.lokado-section--soft {
+  background: var(--ugavi-surface-alt);
+}
+
+.lokado-section--brand {
+  background: var(--ugavi-gradient-brand);
+  color: #fff;
+}
+
+.lokado-section--brand h2,
+.lokado-section--brand p {
+  color: #fff;
+}
+
+.lokado-section-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, .7fr);
+  gap: 60px;
+  align-items: end;
+  margin-bottom: 54px;
+}
+
+.lokado-section h2,
+.lokado-cta h2,
+.lokado-statement {
+  margin: 0;
+  color: var(--ugavi-brand-dark);
+  font-size: clamp(2rem, 4vw, 3.7rem);
+  line-height: 1.08;
+  letter-spacing: -.04em;
+}
+
+.lokado-section-heading p,
+.lokado-prose p,
+.lokado-cta p {
+  margin: 0;
+  color: var(--ugavi-text-secondary);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.lokado-programme-grid,
+.lokado-value-grid,
+.lokado-accountability-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.lokado-programme-card {
+  min-height: 310px;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 24px 28px;
+  border: 1px solid var(--ugavi-border);
+  border-radius: 22px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  transition: transform var(--ugavi-transition-normal), box-shadow var(--ugavi-transition-normal);
+}
+
+.lokado-programme-card > img {
+  width: calc(100% + 48px);
+  height: 154px;
+  margin: -18px -24px 22px;
+  border-radius: 22px 22px 0 0;
+  object-fit: cover;
+}
+
+.lokado-programme-card:hover {
+  transform: translateY(-6px);
+  color: inherit;
+  box-shadow: var(--ugavi-shadow-card-hover);
+  text-decoration: none;
+}
+
+.lokado-programme-card--featured {
+  background: var(--ugavi-brand);
+  color: #fff;
+}
+
+.lokado-programme-card > span,
+.lokado-programme-stack > article > span,
+.lokado-accountability-grid article > span,
+.lokado-approach-list article > span {
+  color: var(--ugavi-gold);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.lokado-programme-card h3,
+.lokado-value-grid h3 {
+  margin: 34px 0 16px;
+  font-size: 1.35rem;
+}
+
+.lokado-programme-card p {
+  color: var(--ugavi-text-secondary);
+  line-height: 1.65;
+}
+
+.lokado-programme-card--featured p,
+.lokado-programme-card--featured b {
+  color: rgba(255, 255, 255, .8);
+}
+
+.lokado-programme-card b {
+  margin-top: auto;
+  font-size: .9rem;
+}
+
+.lokado-approach-list {
+  display: grid;
+  gap: 28px;
+}
+
+.lokado-approach-list article {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 20px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, .16);
+}
+
+.lokado-approach-list h3 {
+  margin: 0 0 10px;
+  color: #fff;
+}
+
+.lokado-approach-list p {
+  color: rgba(255, 255, 255, .68) !important;
+}
+
+.lokado-partner-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lokado-partner-list li {
+  min-height: 116px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  border: 1px solid var(--ugavi-border);
+  border-radius: 16px;
+  background: #fff;
+  transition: transform var(--ugavi-transition-fast), border-color var(--ugavi-transition-fast), box-shadow var(--ugavi-transition-fast);
+}
+
+.lokado-partner-list li:hover {
+  transform: translateY(-3px);
+  border-color: #b8c8d8;
+  box-shadow: var(--ugavi-shadow-card);
+}
+
+.lokado-partner-list img {
+  width: 100%;
+  max-width: 150px;
+  height: 70px;
+  object-fit: contain;
+}
+
+.lokado-partner-list li:has(img[alt="German Federal Ministry for Economic Cooperation and Development (BMZ)"]) img,
+.lokado-partner-list li:has(img[alt="GIZ"]) img {
+  max-width: 178px;
+}
+
+.lokado-partner-note {
+  margin: 18px 0 0;
+  color: var(--ugavi-text-secondary);
+  font-size: .78rem;
+  line-height: 1.55;
+}
+
+.lokado-cta {
+  padding: 72px 0;
+  background: var(--ugavi-gold-light);
+}
+
+.lokado-cta__inner {
+  grid-template-columns: 1.1fr .9fr;
+}
+
+.lokado-cta__inner > div:last-child {
+  display: grid;
+  justify-items: start;
+  gap: 24px;
+}
+
+.lokado-page-hero {
+  padding: 112px 0 92px;
+  background:
+    linear-gradient(115deg, rgba(20, 45, 78, .96), rgba(22, 125, 120, .86)),
+    url("/assets/ugavi/images/lokado-turkana-landscape.svg") center 60% / cover;
+}
+
+.lokado-page-hero h1,
+.lokado-page-hero p,
+.lokado-page-hero .lokado-kicker {
+  color: #fff;
+}
+
+.lokado-page-hero h1 {
+  max-width: 940px;
+}
+
+.lokado-page-hero p {
+  color: rgba(255, 255, 255, .78);
+}
+
+.lokado-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  align-items: center;
+  margin-bottom: 32px;
+  color: rgba(255, 255, 255, .58);
+  font-size: .8rem;
+}
+
+.lokado-breadcrumb a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.lokado-leadership-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.lokado-person-card {
+  overflow: hidden;
+  border: 1px solid var(--ugavi-border);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: var(--ugavi-shadow-card);
+}
+
+.lokado-person-card > img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.lokado-person-card > div {
+  padding: 24px;
+}
+
+.lokado-person-card span,
+.lokado-story-card span {
+  color: var(--lokado-green);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.lokado-person-card h2 {
+  margin: 10px 0 6px;
+  font-size: 1.35rem;
+}
+
+.lokado-person-card p {
+  margin: 0;
+  color: var(--ugavi-text-secondary);
+}
+
+.lokado-content-note {
+  margin: 28px 0 0;
+  color: var(--ugavi-text-secondary);
+  font-size: .8rem;
+}
+
+.lokado-stories-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.lokado-story-card {
+  overflow: hidden;
+  border: 1px solid var(--ugavi-border);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: var(--ugavi-shadow-card);
+}
+
+.lokado-story-card--wide {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+}
+
+.lokado-story-card > img {
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+}
+
+.lokado-story-card--wide > img {
+  height: 100%;
+  min-height: 360px;
+}
+
+.lokado-story-card > div {
+  padding: 30px;
+}
+
+.lokado-story-card h2 {
+  margin: 12px 0 14px;
+  font-size: clamp(1.5rem, 3vw, 2.4rem);
+}
+
+.lokado-story-card p {
+  color: var(--ugavi-text-secondary);
+  line-height: 1.7;
+}
+
+.lokado-story-card a {
+  display: inline-flex;
+  margin-top: 12px;
+  color: var(--lokado-blue);
+  font-weight: 750;
+}
+
+.lokado-editorial-note {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 70px;
+}
+
+.lokado-editorial-note h2 {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+}
+
+.lokado-editorial-note p {
+  margin: 0;
+  color: var(--ugavi-text-secondary);
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.lokado-policy {
+  display: grid;
+  gap: 0;
+}
+
+.lokado-policy > section {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 32px;
+  padding: 38px 0;
+  border-bottom: 1px solid var(--ugavi-border);
+}
+
+.lokado-policy > section > span {
+  color: var(--lokado-gold);
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.lokado-policy h2 {
+  margin-bottom: 14px;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+}
+
+.lokado-policy p {
+  max-width: 850px;
+  margin: 0;
+  color: var(--ugavi-text-secondary);
+  line-height: 1.8;
+}
+
+.lokado-not-found {
+  min-height: 68vh;
+  display: grid;
+  align-items: center;
+  padding: 100px 0;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(45, 125, 58, .18), transparent 24rem),
+    var(--ugavi-surface-alt);
+}
+
+.lokado-not-found h1 {
+  max-width: 760px;
+  margin: 0;
+  font-size: clamp(3rem, 8vw, 6.5rem);
+  line-height: .95;
+  letter-spacing: -.055em;
+}
+
+.lokado-not-found p {
+  max-width: 650px;
+  margin: 28px 0;
+  color: var(--ugavi-text-secondary);
+  font-size: 1.1rem;
+  line-height: 1.75;
+}
+
+.lokado-not-found__actions {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 38px;
+}
+
+.lokado-not-found nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.lokado-not-found nav a {
+  color: var(--lokado-blue);
+  font-weight: 750;
+}
+
+.lokado-two-column--copy {
+  align-items: start;
+}
+
+.lokado-prose {
+  display: grid;
+  gap: 18px;
+}
+
+.lokado-value-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.lokado-value-grid article,
+.lokado-accountability-grid article {
+  padding: 30px;
+  border: 1px solid var(--ugavi-border);
+  border-radius: 20px;
+  background: #fff;
+}
+
+.lokado-value-grid h3 {
+  margin: 0 0 12px;
+}
+
+.lokado-value-grid p,
+.lokado-accountability-grid p {
+  margin: 0;
+  color: var(--ugavi-text-secondary);
+  line-height: 1.65;
+}
+
+.lokado-programme-stack {
+  display: grid;
+  gap: 0;
+}
+
+.lokado-programme-stack > article {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 36px;
+  padding: 42px 0;
+  border-bottom: 1px solid var(--ugavi-border);
+}
+
+.lokado-programme-stack h2 {
+  margin-bottom: 14px;
+  font-size: clamp(1.6rem, 3vw, 2.5rem);
+}
+
+.lokado-programme-stack p {
+  max-width: 760px;
+  color: var(--ugavi-text-secondary);
+  line-height: 1.75;
+}
+
+.lokado-programme-stack img {
+  width: 100%;
+  max-width: 780px;
+  height: clamp(240px, 34vw, 420px);
+  margin-top: 24px;
+  border-radius: 22px;
+  object-fit: cover;
+  box-shadow: var(--ugavi-shadow-card);
+}
+
+.lokado-accountability-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.lokado-accountability-grid h2 {
+  margin: 32px 0 14px;
+  font-size: 1.7rem;
+}
+
+.lokado-contact-grid {
+  align-items: start;
+}
+
+.lokado-contact-form h2 {
+  margin-bottom: 18px;
+}
+
+.lokado-contact-form > p {
+  max-width: 660px;
+  margin-bottom: 28px;
+  color: var(--ugavi-text-secondary);
+  line-height: 1.7;
+}
+
+.lokado-contact-form form {
+  display: grid;
+  gap: 18px;
+}
+
+.lokado-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.lokado-contact-form label {
+  display: grid;
+  gap: 7px;
+  color: #364b64;
+  font-size: .84rem;
+  font-weight: 700;
+}
+
+.lokado-contact-form input,
+.lokado-contact-form select,
+.lokado-contact-form textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 13px;
+  border: 1px solid #cbd5df;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ugavi-brand-dark);
+  font: inherit;
+}
+
+.lokado-contact-form textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.lokado-contact-form input:focus,
+.lokado-contact-form select:focus,
+.lokado-contact-form textarea:focus {
+  outline: 3px solid rgba(24, 56, 143, .18);
+  border-color: var(--lokado-blue);
+}
+
+.lokado-honeypot {
+  position: absolute !important;
+  left: -10000px !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+}
+
+.lokado-consent {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  font-weight: 500 !important;
+}
+
+.lokado-consent input {
+  width: 18px;
+  min-height: 18px;
+  margin-top: 2px;
+}
+
+.lokado-form-status {
+  min-height: 22px;
+  margin: 0;
+  color: #a32b2f;
+}
+
+.lokado-form-status--success {
+  color: var(--lokado-green);
+}
+
+.lokado-contact-grid > div > p {
+  max-width: 560px;
+  margin: 24px 0;
+  color: var(--ugavi-text-secondary);
+  line-height: 1.7;
+}
+
+.lokado-contact-links {
+  display: grid;
+  gap: 12px;
+}
+
+.lokado-contact-links a {
+  display: grid;
+  padding: 18px 22px;
+  border: 1px solid var(--ugavi-border);
+  border-radius: 14px;
+  color: var(--ugavi-brand);
+  font-size: 1.15rem;
+  font-weight: 750;
+}
+
+.lokado-contact-links small {
+  color: var(--ugavi-text-secondary);
+  font-size: .75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.lokado-contact-grid aside {
+  padding: 36px;
+  border-radius: 24px;
+  background: var(--ugavi-brand);
+  color: #fff;
+}
+
+.lokado-contact-grid aside > p {
+  color: rgba(255, 255, 255, .72);
+  line-height: 1.7;
+}
+
+.lokado-contact-grid aside h2 {
+  margin-bottom: 24px;
+  color: #fff;
+  font-size: 1.7rem;
+}
+
+.lokado-contact-grid aside h3 {
+  margin: 32px 0 18px;
+  color: #fff;
+  font-size: 1rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.lokado-contact-grid aside .lokado-contact-links a {
+  border-color: rgba(255, 255, 255, .18);
+  background: rgba(255, 255, 255, .08);
+  color: #fff;
+}
+
+.lokado-contact-email {
+  display: inline-flex;
+  margin-top: 24px;
+  color: #fff;
+  font-weight: 750;
+}
+
+.lokado-contact-grid aside ul {
+  columns: 2;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.lokado-contact-grid aside li {
+  margin-bottom: 14px;
+  color: rgba(255, 255, 255, .8);
+}
+
+.lokado-channel-list {
+  display: grid;
+  gap: 16px;
+}
+
+.lokado-channel-list a {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 20px;
+  padding: 24px;
+  border-radius: 18px;
+  background: #fff;
+  color: var(--ugavi-brand);
+  text-decoration: none;
+}
+
+.lokado-channel-list span {
+  color: var(--ugavi-text-secondary);
+  grid-column: 1;
+}
+
+.lokado-channel-list b {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+.lokado-footer {
+  padding: 76px 0 24px;
+  background: var(--ugavi-brand-dark);
+  color: #dce7f1;
+}
+
+.lokado-footer__grid {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(3, 1fr);
+  gap: 48px;
+}
+
+.lokado-footer__brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.lokado-footer__brand img {
+  width: 54px;
+  height: 51px;
+  padding: 5px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.lokado-footer__brand strong {
+  color: #fff;
+  font-size: 1.5rem;
+}
+
+.lokado-footer__grid p {
+  max-width: 360px;
+  color: #9eb0c3;
+  line-height: 1.7;
+}
+
+.lokado-footer__grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lokado-footer__grid h2 {
+  margin: 0 0 10px;
+  color: #fff;
+  font-size: .8rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.lokado-footer__grid a,
+.lokado-footer__grid span {
+  color: #9eb0c3;
+}
+
+.lokado-footer__grid a:hover {
+  color: #fff;
+}
+
+.lokado-footer__bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 62px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, .12);
+  color: #7990a7;
+  font-size: .8rem;
+}
+
+@media (max-width: 1080px) {
+  .lokado-nav__links { display: none; }
+  .lokado-programme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lokado-partner-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 780px) {
+  .lokado-shell { width: min(100% - 28px, 1180px); }
+  .lokado-nav__inner { min-height: 72px; }
+  .lokado-nav__brand img { width: 42px; height: 40px; }
+  .lokado-nav__brand strong { font-size: 1.2rem; }
+  .lokado-nav__brand small { display: none; }
+  .lokado-nav__actions { display: none; }
+  .lokado-nav__menu { display: block; margin-left: auto; }
+  .lokado-nav__menu summary { display: grid; gap: 5px; padding: 10px; cursor: pointer; list-style: none; }
+  .lokado-nav__menu summary span { width: 24px; height: 2px; background: var(--ugavi-brand); }
+  .lokado-nav__menu nav { position: absolute; inset: 72px 14px auto; display: grid; padding: 18px; border: 1px solid var(--ugavi-border); border-radius: 16px; background: #fff; box-shadow: var(--ugavi-shadow-elevated); }
+  .lokado-nav__menu nav a,
+  .lokado-nav__menu nav button { padding: 13px; border: 0; background: transparent; color: var(--ugavi-brand); text-align: left; text-decoration: none; font: inherit; font-weight: 700; cursor: pointer; }
+  .lokado-nav__menu nav > span { padding: 8px 13px; color: var(--ugavi-text-secondary); font-size: .78rem; }
+  .lokado-hero { padding: 62px 0; }
+  .lokado-hero__grid,
+  .lokado-two-column,
+  .lokado-cta__inner,
+  .lokado-contact-grid,
+  .lokado-section-heading { grid-template-columns: 1fr; gap: 34px; }
+  .lokado-hero__copy h1,
+  .lokado-page-hero h1 { font-size: clamp(2.6rem, 14vw, 4.2rem); }
+  .lokado-hero__visual { min-height: 430px; }
+  .lokado-proof { gap: 14px; }
+  .lokado-section { padding: 74px 0; }
+  .lokado-programme-grid,
+  .lokado-value-grid,
+  .lokado-accountability-grid { grid-template-columns: 1fr; }
+  .lokado-leadership-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lokado-story-card--wide { grid-column: auto; display: block; }
+  .lokado-story-card--wide > img { min-height: 0; height: 260px; }
+  .lokado-stories-grid,
+  .lokado-editorial-note { grid-template-columns: 1fr; gap: 28px; }
+  .lokado-programme-card { min-height: 250px; }
+  .lokado-programme-card h3 { margin-top: 24px; }
+  .lokado-programme-stack > article { grid-template-columns: 42px 1fr; gap: 20px; }
+  .lokado-contact-grid aside ul { columns: 1; }
+  .lokado-form-row { grid-template-columns: 1fr; }
+  .lokado-footer__grid { grid-template-columns: 1fr 1fr; }
+  .lokado-footer__bottom { flex-direction: column; }
+  .lokado-partner-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+}
+
+@media (max-width: 520px) {
+  .lokado-hero__actions { align-items: stretch; flex-direction: column; }
+  .lokado-text-link { text-align: center; }
+  .lokado-proof { display: grid; grid-template-columns: 1fr 1fr; }
+  .lokado-footer__grid { grid-template-columns: 1fr; }
+  .lokado-leadership-grid { grid-template-columns: 1fr; }
+  .lokado-policy > section { grid-template-columns: 42px 1fr; gap: 18px; }
+  .lokado-not-found__actions { align-items: stretch; flex-direction: column; }
+}

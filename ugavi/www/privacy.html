@@ -1,0 +1,15 @@
+{% extends "templates/lokado_web_base.html" %}
+{% block title %}Privacy & data use — LOKADO{% endblock %}
+{% block page_content %}
+<section class="lokado-page-hero"><div class="lokado-shell">
+    <nav class="lokado-breadcrumb" aria-label="{{ _('Breadcrumb') }}"><a href="/website">{{ _("Home") }}</a><span>/</span><span aria-current="page">{{ _("Privacy & data use") }}</span></nav>
+    <span class="lokado-kicker">{{ _("Privacy") }}</span><h1>{{ _("Responsible data use for public enquiries and supplier access") }}</h1>
+    <p>{{ _("A clear summary of what this Ugavi website collects, why it is used and where to direct questions.") }}</p>
+</div></section>
+<section class="lokado-section"><div class="lokado-shell lokado-policy">
+    <section><span>01</span><div><h2>{{ _("Website enquiries") }}</h2><p>{{ _("The contact form collects the name, email, organization, enquiry type and message you provide. LOKADO uses these details only to route and respond to the enquiry. Do not submit passwords, beneficiary case details, financial credentials or other sensitive personal information.") }}</p></div></section>
+    <section><span>02</span><div><h2>{{ _("Supplier and staff sessions") }}</h2><p>{{ _("Authenticated Ugavi access uses Frappe session controls. Supplier records are scoped server-side to the Supplier linked to the signed-in account. Users should sign out on shared devices and protect account credentials.") }}</p></div></section>
+    <section><span>03</span><div><h2>{{ _("Local website assets") }}</h2><p>{{ _("This implementation serves approved LOKADO public images locally from Ugavi rather than loading third-party image pixels during a visit. External links may have their own privacy practices.") }}</p></div></section>
+    <section><span>04</span><div><h2>{{ _("Questions or corrections") }}</h2><p>{{ _("Use the contact form or email info@lokado.org to request help with a public enquiry. Account-specific corrections require identity verification through the appropriate LOKADO team.") }}</p></div></section>
+</div></section>
+{% endblock %}

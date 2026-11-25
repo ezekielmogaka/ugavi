@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Abstract Turkana landscape</title>
+  <desc id="desc">Layered hills, water and community connections representing resilience across Turkana.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#0d2139"/>
+      <stop offset=".58" stop-color="#142d4e"/>
+      <stop offset="1" stop-color="#167d78"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#f4d995"/>
+      <stop offset="1" stop-color="#d6a85f"/>
+    </linearGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="16"/></filter>
+  </defs>
+  <rect width="1200" height="900" fill="url(#sky)"/>
+  <circle cx="885" cy="195" r="96" fill="url(#sun)"/>
+  <circle cx="885" cy="195" r="145" fill="#d6a85f" opacity=".12" filter="url(#blur)"/>
+  <path d="M0 530L185 365l145 102 175-244 205 263 170-174 320 246v342H0Z" fill="#264d60"/>
+  <path d="M0 650l210-153 165 86 188-177 190 178 166-98 281 164v250H0Z" fill="#176b68"/>
+  <path d="M0 760l240-104 185 66 195-108 210 105 170-62 200 95v148H0Z" fill="#0f4545"/>
+  <path d="M0 785c260-72 410 40 632-35 226-77 350-30 568 37v113H0Z" fill="#0a3038"/>
+  <g stroke="#f4d995" stroke-width="3" fill="none" opacity=".62">
+    <path d="M98 260c138-55 204-38 302 25s189 58 293 10 192-52 305-8"/>
+    <path d="M80 292c152-48 216-25 310 32s188 57 300 8 202-50 332-4"/>
+  </g>
+  <g fill="#faf3e5">
+    <circle cx="210" cy="310" r="12"/><circle cx="430" cy="348" r="9"/>
+    <circle cx="690" cy="330" r="11"/><circle cx="976" cy="318" r="8"/>
+  </g>
+  <g stroke="#faf3e5" stroke-width="3" opacity=".55">
+    <path d="M210 310L430 348 690 330 976 318"/>
+  </g>
+  <g fill="#d6a85f">
+    <path d="M225 705h14v60h-14z"/><path d="M206 709l26-31 27 31z"/>
+    <path d="M540 660h13v55h-13z"/><path d="M521 665l26-29 26 29z"/>
+    <path d="M884 686h14v58h-14z"/><path d="M864 690l27-32 27 32z"/>
+  </g>
+</svg>

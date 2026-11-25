@@ -17,24 +17,36 @@ PREQUALIFICATION_DOCUMENT_TYPES = {
 
 def _get_supplier_for_user(user=None):
     user = user or frappe.session.user
+    suppliers = set(
+        frappe.get_all(
+            "User Permission",
+            filters={"user": user, "allow": "Supplier"},
+            pluck="for_value",
+            limit=20,
+        )
+    )
     contact = frappe.db.get_value("Contact", {"user": user}, "name")
     if contact:
-        supplier = frappe.db.get_value(
+        suppliers.update(frappe.get_all(
             "Dynamic Link",
-            {
+            filters={
                 "parenttype": "Contact",
                 "parent": contact,
                 "link_doctype": "Supplier",
             },
-            "link_name",
+            pluck="link_name",
+            limit=20,
+        ))
+    suppliers.discard(None)
+    suppliers.discard("")
+    if len(suppliers) > 1:
+        frappe.throw(
+            _(
+                "This account is linked to multiple Supplier records. "
+                "Ask the LOKADO administrator to correct the identity link."
+            )
         )
-        if supplier:
-            return supplier
-    return frappe.db.get_value(
-        "User Permission",
-        {"user": user, "allow": "Supplier"},
-        "for_value",
-    )
+    return next(iter(suppliers), None)
 
 
 def get_home_page(user: str) -> str | None:
@@ -122,7 +134,10 @@ def get_context(context):
     """Supplier dashboard context."""
     context.no_cache = 1
     context.title = _("Supplier Portal")
+    context.sitemap = 0
     context.supplier = _get_supplier_for_user()
+    context.session_user = frappe.session.user
+    context.is_logged_in = frappe.session.user not in (None, "Guest")
     context.open_tenders = []
     context.bids = []
     context.prequalifications = []

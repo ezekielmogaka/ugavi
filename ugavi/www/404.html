@@ -1,0 +1,21 @@
+{% extends "templates/lokado_web_base.html" %}
+{% block title %}Page not found — LOKADO{% endblock %}
+{% block page_content %}
+<section class="lokado-not-found">
+    <div class="lokado-shell">
+        <span class="lokado-kicker">{{ _("404") }}</span>
+        <h1>{{ _("That page is not available") }}</h1>
+        <p>{{ _("The link may be outdated, or the page may now sit in a different section. Continue from the public home or search the main routes below.") }}</p>
+        <div class="lokado-not-found__actions">
+            <a class="lokado-button" href="/website">{{ _("Go to public home") }}</a>
+            <a class="lokado-button lokado-button--ghost" href="/contact">{{ _("Contact LOKADO") }}</a>
+        </div>
+        <nav aria-label="{{ _('Popular destinations') }}">
+            <a href="/programmes">{{ _("Programmes") }}</a>
+            <a href="/leadership">{{ _("Leadership") }}</a>
+            <a href="/updates">{{ _("Field updates") }}</a>
+            <a href="/supplier/dashboard">{{ _("Supplier portal") }}</a>
+        </nav>
+    </div>
+</section>
+{% endblock %}

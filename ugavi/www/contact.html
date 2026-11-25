@@ -1,0 +1,79 @@
+{% extends "templates/lokado_web_base.html" %}
+{% block title %}Contact LOKADO{% endblock %}
+{% block page_content %}
+<section class="lokado-page-hero"><div class="lokado-shell"><span class="lokado-kicker">{{ _("Contact") }}</span><h1>{{ _("Connect with our team") }}</h1><p>{{ _("For partnerships, programmes, field coordination and supplier enquiries.") }}</p></div></section>
+<section class="lokado-section"><div class="lokado-shell lokado-contact-grid">
+    <div class="lokado-contact-form">
+        <span class="lokado-kicker">{{ _("Send an enquiry") }}</span>
+        <h2>{{ _("How can we help?") }}</h2>
+        <p>{{ _("Share enough context for the right team to respond. Please do not include passwords, beneficiary case details or sensitive financial information.") }}</p>
+        <form id="lokado-contact-form">
+            <div class="lokado-form-row">
+                <label>{{ _("Your name") }}<input type="text" name="name" autocomplete="name" maxlength="140" required></label>
+                <label>{{ _("Email address") }}<input type="email" name="email" autocomplete="email" maxlength="140" required></label>
+            </div>
+            <div class="lokado-form-row">
+                <label>{{ _("Organization") }}<input type="text" name="organization" autocomplete="organization" maxlength="140"></label>
+                <label>{{ _("Enquiry type") }}<select name="subject" required><option value="">{{ _("Choose one") }}</option><option value="Partnership">{{ _("Partnership") }}</option><option value="Programme enquiry">{{ _("Programme enquiry") }}</option><option value="Supplier enquiry">{{ _("Supplier enquiry") }}</option><option value="Field coordination">{{ _("Field coordination") }}</option><option value="General enquiry">{{ _("General enquiry") }}</option></select></label>
+            </div>
+            <label>{{ _("Message") }}<textarea name="message" minlength="20" maxlength="4000" rows="7" placeholder="{{ _('Tell us what you need and the best way to respond') }}" required></textarea></label>
+            <label class="lokado-honeypot" aria-hidden="true">{{ _("Company website") }}<input type="text" name="company_website" tabindex="-1" autocomplete="off"></label>
+            <label class="lokado-consent"><input type="checkbox" name="consent" required> <span>{{ _("I agree that LOKADO may use these details to respond to my enquiry. I have not included sensitive personal information.") }}</span></label>
+            <button class="lokado-button" type="submit">{{ _("Send enquiry") }}</button>
+            <p class="lokado-form-status" role="status" aria-live="polite"></p>
+        </form>
+    </div>
+    <aside><span class="lokado-kicker lokado-kicker--light">{{ _("Direct contact") }}</span><h2>{{ _("Turkana County, Kenya") }}</h2><p>{{ _("For urgent programme or field coordination, call the organization directly.") }}</p><div class="lokado-contact-links"><a href="tel:+254722652268"><small>{{ _("Telephone") }}</small>+254 722 652 268</a><a href="tel:+254735637508"><small>{{ _("Alternative") }}</small>+254 735 637 508</a></div><h3>{{ _("Field locations") }}</h3><ul><li>Lokipoto</li><li>Loreng</li><li>Oropoi</li><li>Nawountos</li><li>Nalapatui</li><li>Lodwar</li></ul><a class="lokado-contact-email" href="mailto:info@lokado.org">info@lokado.org</a></aside>
+</div></section>
+<section class="lokado-section lokado-section--soft"><div class="lokado-shell lokado-two-column">
+    <div><span class="lokado-kicker">{{ _("Suppliers & partners") }}</span><h2>{{ _("Use the right digital channel") }}</h2></div>
+    <div class="lokado-channel-list">
+        <a href="/supplier/dashboard"><strong>{{ _("Supplier portal") }}</strong><span>{{ _("Prequalification, opportunities, bids, awards and delivery follow-up") }}</span><b>→</b></a>
+        <a href="/login"><strong>{{ _("Staff & partner access") }}</strong><span>{{ _("Secure sign-in to authorized Ugavi workspaces") }}</span><b>→</b></a>
+    </div>
+</div></section>
+{% endblock %}
+
+{% block script %}
+{{ super() }}
+<script>
+frappe.ready(() => {
+    const form = document.querySelector("#lokado-contact-form");
+    const status = form?.querySelector(".lokado-form-status");
+    if (!form || !status) return;
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (form.elements.company_website.value) return;
+        const button = form.querySelector("button[type=submit]");
+        button.disabled = true;
+        status.textContent = "{{ _('Sending your enquiry…') }}";
+        const details = [
+            `Name: ${form.elements.name.value.trim()}`,
+            `Email: ${form.elements.email.value.trim()}`,
+            `Organization: ${form.elements.organization.value.trim() || "Not provided"}`,
+            "",
+            form.elements.message.value.trim(),
+        ].join("\\n");
+        frappe.call({
+            method: "frappe.www.contact.send_message",
+            args: {
+                sender: form.elements.email.value.trim(),
+                subject: `[LOKADO website] ${form.elements.subject.value}`,
+                message: details,
+            },
+            callback: (response) => {
+                button.disabled = false;
+                if (response.exc) return;
+                form.reset();
+                status.textContent = "{{ _('Thank you. Your enquiry has been received and the appropriate team will respond.') }}";
+                status.classList.add("lokado-form-status--success");
+            },
+            error: () => {
+                button.disabled = false;
+                status.textContent = "{{ _('We could not send your enquiry. Please try again or call the organization.') }}";
+            },
+        });
+    });
+});
+</script>
+{% endblock %}

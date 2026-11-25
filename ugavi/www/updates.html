@@ -1,0 +1,26 @@
+{% extends "templates/lokado_web_base.html" %}
+{% block title %}Field updates — LOKADO{% endblock %}
+{% block page_content %}
+<section class="lokado-page-hero">
+    <div class="lokado-shell">
+        <nav class="lokado-breadcrumb" aria-label="{{ _('Breadcrumb') }}"><a href="/website">{{ _("Home") }}</a><span>/</span><span aria-current="page">{{ _("Field updates") }}</span></nav>
+        <span class="lokado-kicker">{{ _("Field updates") }}</span><h1>{{ _("Local action, shared learning") }}</h1>
+        <p>{{ _("Selected programme stories from LOKADO's public channels, presented with clear context rather than unverified headline counters.") }}</p>
+    </div>
+</section>
+<section class="lokado-section"><div class="lokado-shell lokado-stories-grid">
+    <article class="lokado-story-card lokado-story-card--wide">
+        <img src="/assets/ugavi/images/lokado-peace-building.jpg" alt="{{ _('Community peacebuilding activity supported by LOKADO') }}" width="670" height="453" loading="lazy">
+        <div><span>{{ _("Peace & social cohesion") }}</span><h2>{{ _("Supporting people-led routes to peace") }}</h2><p>{{ _("LOKADO's peacebuilding work brings communities, leaders and young people into dialogue and locally relevant action across Turkana.") }}</p><a href="/programmes#peace">{{ _("Explore this programme") }} →</a></div>
+    </article>
+    <article class="lokado-story-card">
+        <img src="/assets/ugavi/images/lokado-livelihoods-goats.jpg" alt="{{ _('LOKADO livelihoods distribution in Turkana') }}" width="670" height="453" loading="lazy">
+        <div><span>{{ _("Livelihoods") }}</span><h2>{{ _("Building resilient household livelihoods") }}</h2><p>{{ _("Livestock and enterprise support connects immediate needs with skills and locally owned productive activity.") }}</p><a href="/programmes#livelihoods">{{ _("Read the programme context") }} →</a></div>
+    </article>
+    <article class="lokado-story-card">
+        <img src="/assets/ugavi/images/lokado-agroforestry.jpg" alt="{{ _('Kangagetei agroforestry farm supported by LOKADO') }}" width="670" height="453" loading="lazy">
+        <div><span>{{ _("Agriculture & resilience") }}</span><h2>{{ _("Growing food, skills and environmental resilience") }}</h2><p>{{ _("Agroforestry and kitchen gardens combine practical production, nutrition and longer-term land stewardship.") }}</p><a href="/programmes#livelihoods">{{ _("Read the programme context") }} →</a></div>
+    </article>
+</div></section>
+<section class="lokado-section lokado-section--soft"><div class="lokado-shell lokado-editorial-note"><div><span class="lokado-kicker">{{ _("Editorial standard") }}</span><h2>{{ _("Updates should be useful, contextual and verifiable") }}</h2></div><p>{{ _("This page is intentionally conservative: each story needs a named programme, period, location, image consent status and evidence owner before it is expanded into a dated news article.") }}</p></div></section>
+{% endblock %}

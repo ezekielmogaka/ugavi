@@ -1,7 +1,9 @@
-{% extends "templates/web.html" %}
+{% extends "templates/lokado_web_base.html" %}
+
+{% block title %}{{ _("Supplier Portal") }} — LOKADO{% endblock %}
 
 {% block page_content %}
-<main class="ugavi-portal" aria-labelledby="supplier-portal-title">
+<div class="ugavi-portal ugavi-portal--v2" aria-labelledby="supplier-portal-title">
     <a class="ugavi-portal__skip-link" href="#supplier-dashboard-content">{{ _("Skip to dashboard") }}</a>
     <header class="ugavi-portal__hero">
         <div class="ugavi-portal__identity">
@@ -15,8 +17,8 @@
             </div>
         </div>
         <div class="ugavi-portal__mark" aria-hidden="true">
-            <span>LOKADO</span>
-            <small>{{ _("Action for development") }}</small>
+            <img src="/assets/ugavi/images/lokado-logo.png" alt="" width="85" height="80">
+            <div><span>{{ _("Secure supplier workspace") }}</span><small>{{ _("LOKADO procurement network") }}</small></div>
         </div>
     </header>
 
@@ -27,25 +29,22 @@
             <h2 id="supplier-welcome-title">{{ profile.supplier_name or supplier }}</h2>
             <small>{{ supplier }}</small>
         </div>
-        <a class="ugavi-portal__secondary-action" href="/me">{{ _("Manage account") }}</a>
+        <div class="ugavi-portal__account-actions">
+            <span class="ugavi-portal__session-label">{{ _("Signed in as") }} {{ session_user }}</span>
+            <a class="ugavi-portal__secondary-action" href="/me">{{ _("Account settings") }}</a>
+            <button type="button" class="ugavi-portal__sign-out" data-supplier-logout>{{ _("Sign out") }}</button>
+        </div>
     </section>
 
-    <nav class="ugavi-portal__journey" aria-label="{{ _('Supplier journey') }}">
-        <a href="#profile">{{ _("Profile") }}</a>
-        <a href="#prequalification">{{ _("Prequalification") }}</a>
-        <a href="#opportunities">{{ _("Opportunities") }}</a>
-        <a href="#bids">{{ _("Bids") }}</a>
-        <a href="#clarifications">{{ _("Clarifications") }}</a>
-        <a href="#complaints">{{ _("Complaints") }}</a>
-        <a href="#awards">{{ _("Awards") }}</a>
-        <a href="#contracts">{{ _("Contracts") }}</a>
-        <a href="#deliveries">{{ _("Deliveries") }}</a>
-        <a href="#invoices">{{ _("Invoices") }}</a>
-        <a href="#evaluations">{{ _("Evaluations") }}</a>
-        <a href="#notifications">{{ _("Notifications") }}</a>
+    <nav class="ugavi-portal__journey" aria-label="{{ _('Supplier workspace') }}" role="tablist">
+        <button type="button" role="tab" data-portal-view="overview" aria-selected="true">{{ _("Overview") }}</button>
+        <button type="button" role="tab" data-portal-view="organization">{{ _("Organization") }}</button>
+        <button type="button" role="tab" data-portal-view="bidding">{{ _("Opportunities & bids") }}</button>
+        <button type="button" role="tab" data-portal-view="fulfilment">{{ _("Orders & fulfilment") }}</button>
+        <button type="button" role="tab" data-portal-view="performance">{{ _("Performance & updates") }}</button>
     </nav>
 
-    <section class="ugavi-portal__readiness" aria-labelledby="journey-readiness-title">
+    <section class="ugavi-portal__readiness" data-portal-overview aria-labelledby="journey-readiness-title">
         <div>
             <span class="ugavi-portal__eyebrow">{{ _("Journey readiness") }}</span>
             <h2 id="journey-readiness-title">
@@ -69,7 +68,7 @@
         </div>
     </section>
 
-    <section class="ugavi-portal__metrics" aria-label="{{ _('Supplier overview') }}">
+    <section class="ugavi-portal__metrics" data-portal-overview aria-label="{{ _('Supplier overview') }}">
         <article class="ugavi-portal__metric">
             <span>{{ _("Open opportunities") }}</span>
             <strong>{{ open_tenders | length }}</strong>
@@ -93,7 +92,7 @@
     </section>
 
     <div class="ugavi-portal__layout">
-        <section id="profile" class="ugavi-portal__card" aria-labelledby="profile-title">
+        <section id="profile" class="ugavi-portal__card" data-portal-view="organization" aria-labelledby="profile-title">
             <div class="ugavi-portal__section-heading">
                 <div>
                     <span class="ugavi-portal__eyebrow">{{ _("Organization") }}</span>
@@ -109,7 +108,7 @@
             </form>
         </section>
 
-        <section id="prequalification" class="ugavi-portal__card" aria-labelledby="prequalification-title">
+        <section id="prequalification" class="ugavi-portal__card" data-portal-view="organization" aria-labelledby="prequalification-title">
             <div class="ugavi-portal__section-heading">
                 <div>
                     <span class="ugavi-portal__eyebrow">{{ _("Eligibility") }}</span>
@@ -145,7 +144,7 @@
             {% endif %}
         </section>
 
-        <section id="opportunities" class="ugavi-portal__card ugavi-portal__card--full" aria-labelledby="opportunities-title">
+        <section id="opportunities" class="ugavi-portal__card ugavi-portal__card--full" data-portal-view="bidding" aria-labelledby="opportunities-title">
             <div class="ugavi-portal__section-heading">
                 <div><span class="ugavi-portal__eyebrow">{{ _("Opportunities") }}</span><h2 id="opportunities-title">{{ _("Open tenders") }}</h2></div>
                 <span class="ugavi-chip ugavi-chip--published">{{ _("{0} open").format(open_tenders | length) }}</span>
@@ -164,7 +163,7 @@
             {% else %}<div class="ugavi-empty-state"><div class="ugavi-empty-state__title">{{ _("No open tenders") }}</div><p>{{ _("New eligible opportunities will appear here.") }}</p></div>{% endif %}
         </section>
 
-        <section id="bids" class="ugavi-portal__card" aria-labelledby="bids-title">
+        <section id="bids" class="ugavi-portal__card" data-portal-view="bidding" aria-labelledby="bids-title">
             <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Secure submission") }}</span><h2 id="bids-title">{{ _("Submit a bid") }}</h2></div></div>
             <form id="bid-form" class="ugavi-portal__form">
                 <label>{{ _("Tender") }}<select name="tender" required><option value="">{{ _("Select an opportunity") }}</option>{% for tender in open_tenders %}<option value="{{ tender.name }}">{{ tender.title }}</option>{% endfor %}</select></label>
@@ -180,7 +179,7 @@
             {% if bids %}<ul class="ugavi-portal__status-list">{% for bid in bids %}<li><div><strong>{{ bid.tender }}</strong><small>{{ bid.name }}{% if bid.submission_receipt %} · {{ _("Receipt") }} {{ bid.submission_receipt[:12] }}…{% endif %}</small></div><span class="ugavi-chip ugavi-chip--{{ bid.status | lower }}">{{ bid.status }}</span></li>{% endfor %}</ul>{% endif %}
         </section>
 
-        <section id="clarifications" class="ugavi-portal__card" aria-labelledby="clarifications-title">
+        <section id="clarifications" class="ugavi-portal__card" data-portal-view="bidding" aria-labelledby="clarifications-title">
             <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Questions") }}</span><h2 id="clarifications-title">{{ _("Clarifications") }}</h2></div></div>
             <form class="ugavi-portal__form" data-ugavi-method="submit_clarification">
                 <label>{{ _("Tender") }}<select name="tender" required><option value="">{{ _("Select an opportunity") }}</option>{% for tender in open_tenders %}<option value="{{ tender.name }}">{{ tender.title }}</option>{% endfor %}</select></label>
@@ -190,7 +189,7 @@
             {% if clarifications %}<ul class="ugavi-portal__status-list">{% for item in clarifications %}<li><div><strong>{{ item.tender }}</strong><small>{{ item.question | striptags | truncate(90) }}{% if item.answer %}<br>{{ _("Answer") }}: {{ item.answer | striptags | truncate(90) }}{% endif %}</small></div><span class="ugavi-chip ugavi-chip--{{ item.status | lower }}">{{ item.status }}</span></li>{% endfor %}</ul>{% endif %}
         </section>
 
-        <section id="complaints" class="ugavi-portal__card" aria-labelledby="complaints-title">
+        <section id="complaints" class="ugavi-portal__card" data-portal-view="bidding" aria-labelledby="complaints-title">
             <div class="ugavi-portal__section-heading">
                 <div>
                     <span class="ugavi-portal__eyebrow">{{ _("MVP2 readiness") }}</span>
@@ -242,19 +241,19 @@
             {% endif %}
         </section>
 
-        <section id="awards" class="ugavi-portal__card" aria-labelledby="awards-title">
+        <section id="awards" class="ugavi-portal__card" data-portal-view="fulfilment" aria-labelledby="awards-title">
             <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Results") }}</span><h2 id="awards-title">{{ _("Awards") }}</h2></div></div>
             {% if awards %}<ul class="ugavi-portal__status-list">{% for item in awards %}<li><div><strong>{{ item.title }}</strong><small>{{ item.name }} · {{ frappe.format_value(item.award_amount, {"fieldtype": "Currency"}) }}</small></div><span class="ugavi-chip ugavi-chip--awarded">{{ item.status }}</span></li>{% endfor %}</ul>
             {% else %}<div class="ugavi-empty-state ugavi-empty-state--compact"><p>{{ _("Award notices issued to your organization will appear here.") }}</p></div>{% endif %}
         </section>
 
-        <section id="contracts" class="ugavi-portal__card" aria-labelledby="contracts-title">
+        <section id="contracts" class="ugavi-portal__card" data-portal-view="fulfilment" aria-labelledby="contracts-title">
             <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Commitments") }}</span><h2 id="contracts-title">{{ _("Contracts") }}</h2></div></div>
             {% if contracts %}<ul class="ugavi-portal__status-list">{% for item in contracts %}<li><div><strong>{{ item.name }}</strong><small>{{ item.purchase_order }} · {{ frappe.format_value(item.contract_value, {"fieldtype": "Currency"}) }}</small></div><span class="ugavi-chip ugavi-chip--{{ item.status | lower }}">{{ item.status }}</span></li>{% endfor %}</ul>
             {% else %}<div class="ugavi-empty-state ugavi-empty-state--compact"><p>{{ _("Active and completed contracts will appear here.") }}</p></div>{% endif %}
         </section>
 
-        <section id="deliveries" class="ugavi-portal__card ugavi-portal__card--full" aria-labelledby="deliveries-title">
+        <section id="deliveries" class="ugavi-portal__card ugavi-portal__card--full" data-portal-view="fulfilment" aria-labelledby="deliveries-title">
             <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Fulfilment") }}</span><h2 id="deliveries-title">{{ _("Orders and deliveries") }}</h2></div></div>
             {% if purchase_orders %}
             <div class="ugavi-portal__table-wrap"><table class="ugavi-portal__table"><thead><tr><th>{{ _("Purchase order") }}</th><th>{{ _("Required by") }}</th><th>{{ _("Received") }}</th><th>{{ _("Status") }}</th><th>{{ _("Action") }}</th></tr></thead><tbody>
@@ -264,7 +263,7 @@
             {% if deliveries %}<h3>{{ _("Recorded receipts") }}</h3><ul class="ugavi-portal__status-list">{% for item in deliveries %}<li><div><strong>{{ item.name }}</strong><small>{{ frappe.utils.format_date(item.posting_date) }} · {{ frappe.format_value(item.grand_total, {"fieldtype": "Currency"}) }} {{ item.currency }}</small></div><span class="ugavi-chip ugavi-chip--{{ item.status | lower | replace(' ', '-') }}">{{ item.status }}</span></li>{% endfor %}</ul>{% endif %}
         </section>
 
-        <section id="invoices" class="ugavi-portal__card ugavi-portal__card--full" aria-labelledby="invoices-title">
+        <section id="invoices" class="ugavi-portal__card ugavi-portal__card--full" data-portal-view="fulfilment" aria-labelledby="invoices-title">
             <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Procure to pay") }}</span><h2 id="invoices-title">{{ _("Supplier invoices") }}</h2></div></div>
             {% if deliveries %}
             <form id="supplier-invoice-form" class="ugavi-portal__form">
@@ -287,18 +286,26 @@
             {% else %}<div class="ugavi-empty-state ugavi-empty-state--compact"><p>{{ _("Invoices created from accepted receipts will appear here.") }}</p></div>{% endif %}
         </section>
 
-        <section id="evaluations" class="ugavi-portal__card" aria-labelledby="evaluations-title">
+        <section id="evaluations" class="ugavi-portal__card" data-portal-view="performance" aria-labelledby="evaluations-title">
             <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Performance") }}</span><h2 id="evaluations-title">{{ _("Supplier evaluations") }}</h2></div></div>
             {% if evaluations %}<ul class="ugavi-portal__status-list">{% for item in evaluations %}<li><div><strong>{{ item.purchase_receipt }}</strong><small>{{ frappe.utils.format_date(item.evaluation_date) }}{% if item.remarks %} · {{ item.remarks | truncate(70) }}{% endif %}</small></div><span class="ugavi-chip ugavi-chip--{{ item.status | lower }}">{{ item.cumulative_rating or item.total_score or 0 }}%</span></li>{% endfor %}</ul>
             {% else %}<div class="ugavi-empty-state ugavi-empty-state--compact"><p>{{ _("Performance results are published after completed deliveries.") }}</p></div>{% endif %}
         </section>
 
-        <section id="notifications" class="ugavi-portal__card" aria-labelledby="notifications-title">
+        <section id="notifications" class="ugavi-portal__card" data-portal-view="performance" aria-labelledby="notifications-title">
             <div class="ugavi-portal__section-heading"><div><span class="ugavi-portal__eyebrow">{{ _("Updates") }}</span><h2 id="notifications-title">{{ _("Notifications") }}</h2></div></div>
             {% if notifications %}<ul class="ugavi-portal__status-list">{% for item in notifications %}<li class="{% if not item.read %}ugavi-portal__notification--unread{% endif %}"><div><strong>{{ item.title }}</strong><small>{{ item.description | striptags | truncate(100) }} · {{ frappe.utils.format_datetime(item.creation) }}</small></div>{% if not item.read %}<button type="button" class="ugavi-portal__text-action" data-read-notification="{{ item.name }}">{{ _("Mark read") }}</button>{% endif %}</li>{% endfor %}</ul>
             {% else %}<div class="ugavi-empty-state ugavi-empty-state--compact"><p>{{ _("Journey updates and receipts will appear here.") }}</p></div>{% endif %}
         </section>
     </div>
+    {% elif is_logged_in %}
+    <section class="ugavi-portal__sign-in" aria-labelledby="supplier-session-title">
+        <span class="ugavi-portal__eyebrow">{{ _("Account not linked") }}</span>
+        <h2 id="supplier-session-title">{{ _("This account is not linked to a Supplier record") }}</h2>
+        <p>{{ _("Sign out and use the supplier account provided by LOKADO, or ask the procurement team to connect this user to the correct Supplier.") }}</p>
+        <button type="button" class="ugavi-portal__primary-action" data-supplier-logout>{{ _("Sign out") }}</button>
+        <small>{{ _("Signed in as") }} {{ session_user }}</small>
+    </section>
     {% else %}
     <section class="ugavi-portal__sign-in" aria-labelledby="supplier-sign-in-title">
         <span class="ugavi-portal__eyebrow">{{ _("Supplier access") }}</span>
@@ -308,7 +315,7 @@
         <small>{{ _("Need access? Contact the LOKADO procurement team.") }}</small>
     </section>
     {% endif %}
-</main>
+</div>
 {% endblock %}
 
 {% block script %}
@@ -399,6 +406,7 @@
         });
     });
     document.querySelectorAll("[data-select-tender]").forEach((button) => button.addEventListener("click", () => {
+        activatePortalView("bidding", true);
         document.querySelector("#bid-form [name=tender]").value = button.dataset.selectTender;
         document.querySelector("#bids").scrollIntoView({ behavior: "smooth" });
     }));
@@ -423,26 +431,63 @@
     document.querySelectorAll("[data-read-notification]").forEach((button) => button.addEventListener("click", () => {
         reloadAfter(button, () => call("mark_notification_read", { notification: button.dataset.readNotification }));
     }));
-    const journeyLinks = [...document.querySelectorAll(".ugavi-portal__journey a")];
-    const journeySections = journeyLinks
-        .map((link) => document.querySelector(link.getAttribute("href")))
-        .filter(Boolean);
-    if ("IntersectionObserver" in window) {
-        const observer = new IntersectionObserver((entries) => {
-            const visible = entries
-                .filter((entry) => entry.isIntersecting)
-                .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
-            if (!visible) return;
-            journeyLinks.forEach((link) => {
-                const isActive = link.getAttribute("href") === `#${visible.target.id}`;
-                link.classList.toggle("ugavi-portal__journey-link--active", isActive);
-                if (isActive) link.setAttribute("aria-current", "location");
-                else link.removeAttribute("aria-current");
-            });
-        }, { rootMargin: "-20% 0px -65% 0px", threshold: [0.1, 0.5] });
-        journeySections.forEach((section) => observer.observe(section));
-    }
+    const viewTabs = [...document.querySelectorAll(".ugavi-portal__journey [data-portal-view]")];
+    const portalSections = [...document.querySelectorAll(".ugavi-portal__layout [data-portal-view]")];
+    const overviewSections = [...document.querySelectorAll("[data-portal-overview]")];
+    const portalLayout = document.querySelector(".ugavi-portal__layout");
+    const activatePortalView = (view, scroll = false) => {
+        const validView = ["overview", "organization", "bidding", "fulfilment", "performance"].includes(view)
+            ? view
+            : "overview";
+        viewTabs.forEach((tab) => {
+            const active = tab.dataset.portalView === validView;
+            tab.setAttribute("aria-selected", active ? "true" : "false");
+            tab.classList.toggle("ugavi-portal__journey-link--active", active);
+        });
+        overviewSections.forEach((section) => section.hidden = validView !== "overview");
+        portalSections.forEach((section) => section.hidden = section.dataset.portalView !== validView);
+        portalLayout.hidden = validView === "overview";
+        if (scroll) portalLayout.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    viewTabs.forEach((tab) => tab.addEventListener("click", () => activatePortalView(tab.dataset.portalView, true)));
+    document.querySelectorAll("a[href^='#']").forEach((link) => link.addEventListener("click", () => {
+        const target = document.querySelector(link.getAttribute("href"));
+        if (target?.dataset.portalView) activatePortalView(target.dataset.portalView);
+    }));
+    const activateHashView = () => {
+        const initialSection = window.location.hash
+            ? document.querySelector(window.location.hash)
+            : null;
+        if (initialSection?.dataset.portalView) activatePortalView(initialSection.dataset.portalView);
+        else activatePortalView("overview");
+    };
+    window.addEventListener("hashchange", activateHashView);
+    activateHashView();
+
+    document.querySelectorAll("[data-supplier-logout]").forEach((button) => {
+        button.addEventListener("click", () => {
+            frappe.confirm(
+                "{{ _('Sign out of the supplier workspace?') }}",
+                () => frappe.call({
+                    method: "logout",
+                    freeze: true,
+                    callback: () => window.location.assign("/login"),
+                })
+            );
+        });
+    });
 })();
+</script>
+{% endif %}
+{% if is_logged_in and not supplier %}
+<script>
+document.querySelectorAll("[data-supplier-logout]").forEach((button) => {
+    button.addEventListener("click", () => frappe.call({
+        method: "logout",
+        freeze: true,
+        callback: () => window.location.assign("/login"),
+    }));
+});
 </script>
 {% endif %}
 {% endblock %}
