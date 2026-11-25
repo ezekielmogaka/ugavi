@@ -1,9 +1,11 @@
-.PHONY: setup build start stop dev-up dev-down dev-logs dev-shell dev-migrate dev-config dev-seed dev-check dev-test dev-reset seed seed-lokado seed-generic seed-check demo-check demo-index fleet-check tenant-manifest-check test lint backup restore backup-demo restore-demo reset-demo reset-lokado upgrade-check clean e2e bootstrap help
+.PHONY: setup build start stop dev-up dev-down dev-logs dev-shell dev-migrate dev-config dev-seed dev-check dev-test dev-reset seed seed-lokado seed-generic seed-check demo-check demo-index fleet-check tenant-manifest-check test lint backup restore backup-demo restore-demo reset-demo reset-lokado upgrade-check release-migrate release-deploy clean e2e bootstrap help
 
 BENCH_DIR ?= $(HOME)/frappe-bench
 SITE ?= ugavi.localhost
 UGAVI_IMAGE ?= ugavi
 UGAVI_TAG ?= 0.1.0
+UGAVI_BUILD_VERSION ?= $(UGAVI_TAG)
+SOURCE_REVISION ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 ERPNEXT_TAG ?= v16.55.0
 NGINX_LISTEN_PORT ?= 8080
 TENANT_MANIFEST ?= deploy/tenants.example.json
@@ -12,6 +14,7 @@ DB_ROOT_PASSWORD ?= admin
 ADMIN_PASSWORD ?= admin
 COMPOSE = UGAVI_IMAGE=$(UGAVI_IMAGE) UGAVI_TAG=$(UGAVI_TAG) NGINX_LISTEN_PORT=$(NGINX_LISTEN_PORT) docker compose -f compose.yaml
 DEV_COMPOSE = UGAVI_IMAGE=$(UGAVI_IMAGE) UGAVI_TAG=$(UGAVI_TAG) docker compose -f compose.yaml -f compose.dev.yaml
+RELEASE_COMPOSE = UGAVI_IMAGE=$(UGAVI_IMAGE) UGAVI_TAG=$(UGAVI_TAG) docker compose -f compose.yaml -f compose.release.yaml
 
 setup:
 	@echo "==> Setting up Ugavi development environment..."
@@ -35,7 +38,13 @@ setup:
 	@echo "==> Setup complete! Visit http://localhost:$(NGINX_LISTEN_PORT)"
 
 build:
-	docker build -t $(UGAVI_IMAGE):$(UGAVI_TAG) --build-arg ERPNEXT_TAG=$(ERPNEXT_TAG) .
+	docker build \
+		--tag $(UGAVI_IMAGE):$(UGAVI_TAG) \
+		--build-arg ERPNEXT_TAG=$(ERPNEXT_TAG) \
+		--build-arg UGAVI_VERSION=$(UGAVI_BUILD_VERSION) \
+		--build-arg SOURCE_REVISION=$(SOURCE_REVISION) \
+		--build-arg SOLVRONIX_TAG=v3.2.0 \
+		.
 
 start:
 	docker compose -f compose.yaml up -d
@@ -174,6 +183,33 @@ upgrade-check: build
 	$(COMPOSE) exec -T backend bench --site $(SITE) run-tests --app ugavi
 	@curl -fsS http://localhost:$(NGINX_LISTEN_PORT)/api/method/frappe.ping
 
+# Production-safe release sequence. A verified backup must be copied off-host
+# separately; this target never runs demo seed scripts.
+release-migrate:
+	$(RELEASE_COMPOSE) run --rm migrator
+
+release-deploy:
+	@echo "==> Pulling immutable release $(UGAVI_IMAGE):$(UGAVI_TAG)..."
+	$(RELEASE_COMPOSE) pull backend frontend websocket scheduler queue-default queue-long migrator
+	@echo "==> Backing up $(SITE) before maintenance..."
+	$(RELEASE_COMPOSE) exec -T backend bench --site $(SITE) backup --with-files
+	@echo "==> Copy backups off the host before proceeding with production."
+	@echo "==> Stopping application services for migration..."
+	$(RELEASE_COMPOSE) stop queue-long queue-default scheduler websocket frontend backend
+	$(MAKE) release-migrate
+	$(RELEASE_COMPOSE) up -d --force-recreate backend websocket frontend scheduler queue-default queue-long
+	@echo "==> Waiting for the release health gate..."
+	@ready=0; \
+	for i in $$(seq 1 60); do \
+		if curl -fsS http://localhost:$(NGINX_LISTEN_PORT)/api/method/frappe.ping >/dev/null; then \
+			ready=1; break; \
+		fi; \
+		echo "Waiting... $$i"; sleep 5; \
+	done; \
+	test $$ready -eq 1
+	$(RELEASE_COMPOSE) exec -T backend bench --site $(SITE) execute ugavi.scripts.check_upstream_compatibility.run
+	@echo "==> Release deployed. Monitor canary traffic before wider tenant promotion."
+
 reset-demo: reset-lokado
 
 reset-lokado:
@@ -271,5 +307,7 @@ help:
 	@echo "  make backup         - Backup DB with files"
 	@echo "  make restore        - Restore from backup"
 	@echo "  make upgrade-check  - Rehearse compatibility, migration, tests, and health checks"
+	@echo "  make release-migrate - Run the one-shot production migration service"
+	@echo "  make release-deploy  - Pull, backup, stop, migrate and health-gate an immutable release"
 	@echo "  make clean          - DESTRUCTIVE: stop release+dev stacks, remove volumes and backups"
 	@echo "  make help           - Show this help"

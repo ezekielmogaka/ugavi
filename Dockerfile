@@ -11,18 +11,33 @@
 #   - sites/assets removed so clean volume mount works
 #   - Same image serves backend (gunicorn) and frontend (nginx)
 
+# syntax=docker/dockerfile:1.7
+
 ARG ERPNEXT_TAG=v16.55.0
+ARG UGAVI_VERSION=0.1.0
+ARG SOURCE_REVISION=unknown
+ARG SOLVRONIX_TAG=v3.2.0
 FROM frappe/erpnext:${ERPNEXT_TAG}
+
+ARG UGAVI_VERSION
+ARG SOURCE_REVISION
+ARG SOLVRONIX_TAG
+ARG ERPNEXT_TAG
 
 LABEL org.opencontainers.image.title="Ugavi SCM"
 LABEL org.opencontainers.image.description="Enterprise Supply Chain Management on Frappe/ERPNext v16"
-LABEL org.opencontainers.image.version="0.1.0"
+LABEL org.opencontainers.image.version="${UGAVI_VERSION}"
+LABEL org.opencontainers.image.revision="${SOURCE_REVISION}"
+LABEL org.opencontainers.image.base.name="frappe/erpnext:${ERPNEXT_TAG}"
 LABEL org.opencontainers.image.vendor="Ugavi"
+
+ENV UGAVI_VERSION="${UGAVI_VERSION}" \
+    UGAVI_AUTO_MIGRATE="1"
 
 USER root
 
 # Copy an installable Frappe app (metadata at app root, package below it).
-COPY pyproject.toml README.md MANIFEST.in package.json /home/frappe/frappe-bench/apps/ugavi/
+COPY pyproject.toml README.md MANIFEST.in package.json requirements-runtime.txt /home/frappe/frappe-bench/apps/ugavi/
 COPY ugavi /home/frappe/frappe-bench/apps/ugavi/ugavi
 
 # Set ownership and register ugavi with bench
@@ -36,19 +51,16 @@ RUN chown -R frappe:0 /home/frappe/frappe-bench/apps/ugavi && \
 USER frappe
 
 # Install ugavi-specific dependencies
-RUN /home/frappe/frappe-bench/env/bin/pip install --no-cache-dir \
-    cryptography>=41.0.0 \
-    python-jose>=3.3.0 \
-    qrcode>=7.4.0 \
-    python-barcode>=0.15.0 \
-    prometheus-client>=0.19.0
+RUN --mount=type=cache,target=/home/frappe/.cache/pip,uid=1000,gid=1000 \
+    /home/frappe/frappe-bench/env/bin/pip install \
+      -r /home/frappe/frappe-bench/apps/ugavi/requirements-runtime.txt
 
 # Verify ugavi is importable (via .pth created in step 3)
 RUN /home/frappe/frappe-bench/env/bin/python -c "import ugavi; print('ugavi import OK')"
 
 # Install solvronix_desk theme for the internal Desk (pinned v3.2.0)
 RUN cd /home/frappe/frappe-bench && \
-    bench get-app --branch v3.2.0 https://github.com/Solvronix/Solvronix-Desk
+    bench get-app --branch "${SOLVRONIX_TAG}" https://github.com/Solvronix/Solvronix-Desk
 
 # Build all assets (ugavi + solvronix_desk + frappe/erpnext shared bundles).
 RUN cd /home/frappe/frappe-bench && \

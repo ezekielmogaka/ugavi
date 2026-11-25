@@ -10,9 +10,9 @@ Frappe/ERPNext files, replace core controllers, or override whitelisted methods.
 |---|---|---|---|---|
 | 0.1.x | 16.54.0 (rehearsed) | 16.53.0 (pinned/rehearsed) | 3.14 | 11.4+ |
 
-Exact production image versions are pinned in `Dockerfile` and `apps.json`.
-The CI compatibility job also installs the current `version-16` upstream
-branches. This catches incompatibilities before a pinned production upgrade.
+Production images pin Frappe/ERPNext/Solvronix app versions in `Dockerfile` and
+`apps.json`. CI rebuilds the exact custom image and tests the pinned versions;
+it does not rely on mutable `version-16` app branches.
 
 ## Extension contract
 
@@ -83,14 +83,17 @@ Validate these workflows using non-production records:
 
 ## Production rollout
 
-1. Announce the maintenance window and stop workers/scheduler.
-2. Create and verify `bench backup --with-files`.
-3. Record current Ugavi, Frappe, and ERPNext image/tag versions.
-4. Deploy the already-rehearsed immutable image.
-5. Run `bench --site <site> migrate`.
-6. Run `bench build --app ugavi` when assets are not image-baked.
-7. Start services, then run compatibility and health checks.
-8. Complete the workflow smoke tests above.
+Use the immutable release workflow in
+[release-delivery.md](operations/release-delivery.md):
+
+1. Announce the maintenance window and stop traffic/write activity.
+2. Create and verify `bench backup --with-files`, then copy it off-host.
+3. Record the current/previous image digests and the pre-release backup.
+4. Deploy the already-rehearsed immutable image tag/digest.
+5. Run the one-shot `migrator` service before application services.
+6. Recreate backend/frontend/workers from the image; assets are already baked.
+7. Run compatibility and health gates.
+8. Complete the workflow smoke tests above, then observe the canary window.
 
 Do not run seed scripts on production.
 

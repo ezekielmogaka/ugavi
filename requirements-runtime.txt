@@ -1,0 +1,5 @@
+cryptography==50.0.2
+python-jose==3.5.0
+qrcode==8.2
+python-barcode==0.16.1
+prometheus_client==0.26.0

@@ -1,0 +1,32 @@
+# Production release overlay. Run migrations explicitly with:
+#   docker compose -f compose.yaml -f compose.release.yaml run --rm migrator
+
+services:
+  backend:
+    environment:
+      UGAVI_AUTO_MIGRATE: "0"
+    pull_policy: always
+
+  migrator:
+    image: ${UGAVI_IMAGE:-ugavi}:${UGAVI_TAG:-0.1.0}
+    entrypoint:
+      - bash
+      - -c
+    command:
+      - |
+        set -e
+        cd /home/frappe/frappe-bench
+        bench --site "${SITE_NAME:-ugavi.localhost}" migrate
+        bench --site "${SITE_NAME:-ugavi.localhost}" execute ugavi.scripts.setup_config.run
+        bench --site "${SITE_NAME:-ugavi.localhost}" clear-cache
+    volumes:
+      - sites_data:/home/frappe/frappe-bench/sites
+    environment:
+      SITE_NAME: ${SITE_NAME:-ugavi.localhost}
+      UGAVI_AUTO_MIGRATE: "0"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    restart: "no"

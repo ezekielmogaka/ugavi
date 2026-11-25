@@ -63,16 +63,19 @@ elif ! bench --site "$SITE_NAME" list-apps 2>/dev/null | grep -q solvronix_desk;
     echo "==> Installing solvronix_desk on existing site..."
     bench --site "$SITE_NAME" install-app solvronix_desk
 fi
-# --- Step 3: Migrate (on first install or if lock is stale) ---
-if [ ! -f "/home/frappe/frappe-bench/sites/.ugavi-migrated" ]; then
-    echo "==> Running migrations for $SITE_NAME..."
+# --- Step 3: Migrate once per immutable image version ---
+UGAVI_VERSION="${UGAVI_VERSION:-development}"
+SAFE_VERSION="$(printf '%s' "$UGAVI_VERSION" | tr -c 'A-Za-z0-9_.-' '_')"
+MIGRATION_MARKER="/home/frappe/frappe-bench/sites/.ugavi-migrated-${SAFE_VERSION}"
+if [ "${UGAVI_AUTO_MIGRATE:-1}" = "1" ] && [ ! -f "$MIGRATION_MARKER" ]; then
+    echo "==> Running migrations for $SITE_NAME (image $UGAVI_VERSION)..."
     # Clean stale lock file from previous aborted run
     rm -f "/home/frappe/frappe-bench/sites/$SITE_NAME/locks/bench_migrate.lock"
     bench --site "$SITE_NAME" migrate
     bench --site "$SITE_NAME" execute ugavi.scripts.setup_config.run
-    touch /home/frappe/frappe-bench/sites/.ugavi-migrated
+    touch "$MIGRATION_MARKER"
 else
-    echo "==> Skipping migrate (already migrated)."
+    echo "==> Skipping migrate (already migrated or UGAVI_AUTO_MIGRATE=0)."
 fi
 
 # --- Step 4: Start ---

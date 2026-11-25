@@ -1,0 +1,109 @@
+name: Release image
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version tag, for example v0.1.1
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/ugavi
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: version
+        shell: bash
+        run: |
+          VERSION="${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}"
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.value }}
+            type=sha,format=long,prefix=sha-
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+      - name: Build release candidate
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          push: false
+          tags: ugavi:release-check
+          cache-from: type=gha,scope=ugavi-release
+          cache-to: type=gha,mode=max,scope=ugavi-release
+          build-args: |
+            ERPNEXT_TAG=v16.55.0
+            UGAVI_VERSION=${{ steps.version.outputs.value }}
+            SOURCE_REVISION=${{ github.sha }}
+            SOLVRONIX_TAG=v3.2.0
+      - name: Scan release candidate
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: ugavi:release-check
+          format: table
+          exit-code: 1
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+      - name: Publish immutable image
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=ugavi-release
+          cache-to: type=gha,mode=max,scope=ugavi-release
+          provenance: mode=max
+          sbom: true
+          build-args: |
+            ERPNEXT_TAG=v16.55.0
+            UGAVI_VERSION=${{ steps.version.outputs.value }}
+            SOURCE_REVISION=${{ github.sha }}
+            SOLVRONIX_TAG=v3.2.0
+      - name: Record release manifest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        shell: bash
+        run: |
+          cat > release-manifest.json <<EOF
+          {
+            "image": "${IMAGE}",
+            "version": "${{ steps.version.outputs.value }}",
+            "digest": "${DIGEST}",
+            "commit": "${GITHUB_SHA}",
+            "erpnext": "v16.55.0",
+            "solvronix_desk": "v3.2.0"
+          }
+          EOF
+          cat release-manifest.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-manifest-${{ steps.version.outputs.value }}
+          path: release-manifest.json
+          retention-days: 365
