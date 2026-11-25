@@ -1,7 +1,7 @@
 .ugavi-portal--v2 {
   --portal-ink: #122d55;
-  --portal-blue: #18388f;
-  --portal-green: #2d7d3a;
+  --portal-blue: var(--ugavi-brand);
+  --portal-green: var(--ugavi-accent);
   --portal-surface: #fff;
   --portal-bg: #f4f7f8;
   box-sizing: border-box;
@@ -13,6 +13,22 @@
   background:
     radial-gradient(circle at 92% 5%, rgba(45, 125, 58, .11), transparent 24rem),
     var(--portal-bg);
+}
+
+.ugavi-portal--v2 .ugavi-portal__card,
+.ugavi-portal--v2 .ugavi-portal__metric,
+.ugavi-portal--v2 .ugavi-portal__readiness {
+  transition:
+    transform var(--ugavi-transition-normal),
+    box-shadow var(--ugavi-transition-normal),
+    border-color var(--ugavi-transition-fast);
+}
+
+.ugavi-portal--v2 .ugavi-portal__card:hover,
+.ugavi-portal--v2 .ugavi-portal__metric:hover {
+  border-color: color-mix(in srgb, var(--portal-blue) 24%, #dfe6eb);
+  box-shadow: var(--ugavi-shadow-card-hover);
+  transform: translateY(-1px);
 }
 
 .ugavi-portal--v2 [hidden] {

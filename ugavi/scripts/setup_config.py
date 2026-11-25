@@ -558,8 +558,8 @@ def configure_theme():
     """Configure Solvronix Desk theme and Frappe Website Theme with LOKADO brand.
 
     Brand palette:
-      Primary (navy):  #142D4E   — sidebar, headers
-      Secondary (teal): #167D78   — accents, success
+      Primary (blue):   #18388F   — sidebar, headers
+      Secondary (green): #2D7D3A  — accents, success
       Gold:            #D6A85F   — highlights, CTAs
 
     Idempotent — only sets values that are uninitialised or at factory defaults.
@@ -578,10 +578,10 @@ def _configure_desk_theme():
     settings = frappe.get_single("Theme Settings")
 
     # Only overwrite factory defaults (#1B3F7E / #F57C00) or unset values.
-    if (settings.brand_color or "") in ("", "#1B3F7E"):
-        settings.brand_color = "#142D4E"
-    if (settings.accent_color or "") in ("", "#F57C00"):
-        settings.accent_color = "#D6A85F"
+    if (settings.brand_color or "") in ("", "#1B3F7E", "#142D4E"):
+        settings.brand_color = "#18388F"
+    if (settings.accent_color or "") in ("", "#F57C00", "#D6A85F"):
+        settings.accent_color = "#2D7D3A"
     if not (settings.company_name or "").strip():
         settings.company_name = "LOKADO"
     if settings.enable_command_palette is None:
@@ -622,10 +622,10 @@ def _configure_portal_theme():
 
     theme_name = "LOKADO Portal"
     colors = {
-        "primary_color": "#142D4E",
-        "text_color": "#172B45",
-        "light_color": "#F5F7FA",
-        "dark_color": "#0d2139",
+        "primary_color": "#18388F",
+        "text_color": "#142C4D",
+        "light_color": "#F4F7F8",
+        "dark_color": "#102458",
         "background_color": "#F5F7FA",
     }
     for color in set(colors.values()):

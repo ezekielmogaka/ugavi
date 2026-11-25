@@ -111,6 +111,10 @@ web_include_css = [
     "/assets/ugavi/css/lokado-website.css",
 ]
 
+web_include_js = [
+    "/assets/ugavi/js/lokado_theme_bridge.js",
+]
+
 # LOKADO brand assets
 favicon = "/assets/ugavi/images/ugavi-favicon.svg"
 app_logo_url = "/assets/ugavi/images/ugavi-logo.svg"

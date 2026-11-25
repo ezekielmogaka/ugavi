@@ -11,6 +11,29 @@ from frappe.utils import add_days, today
 
 
 class TestPortalThemeSetup(unittest.TestCase):
+    def test_desk_and_public_surfaces_share_lokado_brand_tokens(self):
+        from ugavi.scripts import setup_config
+
+        settings = MagicMock(
+            brand_color="#142D4E",
+            accent_color="#D6A85F",
+            company_name="LOKADO",
+            enable_command_palette=1,
+            enable_smart_home=1,
+            default_theme_mode="Light",
+            base_font_size="Default",
+            default_density="Comfortable",
+            corner_radius=8,
+        )
+        with patch.object(setup_config, "frappe") as framework:
+            framework.db.exists.return_value = True
+            framework.get_single.return_value = settings
+            setup_config._configure_desk_theme()
+
+        self.assertEqual(settings.brand_color, "#18388F")
+        self.assertEqual(settings.accent_color, "#2D7D3A")
+        settings.save.assert_called_once_with(ignore_permissions=True)
+
     def test_website_home_and_navigation_are_configured_natively(self):
         from ugavi.scripts import setup_config
 
@@ -75,6 +98,33 @@ class TestPortalThemeSetup(unittest.TestCase):
         self.assertIn("ugavi-portal--v2", template)
         self.assertTrue((portal_root / "dashboard.css").exists())
 
+    def test_public_pages_bridge_published_solvronix_tokens_only(self):
+        from ugavi import hooks
+
+        self.assertIn(
+            "/assets/ugavi/js/lokado_theme_bridge.js",
+            hooks.web_include_js,
+        )
+        bridge = (
+            Path(__file__).resolve().parents[2]
+            / "public"
+            / "js"
+            / "lokado_theme_bridge.js"
+        ).read_text()
+        self.assertIn("solvronix_desk.api.get_theme_css", bridge)
+        self.assertNotIn("solvronix_desk/css/solvronix_desk.css", bridge)
+        self.assertIn("sessionStorage.getItem", bridge)
+        self.assertIn("sessionStorage.setItem", bridge)
+
+    def test_only_solvronix_desk_is_installed_from_the_ecosystem(self):
+        import solvronix_desk
+
+        installed = set(frappe.get_installed_apps())
+        self.assertEqual(solvronix_desk.__version__, "3.2.0")
+        self.assertIn("solvronix_desk", installed)
+        self.assertNotIn("solvronix_pilot_connector", installed)
+        self.assertNotIn("edvronix", installed)
+
     def test_supplier_identity_conflict_fails_closed(self):
         from ugavi.procurement.portal import supplier_portal
 
@@ -120,7 +170,7 @@ class TestPortalThemeSetup(unittest.TestCase):
             return theme
 
         def save(**kwargs):
-            self.assertEqual(len(colors), 4)
+            self.assertEqual(len(colors), 5)
             settings.save.assert_not_called()
 
         theme.save.side_effect = save
