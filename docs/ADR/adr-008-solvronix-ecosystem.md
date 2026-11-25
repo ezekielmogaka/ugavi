@@ -34,18 +34,20 @@ Install and pin Solvronix Desk for:
 Ugavi pins the same release as the upstream v3.2.0 repository revision and
 configures native Theme Settings through `setup_config.py`.
 
-### Bridge published tokens to Website and Supplier Portal
+### Keep Website and Supplier Portal independently themed
 
 The LOKADO public website and supplier portal remain Ugavi-owned Frappe portal
 pages. They do not import Solvronix Desk layout, sidebar or component CSS.
 
-Ugavi may reuse only the published, public Theme Studio variables through
-`solvronix_desk.api.get_theme_css` so brand and accent changes propagate
-without an asset rebuild. LOKADO-specific fallback tokens remain in Ugavi,
-therefore the site continues to render if Solvronix is unavailable.
+They use the native Frappe `Website Theme` plus Ugavi-owned, server-rendered
+Portal Page tokens. Solvronix Theme Studio remains authoritative only for
+Desk/login. A Desk theme publication must not recolor public pages after first
+paint, and the public surfaces must remain correct when Solvronix is disabled.
 
-This gives Desk, login, public website and supplier portal one brand system
-without coupling public DOM to Solvronix's Desk selectors.
+The visual relationship is intentional rather than technical: both scopes use
+LOKADO identity, Inter/system typography, accessible focus, restrained motion
+and enterprise card hierarchy. Colour values are permitted to differ where
+the information context differs.
 
 ### Do not install Solvronix Pilot Connector by default
 
@@ -84,13 +86,12 @@ upgrade validation and operator training.
 
 ## Performance and UI rules
 
-1. The public token bridge must use the public display-only theme endpoint and
-   fail open to Ugavi's static LOKADO tokens.
+1. Public and supplier pages use server-rendered Frappe/LOKADO tokens only.
 2. No Solvronix Desk CSS selector or JavaScript runtime is loaded onto public
    pages.
 3. Public/supplier navigation, content hierarchy and forms remain Ugavi-owned.
-4. Theme updates must preserve server-rendered fallbacks, so the first paint is
-   usable and branded without waiting for JavaScript.
+4. Theme publication for Desk must be previewed and published inside Theme
+   Studio; the website has a separate release/change path.
 5. Interactive transitions respect `prefers-reduced-motion`; focus rings,
    contrast and mobile navigation remain testable independently.
 6. No AI button is exposed to Guest or Supplier Portal users.
@@ -98,9 +99,9 @@ upgrade validation and operator training.
 
 ## Consequences
 
-- **Positive:** one colour/typography/motion system across internal and public
-  experiences; Solvronix remains supported and replaceable; public pages keep
-  their independent information architecture.
+- **Positive:** Solvronix can evolve independently without introducing visual
+  regressions into public pages; public pages keep stable first paint and
+  independent information architecture.
 - **Positive:** no unrelated Education domain or external AI service is added
   by default.
 - **Trade-off:** public pages maintain Ugavi-owned templates rather than using

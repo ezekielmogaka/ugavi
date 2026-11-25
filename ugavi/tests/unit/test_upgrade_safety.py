@@ -11,12 +11,12 @@ from frappe.utils import add_days, today
 
 
 class TestPortalThemeSetup(unittest.TestCase):
-    def test_desk_and_public_surfaces_share_lokado_brand_tokens(self):
+    def test_desk_theme_preserves_reviewed_lokado_palette(self):
         from ugavi.scripts import setup_config
 
         settings = MagicMock(
-            brand_color="#142D4E",
-            accent_color="#D6A85F",
+            brand_color="#18388F",
+            accent_color="#2D7D3A",
             company_name="LOKADO",
             enable_command_palette=1,
             enable_smart_home=1,
@@ -30,8 +30,8 @@ class TestPortalThemeSetup(unittest.TestCase):
             framework.get_single.return_value = settings
             setup_config._configure_desk_theme()
 
-        self.assertEqual(settings.brand_color, "#18388F")
-        self.assertEqual(settings.accent_color, "#2D7D3A")
+        self.assertEqual(settings.brand_color, "#142D4E")
+        self.assertEqual(settings.accent_color, "#D6A85F")
         settings.save.assert_called_once_with(ignore_permissions=True)
 
     def test_website_home_and_navigation_are_configured_natively(self):
@@ -98,23 +98,10 @@ class TestPortalThemeSetup(unittest.TestCase):
         self.assertIn("ugavi-portal--v2", template)
         self.assertTrue((portal_root / "dashboard.css").exists())
 
-    def test_public_pages_bridge_published_solvronix_tokens_only(self):
+    def test_public_pages_do_not_import_solvronix_desk_runtime(self):
         from ugavi import hooks
 
-        self.assertIn(
-            "/assets/ugavi/js/lokado_theme_bridge.js",
-            hooks.web_include_js,
-        )
-        bridge = (
-            Path(__file__).resolve().parents[2]
-            / "public"
-            / "js"
-            / "lokado_theme_bridge.js"
-        ).read_text()
-        self.assertIn("solvronix_desk.api.get_theme_css", bridge)
-        self.assertNotIn("solvronix_desk/css/solvronix_desk.css", bridge)
-        self.assertIn("sessionStorage.getItem", bridge)
-        self.assertIn("sessionStorage.setItem", bridge)
+        self.assertFalse(getattr(hooks, "web_include_js", ()))
 
     def test_only_solvronix_desk_is_installed_from_the_ecosystem(self):
         import solvronix_desk
@@ -170,7 +157,7 @@ class TestPortalThemeSetup(unittest.TestCase):
             return theme
 
         def save(**kwargs):
-            self.assertEqual(len(colors), 5)
+            self.assertEqual(len(colors), 4)
             settings.save.assert_not_called()
 
         theme.save.side_effect = save

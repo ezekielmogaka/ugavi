@@ -1,14 +1,14 @@
 .lokado-site,
 .lokado-nav,
 .lokado-footer {
-  --lokado-blue: var(--st-brand, #18388f);
-  --lokado-blue-vivid: color-mix(in srgb, var(--st-brand, #18388f) 88%, white);
-  --lokado-green: var(--st-accent, #2d7d3a);
+  --lokado-blue: #18388f;
+  --lokado-blue-vivid: #244db2;
+  --lokado-green: #2d7d3a;
   --lokado-gold: #e7a63b;
-  --ugavi-brand: var(--st-brand, #18388f);
-  --ugavi-brand-vivid: color-mix(in srgb, var(--st-brand, #18388f) 88%, white);
+  --ugavi-brand: var(--lokado-blue);
+  --ugavi-brand-vivid: var(--lokado-blue-vivid);
   --ugavi-brand-dark: #102458;
-  --ugavi-accent: var(--st-accent, #2d7d3a);
+  --ugavi-accent: var(--lokado-green);
   font-family: var(--ugavi-font);
   color: var(--ugavi-text-primary);
 }
@@ -42,12 +42,10 @@
 }
 
 .lokado-nav {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 20;
   border-bottom: 1px solid rgba(20, 45, 78, .1);
   background: rgba(255, 255, 255, .96);
-  box-shadow: 0 1px 0 rgba(16, 36, 88, .08), 0 8px 24px rgba(16, 36, 88, .04);
   backdrop-filter: blur(18px);
 }
 
@@ -151,11 +149,7 @@
   color: #fff !important;
   font-weight: 750;
   text-decoration: none;
-  transition:
-    transform var(--ugavi-transition-normal),
-    box-shadow var(--ugavi-transition-normal),
-    background-color var(--ugavi-transition-fast),
-    border-color var(--ugavi-transition-fast);
+  transition: transform var(--ugavi-transition-fast), box-shadow var(--ugavi-transition-fast), background var(--ugavi-transition-fast);
 }
 
 .lokado-button:hover {
@@ -163,20 +157,6 @@
   background: var(--ugavi-brand-vivid);
   box-shadow: 0 12px 28px rgba(20, 45, 78, .18);
   text-decoration: none;
-}
-
-.lokado-button:active,
-.lokado-portal__primary-action:active,
-.lokado-portal__secondary-action:active {
-  transform: translateY(0) scale(.98);
-  transition-duration: 60ms;
-}
-
-.lokado-site :focus-visible {
-  outline: none;
-  box-shadow:
-    0 0 0 2px var(--ugavi-surface),
-    0 0 0 4px color-mix(in srgb, var(--ugavi-brand) 38%, transparent);
 }
 
 .lokado-button--small {

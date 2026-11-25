@@ -92,14 +92,12 @@ a product failure or claiming that it passed.
 configures native Website Settings navigation without replacing Frappe core
 templates.
 
-The visual system is shared across Solvronix Desk, login, public website and
-supplier portal: LOKADO blue (`#18388F`) is the brand primary, LOKADO green
-(`#2D7D3A`) is the action/success accent and `#D6A85F` is reserved for
-highlights. Solvronix remains the Desk/login runtime; the public and supplier
-surfaces use Frappe app-owned templates and the same Ugavi design tokens.
-This keeps typography, motion, elevation, focus rings, density and colour
-meaning consistent without importing Desk-specific selectors into Website
-pages.
+The visual systems are intentionally scoped. Solvronix Desk and login use the
+reviewed LOKADO navy/gold Desk palette (`#142D4E` / `#D6A85F`) and Solvronix's
+native Theme Studio controls. The public website and supplier portal use
+app-owned Frappe templates with their established blue/green LOKADO palette.
+They do not load Desk CSS or subscribe to Desk theme changes, preventing a
+published Desk experiment from changing portal pages after first paint.
 
 - Home (Guest): `http://localhost:8080/`
 - Home (also available to signed-in users): `http://localhost:8080/website`
