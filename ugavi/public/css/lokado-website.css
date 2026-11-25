@@ -322,7 +322,9 @@
 }
 
 .lokado-section--brand {
-  background: var(--ugavi-gradient-brand);
+  background:
+    radial-gradient(circle at 8% 18%, rgba(231, 166, 59, .1), transparent 24rem),
+    linear-gradient(120deg, #0b2140 0%, #123c65 52%, #0f5f5c 100%);
   color: #fff;
 }
 
@@ -347,6 +349,17 @@
   font-size: clamp(2rem, 4vw, 3.7rem);
   line-height: 1.08;
   letter-spacing: -.04em;
+}
+
+.lokado-site .lokado-section--brand h2 {
+  max-width: 640px;
+  color: #f7fbff;
+}
+
+.lokado-site .lokado-section--brand > .lokado-shell > div:first-child > h2 {
+  font-size: clamp(2.15rem, 4vw, 3.75rem);
+  line-height: 1.12;
+  text-wrap: balance;
 }
 
 .lokado-section-heading p,
@@ -440,16 +453,26 @@
   grid-template-columns: 36px 1fr;
   gap: 20px;
   padding-bottom: 28px;
-  border-bottom: 1px solid rgba(255, 255, 255, .16);
+  border-bottom: 1px solid rgba(191, 221, 232, .22);
+}
+
+.lokado-approach-list article > span {
+  color: #ffd17f;
+}
+
+.lokado-site .lokado-section--brand .lokado-kicker--light {
+  color: #a8e4df;
 }
 
 .lokado-approach-list h3 {
   margin: 0 0 10px;
-  color: #fff;
+  color: #f8fcff;
+  font-size: clamp(1.25rem, 2vw, 1.6rem);
 }
 
 .lokado-approach-list p {
-  color: rgba(255, 255, 255, .68) !important;
+  color: #c0d3e3 !important;
+  line-height: 1.7;
 }
 
 .lokado-partner-list {
