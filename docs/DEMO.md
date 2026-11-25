@@ -116,7 +116,8 @@ pages.
 Confirm the desktop header, mobile menu, supplier/staff calls to action,
 partner logo strip and footer links. Partner logos are local copies of the
 official marks shown on LOKADO's existing public website; reconfirm current
-partnership status before production publication. The public site deliberately
+partnership status and image consent before production publication; keep these
+governance checks in the release checklist, not in visitor-facing copy. The public site deliberately
 avoids unsourced beneficiary
 counters and live operational figures. Photography is reused from LOKADO's
 approved public website, while the layout and SVG artwork are app-owned. Programme

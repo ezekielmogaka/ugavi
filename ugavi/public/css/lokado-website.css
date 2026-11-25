@@ -414,7 +414,7 @@
 
 .lokado-programme-card > img {
   width: calc(100% + 48px);
-  height: 154px;
+  height: 176px;
   margin: -18px -24px 22px;
   border-radius: 22px 22px 0 0;
   object-fit: cover;
@@ -432,11 +432,24 @@
   color: #fff;
 }
 
+.lokado-programme-card--featured,
+.lokado-programme-card--featured:hover {
+  color: #fff;
+}
+
+.lokado-programme-card--featured h3 {
+  color: #fff !important;
+}
+
+.lokado-programme-card.lokado-programme-card--featured > span {
+  color: #ffd17f;
+}
+
 .lokado-programme-card > span,
 .lokado-programme-stack > article > span,
 .lokado-accountability-grid article > span,
 .lokado-approach-list article > span {
-  color: var(--ugavi-gold);
+  color: #8b5f18;
   font-size: .78rem;
   font-weight: 800;
   letter-spacing: .12em;
@@ -725,7 +738,7 @@
 }
 
 .lokado-policy > section > span {
-  color: var(--lokado-gold);
+  color: #8b5f18;
   font-weight: 800;
   letter-spacing: .12em;
 }
