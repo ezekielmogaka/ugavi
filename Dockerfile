@@ -76,6 +76,7 @@ RUN cd /home/frappe/frappe-bench && \
 # not used by gunicorn, workers, scheduler or nginx at runtime.
 RUN rm -rf \
       /home/frappe/frappe-bench/apps/frappe/node_modules/esbuild-linux-arm64 \
+      /home/frappe/frappe-bench/apps/frappe/node_modules/esbuild-linux-64 \
       /home/frappe/frappe-bench/apps/frappe/node_modules/loader-utils \
       /home/frappe/frappe-bench/apps/frappe/node_modules/postcss-modules/node_modules/loader-utils \
       /home/frappe/frappe-bench/apps/frappe/node_modules/shell-quote
