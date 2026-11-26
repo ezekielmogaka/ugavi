@@ -121,6 +121,8 @@ jobs:
           cache-dependency-path: tests/e2e/package-lock.json
       - name: Browser smoke
         working-directory: tests/e2e
+        env:
+          UGAVI_BASE_URL: http://localhost:8080
         run: |
           npm ci
           npx playwright install --with-deps chromium
