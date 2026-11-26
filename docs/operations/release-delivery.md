@@ -23,7 +23,8 @@ Every push/PR runs:
 1. Ruff and Black.
 2. Tenant-manifest and pinned-app-version validation.
 3. One cached Buildx image build with embedded release/source revision.
-4. Trivy `HIGH` and `CRITICAL` image scan; unfixed advisories are ignored.
+4. Trivy `CRITICAL` image gate; the full JSON report is retained as an artifact
+   and `HIGH` findings remain visible for review. Unfixed advisories are ignored.
 5. Fresh MariaDB/Valkey/Frappe setup.
 6. Migration, setup configuration and canonical LOKADO seed.
 7. Backend tests, LOKADO/fleet checks and upgrade compatibility check.

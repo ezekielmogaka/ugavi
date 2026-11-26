@@ -3,3 +3,7 @@ python-jose==3.5.0
 qrcode==8.2
 python-barcode==0.16.1
 prometheus_client==0.26.0
+GitPython==3.2.1
+msgpack==1.2.3
+setuptools==78.1.1
+urllib3==2.8.0

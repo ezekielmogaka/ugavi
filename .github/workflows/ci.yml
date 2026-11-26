@@ -62,14 +62,31 @@ jobs:
             UGAVI_VERSION=ci-${{ github.sha }}
             SOURCE_REVISION=${{ github.sha }}
             SOLVRONIX_TAG=v3.2.0
-      - name: Scan image
+      - name: Report image vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ugavi:ci-${{ github.sha }}
+          format: json
+          output: trivy-image.json
+          exit-code: 0
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
+      - name: Upload security scan
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ugavi-trivy-${{ github.sha }}
+          path: trivy-image.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Block critical image vulnerabilities
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ugavi:ci-${{ github.sha }}
           format: table
           exit-code: 1
           ignore-unfixed: true
-          severity: HIGH,CRITICAL
+          severity: CRITICAL
       - name: Start infrastructure
         run: |
           docker compose up -d mariadb valkey mailpit

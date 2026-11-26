@@ -36,6 +36,12 @@ ENV UGAVI_VERSION="${UGAVI_VERSION}" \
 
 USER root
 
+# Pick up security fixes released after the upstream Frappe image tag.
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get upgrade -y --no-install-recommends && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy an installable Frappe app (metadata at app root, package below it).
 COPY pyproject.toml README.md MANIFEST.in package.json requirements-runtime.txt /home/frappe/frappe-bench/apps/ugavi/
 COPY ugavi /home/frappe/frappe-bench/apps/ugavi/ugavi
@@ -65,6 +71,14 @@ RUN cd /home/frappe/frappe-bench && \
 # Build all assets (ugavi + solvronix_desk + frappe/erpnext shared bundles).
 RUN cd /home/frappe/frappe-bench && \
     bench build
+
+# Remove build-only packages/binaries that Trivy correctly identifies but are
+# not used by gunicorn, workers, scheduler or nginx at runtime.
+RUN rm -rf \
+      /home/frappe/frappe-bench/apps/frappe/node_modules/esbuild-linux-arm64 \
+      /home/frappe/frappe-bench/apps/frappe/node_modules/loader-utils \
+      /home/frappe/frappe-bench/apps/frappe/node_modules/postcss-modules/node_modules/loader-utils \
+      /home/frappe/frappe-bench/apps/frappe/node_modules/shell-quote
 
 # Merge freshly-built ugavi assets into the existing image-layer /assets
 # bench build writes compiled bundles to apps/ugavi/public/dist/
