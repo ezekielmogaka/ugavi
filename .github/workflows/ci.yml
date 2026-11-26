@@ -63,7 +63,7 @@ jobs:
             SOURCE_REVISION=${{ github.sha }}
             SOLVRONIX_TAG=v3.2.0
       - name: Scan image
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ugavi:ci-${{ github.sha }}
           format: table
