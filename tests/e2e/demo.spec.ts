@@ -56,6 +56,9 @@ test('health endpoint and administrator desk load', async ({ page }) => {
 
   await page.goto('/app/tender');
   await expect(page.locator('body')).toContainText('Tender');
+
+  await page.goto('/supplier/dashboard');
+  await expect(page).toHaveURL(/\/desk/);
 });
 
 test('supplier portal requires an authenticated supplier identity', async ({ page }) => {

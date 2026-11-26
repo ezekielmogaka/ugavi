@@ -137,11 +137,18 @@ def notify_supplier_users(supplier: str, title: str, description: str,
 def get_context(context):
     """Supplier dashboard context."""
     context.no_cache = 1
-    context.title = _("Supplier Portal")
     context.sitemap = 0
+    context.title = _("Supplier Portal")
     context.supplier = _get_supplier_for_user()
     context.session_user = frappe.session.user
     context.is_logged_in = frappe.session.user not in (None, "Guest")
+    if (
+        context.is_logged_in
+        and not context.supplier
+        and frappe.db.get_value("User", frappe.session.user, "user_type") == "System User"
+    ):
+        frappe.local.flags.redirect_location = "/desk"
+        raise frappe.Redirect
     context.open_tenders = []
     context.bids = []
     context.prequalifications = []

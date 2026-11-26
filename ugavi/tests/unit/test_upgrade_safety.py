@@ -356,6 +356,34 @@ class TestUpgradeSafety(unittest.TestCase):
                 "/desk",
             )
 
+    def test_system_user_is_redirected_from_supplier_portal(self):
+        from ugavi.procurement.portal import supplier_portal
+
+        context = frappe._dict()
+        previous_redirect = frappe.local.flags.get("redirect_location")
+        try:
+            with (
+                patch.object(
+                    supplier_portal,
+                    "_get_supplier_for_user",
+                    return_value=None,
+                ),
+                patch.object(
+                    supplier_portal.frappe.db,
+                    "get_value",
+                    return_value="System User",
+                ),
+                patch.dict(
+                    supplier_portal.frappe.session,
+                    {"user": "Administrator"},
+                ),
+                self.assertRaises(frappe.Redirect),
+            ):
+                supplier_portal.get_context(context)
+            self.assertEqual(frappe.local.flags.redirect_location, "/desk")
+        finally:
+            frappe.local.flags.redirect_location = previous_redirect
+
     def test_purchase_requisition_uses_single_canonical_client_script(self):
         from ugavi import hooks
 
