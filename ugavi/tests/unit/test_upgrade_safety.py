@@ -343,6 +343,19 @@ class TestUpgradeSafety(unittest.TestCase):
             "ugavi.procurement.portal.supplier_portal.get_home_page",
         )
 
+    def test_system_users_land_in_desk_after_login(self):
+        from ugavi.procurement.portal import supplier_portal
+
+        with (
+            patch.object(supplier_portal, "_get_supplier_for_user", return_value=None),
+            patch.object(supplier_portal, "frappe") as framework,
+        ):
+            framework.db.get_value.return_value = "System User"
+            self.assertEqual(
+                supplier_portal.get_home_page("programme@lokado.org"),
+                "/desk",
+            )
+
     def test_purchase_requisition_uses_single_canonical_client_script(self):
         from ugavi import hooks
 

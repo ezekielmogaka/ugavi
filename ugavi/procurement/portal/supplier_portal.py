@@ -50,8 +50,12 @@ def _get_supplier_for_user(user=None):
 
 
 def get_home_page(user: str) -> str | None:
-    """Send linked supplier users to their app-owned portal after login."""
-    return "/supplier/dashboard" if _get_supplier_for_user(user) else None
+    """Route authenticated users to the supplier portal or operational Desk."""
+    if _get_supplier_for_user(user):
+        return "/supplier/dashboard"
+    if frappe.db.get_value("User", user, "user_type") == "System User":
+        return "/desk"
+    return None
 
 
 def _require_supplier():
