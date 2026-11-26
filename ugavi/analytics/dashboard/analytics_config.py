@@ -3,7 +3,6 @@
 Role-based dashboards with number cards and scheduled reports.
 """
 import frappe
-from frappe import _
 
 
 DASHBOARD_CONFIG = {

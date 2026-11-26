@@ -1,8 +1,6 @@
 """Budget burn-rate and variance reporting (W7)."""
 import frappe
-from frappe import _
-from frappe.utils import today, getdate, flt, add_days
-from datetime import datetime
+from frappe.utils import flt
 
 
 @frappe.whitelist()

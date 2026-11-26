@@ -131,7 +131,6 @@ class TestAnalyticsConfig(unittest.TestCase):
 
     def test_system_manager_config(self):
         from ugavi.analytics.dashboard.analytics_config import (
-            DASHBOARD_CONFIG,
             get_dashboard_config,
         )
         sm = get_dashboard_config(["System Manager"])

@@ -3,7 +3,6 @@
 Quarterly access review with role-permission matrix and change log.
 """
 import frappe
-from frappe import _
 from frappe.utils import today, getdate, add_to_date
 
 

@@ -4,9 +4,7 @@ Generates and emails donor report packs on a schedule.
 """
 
 import frappe
-from frappe import _
 from frappe.utils import now_datetime, today
-from frappe.utils.file_manager import save_file
 
 
 def generate_scheduled_donor_reports():
@@ -64,8 +62,6 @@ def _deliver(doc):
     # Generate Excel attachment
     data = frappe._dict(frappe.parse_json(doc.report_data or "{}"))
     content = _render_report(data)
-    file_name = f"Donor_Report_{doc.donor}_{today()}.json"
-
     frappe.sendmail(
         recipients=recipients,
         subject=f"Ugavi Donor Report: {doc.donor} ({doc.from_date} to {doc.to_date})",

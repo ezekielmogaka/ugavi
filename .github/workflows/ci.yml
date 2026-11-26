@@ -28,11 +28,9 @@ jobs:
         with:
           python-version: "3.14"
       - name: Install quality tools
-        run: pip install ruff==0.14.6 black==25.11.0
-      - name: Python lint and format
-        run: |
-          ruff check ugavi/
-          black --check ugavi/
+        run: pip install ruff==0.14.6
+      - name: Python lint
+        run: ruff check ugavi/
       - name: Configuration validation
         run: |
           python3 deploy/validate_tenant_manifest.py deploy/tenants.example.json

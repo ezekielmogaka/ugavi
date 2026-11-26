@@ -3118,7 +3118,7 @@ def _seed_finance():
                 })
                 st.append("taxes", {
                     "charge_type": "On Net Total",
-                    "account_head": f"VAT - LOKADO",
+                    "account_head": "VAT - LOKADO",
                     "rate": rate,
                     "description": f"Rate: {rate}%",
                 })
@@ -3137,7 +3137,7 @@ def _seed_finance():
                 })
                 pt.append("taxes", {
                     "charge_type": "On Net Total",
-                    "account_head": f"VAT - LOKADO",
+                    "account_head": "VAT - LOKADO",
                     "rate": rate,
                     "description": f"Rate: {rate}%",
                 })
@@ -3915,7 +3915,6 @@ def _seed_payment_entries():
     """Full and partial payments allocated to invoices, passing the evaluation gate."""
     from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
-    td = today()
     paid = 0
     for index, (bill_no, supplier_name, _wh, share, mode) in enumerate(RECEIPT_INVOICES):
         if not share:
@@ -4162,7 +4161,6 @@ def _seed_notification_rules():
 
 def _seed_projects_and_grants():
     """Projects/Programmes linked to donors with grant allocations."""
-    td = today()
     projects = [
         ("WASH Programme - Kakuma Refugee Camp", "Open", 2500000, 65, "High",
          "IOM", "Water, Sanitation & Hygiene serving Kakuma camp and host community"),
